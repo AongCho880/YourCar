@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ReactNode } from 'react';
@@ -22,6 +23,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   if (loading || !isAdmin) {
     // Show a loader or minimal content while checking auth or if not admin
+    // The header here is for the non-authenticated or loading state.
+    // We'll keep its original styling for now, as the request is for the authenticated panel.
     return (
       <div className="flex flex-col min-h-screen">
         <header className="bg-primary text-primary-foreground p-4 shadow-md">
@@ -46,9 +49,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // If admin is authenticated
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="bg-primary text-primary-foreground p-4 shadow-md">
+      <header className="bg-card text-card-foreground p-4 shadow-xl">
         <div className="container mx-auto flex flex-wrap justify-between items-center gap-4">
-          <Link href="/admin/dashboard" className="text-xl font-bold font-headline hover:opacity-80 transition-opacity">Admin Panel</Link>
+          <Link href="/admin/dashboard" className="text-xl font-bold font-headline text-primary hover:text-primary/80 transition-opacity">Admin Panel</Link>
           <nav className="flex flex-wrap items-center gap-2">
             <Button variant={pathname === '/admin/dashboard' ? 'secondary' : 'ghost'} asChild size="sm">
               <Link href="/admin/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" />Dashboard</Link>
