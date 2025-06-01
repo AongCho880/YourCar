@@ -31,9 +31,13 @@ const YourCarLogo = () => (
       strokeWidth="1.5"
       fill="none"
     />
-    <path d="M16 8L12 14H20L16 8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M12 20L16 14M16 14L20 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M10 24H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M8 8L16 16M16 16L24 8M16 16V24"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
