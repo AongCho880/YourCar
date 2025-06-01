@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ReactNode } from 'react';
@@ -22,8 +23,8 @@ const generateMockFeatures = (): string[] => {
   return features;
 };
 
-const generateMockImages = (make: string, model: string, count: number): string[] => {
-  return Array.from({ length: count }, (_, i) => `https://placehold.co/600x400.png?text=${make}+${model}+${i + 1}`);
+const generateMockImages = (count: number): string[] => {
+  return Array.from({ length: count }, (_, i) => `https://placehold.co/600x400.png`);
 };
 
 
@@ -44,7 +45,7 @@ const initialCarsData: Car[] = Array.from({ length: 15 }, (_, i) => {
     mileage,
     condition,
     features: generateMockFeatures(),
-    images: generateMockImages(make, model, getRandomNumber(1, 3)),
+    images: generateMockImages(getRandomNumber(1, 3)),
     description: `This is a fantastic ${year} ${make} ${model}. It's in ${condition.toLocaleLowerCase()} condition with ${mileage.toLocaleString()} miles. Priced at $${price.toLocaleString()}, it comes with features like ${generateMockFeatures().slice(0,2).join(', ')}. A great deal!`,
     createdAt: Date.now() - (i * 1000 * 60 * 60 * 24), // Stagger creation time
     updatedAt: Date.now() - (i * 1000 * 60 * 60 * 24),
