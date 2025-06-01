@@ -21,7 +21,17 @@ const YourCarLogo = () => (
     className="h-7 w-7 text-primary group-hover:text-primary/80 transition-colors"
     aria-hidden="true"
   >
-    <path d="M8 8L16 16M16 16L24 8M16 16V24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect 
+      x="4" 
+      y="4" 
+      width="24" 
+      height="24" 
+      rx="4" 
+      stroke="currentColor" 
+      strokeWidth="1.5" 
+      fill="none" 
+    />
+    <path d="M8 8L16 16M16 16L24 8M16 16V24" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
 
@@ -40,7 +50,7 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: 'Home' },
     isAdmin && { href: '/admin/dashboard', label: 'Dashboard' },
-    !isAdmin && { href: '/admin', label: 'Admin Login' },
+    !isAdmin && !loading && { href: '/admin', label: 'Admin Login' },
   ].filter(Boolean) as { href: string; label: string }[];
 
   const NavLinkItem = ({ href, label }: { href: string; label: string }) => (
