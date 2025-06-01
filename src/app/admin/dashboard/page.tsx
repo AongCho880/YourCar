@@ -47,8 +47,8 @@ export default function AdminDashboardPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold font-headline">Car Listings Management</h1>
         <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">
-          <Link href="/admin/cars/new">
-            <PlusCircle className="mr-2 h-4 w-4" /> Add New Car
+          <Link href="/admin/cars/new" className="text-white">
+            <PlusCircle className="mr-2 h-4 w-4 text-white" /> Add New Car
           </Link>
         </Button>
       </div>

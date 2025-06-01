@@ -48,7 +48,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // If admin is authenticated
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="bg-card text-card-foreground p-4 shadow-xl">
+      <header className="bg-white text-card-foreground p-4 shadow-xl">
         <div className="container mx-auto flex flex-wrap justify-between items-center gap-4">
           <Link href="/admin/dashboard" className="text-xl font-bold font-headline text-primary hover:text-primary/80 transition-opacity">Admin Panel</Link>
           <nav className="flex flex-wrap items-center gap-2">

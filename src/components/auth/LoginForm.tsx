@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import Link from 'next/link'; // Added Link import
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -56,6 +56,7 @@ export default function LoginForm() {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <Label htmlFor="password">Password</Label>
+              {/* Placeholder: In a real app, this would link to a password recovery flow */}
               <Link href="#" className="text-xs text-primary hover:underline">
                 Forgot Password?
               </Link>
@@ -72,7 +73,7 @@ export default function LoginForm() {
           {error && <p className="text-sm text-destructive">{error}</p>}
         </CardContent>
         <CardFooter>
-          <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white">
+          <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
             <LogIn className="mr-2 h-4 w-4" /> Login
           </Button>
         </CardFooter>
