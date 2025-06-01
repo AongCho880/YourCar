@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import CarCard from '@/components/CarCard';
 import FilterControls from '@/components/FilterControls';
 import type { Car, CarFilters } from '@/types';
@@ -32,8 +33,8 @@ export default function HomePage() {
         if (
           !car.make.toLowerCase().includes(lowerSearchTerm) &&
           !car.model.toLowerCase().includes(lowerSearchTerm) &&
-          !car.features.join(' ').toLowerCase().includes(lowerSearchTerm) &&
-          !car.description.toLowerCase().includes(lowerSearchTerm)
+          !(car.features || []).join(' ').toLowerCase().includes(lowerSearchTerm) &&
+          !(car.description || '').toLowerCase().includes(lowerSearchTerm)
         ) return false;
       }
       return true;
@@ -47,10 +48,10 @@ export default function HomePage() {
 
   const totalPages = Math.ceil(filteredCars.length / ITEMS_PER_PAGE);
 
-  const handleFilterChange = (newFilters: CarFilters) => {
+  const handleFilterChange = useCallback((newFilters: CarFilters) => {
     setFilters(newFilters);
     setCurrentPage(1); // Reset to first page on filter change
-  };
+  }, [setFilters, setCurrentPage]); // setFilters and setCurrentPage are stable
 
   if (carsLoading) {
     return (
