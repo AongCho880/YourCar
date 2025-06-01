@@ -63,7 +63,7 @@ export default function Navbar() {
     <Button
       variant={pathname === href ? "secondary" : "ghost"}
       className={cn(
-        "text-card-foreground hover:bg-accent hover:text-accent-foreground",
+        "text-card-foreground hover:bg-primary hover:text-white",
         pathname === href && "bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
       )}
       asChild

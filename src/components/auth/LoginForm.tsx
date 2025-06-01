@@ -72,7 +72,7 @@ export default function LoginForm() {
           {error && <p className="text-sm text-destructive">{error}</p>}
         </CardContent>
         <CardFooter>
-          <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white">
             <LogIn className="mr-2 h-4 w-4" /> Login
           </Button>
         </CardFooter>

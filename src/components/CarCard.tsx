@@ -4,7 +4,7 @@ import Image from 'next/image';
 import type { Car as CarType } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Fuel, Gauge, GitCommitHorizontal, ExternalLink } from 'lucide-react';
+import { Fuel, Gauge, Cog, ExternalLink } from 'lucide-react';
 
 interface CarCardProps {
   car: CarType;
@@ -48,8 +48,7 @@ export default function CarCard({ car }: CarCardProps) {
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              {/* Using GitCommitHorizontal as a stand-in for a manual transmission icon */}
-              <GitCommitHorizontal className="w-5 h-5 mr-2 text-primary" />
+              <Cog className="w-5 h-5 mr-2 text-primary" />
             </div>
             <span>Manual</span> {/* Placeholder: CarType doesn't have transmission_type */}
           </div>

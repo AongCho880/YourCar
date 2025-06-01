@@ -17,7 +17,7 @@ export default function CarDetailPage() {
   const { id } = params;
   const { getCarById, loading } = useCars();
   
-  const car = getCarById(Array.isArray(id) ? id[0] : id);
+  const car = getCarById(Array.isArray(id) ? id[0] : String(id));
 
   if (loading) {
     return (
