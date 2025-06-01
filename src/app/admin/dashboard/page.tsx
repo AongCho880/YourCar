@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Edit, Trash2, PlusCircle, Eye, Car, Cog } from 'lucide-react'; // Reverted to Cog as ManualGearbox was an issue
+import { Edit, Trash2, PlusCircle, Eye, Car, Cog } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,8 +66,8 @@ export default function AdminDashboardPage() {
           </Button>
         </div>
       ) : (
-        <div className="border rounded-lg shadow-sm overflow-hidden"> {/* Outer div for styling, overflow-hidden for rounded corners */}
-          <Table className="max-h-[65vh]"> {/* Table component gets max-h, its inner div will scroll */}
+        <div className="border rounded-lg shadow-sm overflow-hidden">
+          <Table className="max-h-[65vh]">
             <TableHeader className="sticky top-0 z-10 bg-card shadow-sm">
               <TableRow>
                 <TableHead className="w-[80px]">Image</TableHead>
@@ -107,7 +107,7 @@ export default function AdminDashboardPage() {
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" title="Delete Car">
+                          <Button variant="ghost" size="icon" title="Delete Car" className="hover:bg-destructive/10">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </AlertDialogTrigger>
