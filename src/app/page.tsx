@@ -9,7 +9,7 @@ import { useCars } from '@/contexts/CarContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { List, LayoutGrid, Filter as FilterIcon } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -51,7 +51,7 @@ export default function HomePage() {
   const handleFilterChange = useCallback((newFilters: CarFilters) => {
     setFilters(newFilters);
     setCurrentPage(1); // Reset to first page on filter change
-  }, [setFilters, setCurrentPage]); // setFilters and setCurrentPage are stable
+  }, [setFilters, setCurrentPage]); 
 
   if (carsLoading) {
     return (
@@ -102,7 +102,9 @@ export default function HomePage() {
           </SheetTrigger>
           <SheetContent side="left" className="w-[300px] overflow-y-auto">
              <div className="p-4">
-                <h2 className="text-xl font-semibold mb-4 font-headline">Filters</h2>
+                <SheetHeader className="mb-4 text-left">
+                  <SheetTitle className="text-xl font-headline">Filters</SheetTitle>
+                </SheetHeader>
                 {FilterControlsContent}
                 <SheetClose asChild>
                     <Button className="w-full mt-4 bg-accent">Apply Filters</Button>
