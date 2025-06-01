@@ -52,9 +52,9 @@ export default function CarDetailPage() {
               <h1 className="text-3xl md:text-4xl font-bold font-headline text-primary mb-1">
                 {car.make} {car.model}
               </h1>
-              <p className="text-lg text-muted-foreground">
+              <div className="text-lg text-muted-foreground">
                 <Badge variant="secondary" className="text-sm">{car.condition}</Badge> - {car.year}
-              </p>
+              </div>
             </div>
             <div className="text-2xl md:text-3xl font-semibold text-accent mt-2 md:mt-0">
               ${car.price.toLocaleString()}
