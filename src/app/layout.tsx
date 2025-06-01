@@ -7,8 +7,8 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'AutoList - Your Premier Car Marketplace',
-  description: 'Find or list your next car with AutoList. Featuring AI-powered ad copy generation.',
+  title: 'YourCar - Your Premier Car Marketplace',
+  description: 'Find or list your next car with YourCar. Featuring AI-powered ad copy generation.',
 };
 
 export default function RootLayout({
