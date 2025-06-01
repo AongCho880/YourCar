@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useCars } from '@/contexts/CarContext';
@@ -65,10 +66,10 @@ export default function AdminDashboardPage() {
           </Button>
         </div>
       ) : (
-        <div className="border rounded-lg overflow-hidden shadow-sm">
+        <div className="border rounded-lg shadow-sm max-h-[65vh]">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="sticky top-0 z-10 bg-card shadow-sm">
               <TableHead className="w-[80px]">Image</TableHead>
               <TableHead>Make & Model</TableHead>
               <TableHead className="hidden md:table-cell">Year</TableHead>
