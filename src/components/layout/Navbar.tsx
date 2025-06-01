@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -36,7 +37,7 @@ export default function Navbar() {
   );
 
   return (
-    <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-50">
+    <header className="bg-card text-card-foreground shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <Link href="/" className="flex items-center gap-2 text-xl font-bold hover:opacity-80 transition-opacity">
           <Car className="h-7 w-7" />
@@ -47,7 +48,7 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-2">
           {navLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
           {isAdmin && !loading && (
-            <Button variant="ghost" onClick={handleLogout} className="text-primary-foreground hover:bg-primary/80">
+            <Button variant="ghost" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" /> Logout
             </Button>
           )}
@@ -57,16 +58,16 @@ export default function Navbar() {
         <div className="md:hidden">
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary/80">
+              <Button variant="ghost" size="icon">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[250px] bg-primary text-primary-foreground">
+            <SheetContent side="right" className="w-[250px] bg-card text-card-foreground">
               <div className="flex flex-col gap-4 pt-8">
                 {navLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
                 {isAdmin && !loading && (
                    <SheetClose asChild>
-                    <Button variant="ghost" onClick={handleLogout} className="text-primary-foreground justify-start hover:bg-primary/80">
+                    <Button variant="ghost" onClick={handleLogout} className="justify-start">
                       <LogOut className="mr-2 h-4 w-4" /> Logout
                     </Button>
                    </SheetClose>
