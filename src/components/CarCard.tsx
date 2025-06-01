@@ -11,6 +11,16 @@ interface CarCardProps {
 }
 
 export default function CarCard({ car }: CarCardProps) {
+  const makeKeywords = car.make.split(' ');
+  let aiHint = '';
+  if (makeKeywords.length >= 2) {
+    aiHint = car.make; // e.g., "Land Rover"
+  } else {
+    // makeKeywords.length is 1, e.g., "Toyota", "BMW", "Mercedes-Benz"
+    const modelType = car.model.split(' ')[0] || 'car';
+    aiHint = `${car.make} ${modelType}`; // e.g., "Toyota Camry", "BMW car", "Mercedes-Benz Sedan"
+  }
+
   return (
     <Card className="flex flex-col h-full overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg bg-card">
       <Link href={`/cars/${car.id}`} className="block">
@@ -20,7 +30,7 @@ export default function CarCard({ car }: CarCardProps) {
           width={600}
           height={400}
           className="w-full h-48 object-cover"
-          data-ai-hint={`${car.make} ${car.model}`}
+          data-ai-hint={aiHint}
         />
       </Link>
 

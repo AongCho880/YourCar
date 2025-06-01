@@ -79,60 +79,70 @@ export default function AdminDashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {cars.map((car) => (
-                <TableRow key={car.id}>
-                  <TableCell>
-                    <Image
-                      src={car.images[0] || 'https://placehold.co/100x75.png'}
-                      alt={`${car.make} ${car.model}`}
-                      width={60}
-                      height={45}
-                      className="rounded object-cover"
-                      data-ai-hint={`${car.make} car`}
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">{car.make} {car.model}</TableCell>
-                  <TableCell className="hidden md:table-cell">{car.year}</TableCell>
-                  <TableCell>${car.price.toLocaleString()}</TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <Badge variant={car.condition === "New" ? "default" : "secondary"}>{car.condition}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" asChild title="View Car">
-                        <Link href={`/cars/${car.id}`} target="_blank"><Eye className="h-4 w-4" /></Link>
-                      </Button>
-                      <Button variant="ghost" size="icon" asChild title="Edit Car">
-                        <Link href={`/admin/cars/edit/${car.id}`}><Edit className="h-4 w-4" /></Link>
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" title="Delete Car" className="hover:bg-destructive/10">
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete the car listing for "{car.make} {car.model}".
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(car.id)}
-                              className="bg-destructive hover:bg-destructive/90"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {cars.map((car) => {
+                const makeKeywords = car.make.split(' ');
+                let aiHint = '';
+                if (makeKeywords.length >= 2) {
+                  aiHint = car.make;
+                } else {
+                  const modelType = car.model.split(' ')[0] || 'car';
+                  aiHint = `${car.make} ${modelType}`;
+                }
+                return (
+                  <TableRow key={car.id}>
+                    <TableCell>
+                      <Image
+                        src={car.images[0] || 'https://placehold.co/100x75.png'}
+                        alt={`${car.make} ${car.model}`}
+                        width={60}
+                        height={45}
+                        className="rounded object-cover"
+                        data-ai-hint={aiHint}
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">{car.make} {car.model}</TableCell>
+                    <TableCell className="hidden md:table-cell">{car.year}</TableCell>
+                    <TableCell>${car.price.toLocaleString()}</TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <Badge variant={car.condition === "New" ? "default" : "secondary"}>{car.condition}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" asChild title="View Car">
+                          <Link href={`/cars/${car.id}`} target="_blank"><Eye className="h-4 w-4" /></Link>
+                        </Button>
+                        <Button variant="ghost" size="icon" asChild title="Edit Car">
+                          <Link href={`/admin/cars/edit/${car.id}`}><Edit className="h-4 w-4" /></Link>
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" title="Delete Car" className="hover:bg-destructive/10">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the car listing for "{car.make} {car.model}".
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(car.id)}
+                                className="bg-destructive hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
