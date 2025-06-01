@@ -1,6 +1,6 @@
 "use client";
 
-import type { CarFilters } from '@/types';
+import type { CarFilters, CarCondition } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ interface FilterControlsProps {
 
 export default function FilterControls({ initialFilters = {}, onFilterChange }: FilterControlsProps) {
   const [make, setMake] = useState(initialFilters.make || '');
-  const [condition, setCondition] = useState(initialFilters.condition || '');
+  const [condition, setCondition] = useState<CarCondition | ''>(initialFilters.condition || '');
   const [priceRange, setPriceRange] = useState<[number, number]>(initialFilters.priceRange || [DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE]);
   const [searchTerm, setSearchTerm] = useState(initialFilters.searchTerm || '');
 
@@ -25,7 +25,7 @@ export default function FilterControls({ initialFilters = {}, onFilterChange }: 
     // Debounce or directly call onFilterChange
     const filters: CarFilters = {};
     if (make) filters.make = make;
-    if (condition) filters.condition = condition as any; // TODO: fix type
+    if (condition) filters.condition = condition as CarCondition;
     if (priceRange[0] !== DEFAULT_MIN_PRICE || priceRange[1] !== DEFAULT_MAX_PRICE) filters.priceRange = priceRange;
     if (searchTerm) filters.searchTerm = searchTerm;
     
@@ -72,7 +72,7 @@ export default function FilterControls({ initialFilters = {}, onFilterChange }: 
 
       <div>
         <Label htmlFor="condition-select" className="block mb-1 font-medium">Condition</Label>
-        <Select value={condition} onValueChange={setCondition}>
+        <Select value={condition} onValueChange={(value) => setCondition(value as CarCondition | '')}>
           <SelectTrigger id="condition-select">
             <SelectValue placeholder="Any Condition" />
           </SelectTrigger>

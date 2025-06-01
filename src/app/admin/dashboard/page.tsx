@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Edit, Trash2, PlusCircle, Eye } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, Eye, Car } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -139,15 +139,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
-// Placeholder Icon for Car if not found in lucide-react
-const Car = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M14 16.5V14a2 2 0 0 0-2-2h- симптомы.path>
-    <path d="M19 17h2c.6 0 1-.4 1-1v-3.6c0-.9-.7-1.7-1.5-1.9L16.7 9H7.3L3.5 10.5A1.7 1.7 0 0 0 2 12.1V16c0 .6.4 1 1 1h2"/>
-    <path d="M5 17h8"/>
-    <circle cx="7.5" cy="17.5" r="2.5"/>
-    <circle cx="16.5" cy="17.5" r="2.5"/>
-  </svg>
-);
-
