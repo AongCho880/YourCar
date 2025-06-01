@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Edit, Trash2, PlusCircle, Eye, Car } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, Eye, Car, Cog } from 'lucide-react'; // Reverted to Cog as ManualGearbox was an issue
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,75 +66,75 @@ export default function AdminDashboardPage() {
           </Button>
         </div>
       ) : (
-        <div className="border rounded-lg shadow-sm max-h-[65vh] overflow-hidden">
-        <Table>
-          <TableHeader className="sticky top-0 z-10 bg-card shadow-sm">
-            <TableRow>
-              <TableHead className="w-[80px]">Image</TableHead>
-              <TableHead>Make & Model</TableHead>
-              <TableHead className="hidden md:table-cell">Year</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead className="hidden lg:table-cell">Condition</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {cars.map((car) => (
-              <TableRow key={car.id}>
-                <TableCell>
-                  <Image
-                    src={car.images[0] || 'https://placehold.co/100x75.png'}
-                    alt={`${car.make} ${car.model}`}
-                    width={60}
-                    height={45}
-                    className="rounded object-cover"
-                    data-ai-hint={`${car.make} car`}
-                  />
-                </TableCell>
-                <TableCell className="font-medium">{car.make} {car.model}</TableCell>
-                <TableCell className="hidden md:table-cell">{car.year}</TableCell>
-                <TableCell>${car.price.toLocaleString()}</TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <Badge variant={car.condition === "New" ? "default" : "secondary"}>{car.condition}</Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" asChild title="View Car">
-                      <Link href={`/cars/${car.id}`} target="_blank"><Eye className="h-4 w-4" /></Link>
-                    </Button>
-                    <Button variant="ghost" size="icon" asChild title="Edit Car">
-                      <Link href={`/admin/cars/edit/${car.id}`}><Edit className="h-4 w-4" /></Link>
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" title="Delete Car">
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the car listing for "{car.make} {car.model}".
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(car.id)}
-                            className="bg-destructive hover:bg-destructive/90"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </TableCell>
+        <div className="border rounded-lg shadow-sm overflow-hidden"> {/* Outer div for styling, overflow-hidden for rounded corners */}
+          <Table className="max-h-[65vh]"> {/* Table component gets max-h, its inner div will scroll */}
+            <TableHeader className="sticky top-0 z-10 bg-card shadow-sm">
+              <TableRow>
+                <TableHead className="w-[80px]">Image</TableHead>
+                <TableHead>Make & Model</TableHead>
+                <TableHead className="hidden md:table-cell">Year</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead className="hidden lg:table-cell">Condition</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {cars.map((car) => (
+                <TableRow key={car.id}>
+                  <TableCell>
+                    <Image
+                      src={car.images[0] || 'https://placehold.co/100x75.png'}
+                      alt={`${car.make} ${car.model}`}
+                      width={60}
+                      height={45}
+                      className="rounded object-cover"
+                      data-ai-hint={`${car.make} car`}
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">{car.make} {car.model}</TableCell>
+                  <TableCell className="hidden md:table-cell">{car.year}</TableCell>
+                  <TableCell>${car.price.toLocaleString()}</TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    <Badge variant={car.condition === "New" ? "default" : "secondary"}>{car.condition}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" asChild title="View Car">
+                        <Link href={`/cars/${car.id}`} target="_blank"><Eye className="h-4 w-4" /></Link>
+                      </Button>
+                      <Button variant="ghost" size="icon" asChild title="Edit Car">
+                        <Link href={`/admin/cars/edit/${car.id}`}><Edit className="h-4 w-4" /></Link>
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" title="Delete Car">
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete the car listing for "{car.make} {car.model}".
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(car.id)}
+                              className="bg-destructive hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>
