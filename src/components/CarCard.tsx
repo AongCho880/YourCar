@@ -1,10 +1,10 @@
+
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Car as CarType } from '@/types';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, CalendarDays, Gauge, Tag } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Fuel, Gauge, GitCommitHorizontal, ExternalLink } from 'lucide-react';
 
 interface CarCardProps {
   car: CarType;
@@ -12,48 +12,60 @@ interface CarCardProps {
 
 export default function CarCard({ car }: CarCardProps) {
   return (
-    <Card className="flex flex-col h-full overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
-      <CardHeader className="p-0 relative">
-        <Link href={`/cars/${car.id}`} className="block">
-          <Image
-            src={car.images[0] || "https://placehold.co/600x400.png"}
-            alt={`${car.make} ${car.model}`}
-            width={600}
-            height={400}
-            className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-            data-ai-hint={`${car.make} ${car.model}`}
-          />
-        </Link>
-      </CardHeader>
-      <CardContent className="p-4 flex-grow">
-        <Link href={`/cars/${car.id}`} className="block">
-          <CardTitle className="text-lg font-headline mb-1 truncate group-hover:text-accent">
+    <Card className="flex flex-col h-full overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg bg-card">
+      <Link href={`/cars/${car.id}`} className="block">
+        <Image
+          src={car.images[0] || "https://placehold.co/600x400.png"}
+          alt={`${car.make} ${car.model}`}
+          width={600}
+          height={400}
+          className="w-full h-48 object-cover"
+          data-ai-hint={`${car.make} ${car.model}`}
+        />
+      </Link>
+
+      <div className="p-4 flex flex-col flex-grow">
+        <Link href={`/cars/${car.id}`} className="block group">
+          <h2 className="text-xl font-bold font-headline mb-2 text-foreground group-hover:text-primary transition-colors">
             {car.make} {car.model}
-          </CardTitle>
+          </h2>
         </Link>
-        <div className="flex items-center text-sm text-muted-foreground mb-2">
-          <Tag className="w-4 h-4 mr-1.5 text-accent" />
-          <span className="font-semibold text-lg text-accent">
+
+        <Separator className="my-1 bg-border/50" />
+
+        <div className="space-y-2 my-3 text-sm text-muted-foreground">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Fuel className="w-5 h-5 mr-2 text-primary" />
+            </div>
+            <span>Petrol</span> {/* Placeholder: CarType doesn't have fuel_type */}
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Gauge className="w-5 h-5 mr-2 text-primary" />
+            </div>
+            <span>{car.mileage.toLocaleString()} miles</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              {/* Using GitCommitHorizontal as a stand-in for a manual transmission icon */}
+              <GitCommitHorizontal className="w-5 h-5 mr-2 text-primary" />
+            </div>
+            <span>Manual</span> {/* Placeholder: CarType doesn't have transmission_type */}
+          </div>
+        </div>
+
+        <Separator className="my-1 bg-border/50" />
+
+        <div className="mt-auto flex items-center justify-between pt-3">
+          <span className="text-xl font-bold text-foreground">
             ${car.price.toLocaleString()}
           </span>
-        </div>
-        <div className="space-y-1 text-sm text-muted-foreground">
-          <div className="flex items-center">
-            <CalendarDays className="w-4 h-4 mr-1.5" /> {car.year}
-          </div>
-          <div className="flex items-center">
-            <Gauge className="w-4 h-4 mr-1.5" /> {car.mileage.toLocaleString()} miles
-          </div>
-        </div>
-        <Badge variant="outline" className="mt-3 text-xs">{car.condition}</Badge>
-      </CardContent>
-      <CardFooter className="p-4 pt-0">
-        <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-          <Link href={`/cars/${car.id}`}>
-            View Details <ArrowRight className="ml-2 h-4 w-4" />
+          <Link href={`/cars/${car.id}`} className="text-sm text-primary hover:text-primary/80 flex items-center font-medium">
+            View Details <ExternalLink className="ml-1 h-4 w-4" />
           </Link>
-        </Button>
-      </CardFooter>
+        </div>
+      </div>
     </Card>
   );
 }
