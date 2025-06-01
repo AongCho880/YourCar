@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect, useMemo } from 'react';
+// import { cn } from '@/lib/utils'; // cn might not be needed if complex className is removed
 
 // Simple SVG Logo
 const YourCarLogo = () => (
@@ -29,7 +29,7 @@ const YourCarLogo = () => (
       rx="4"
       stroke="currentColor"
       strokeWidth="1.5"
-      fill="none"
+      fill="hsl(var(--primary)/0.1)"
     />
     <path
       d="M8 8L16 16M16 16L24 8M16 16V24"
@@ -47,25 +47,33 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [clientLoaded, setClientLoaded] = useState(false);
+
+  useEffect(() => {
+    setClientLoaded(true);
+  }, []);
 
   const handleLogout = () => {
     logout();
     router.push('/');
   };
 
-  const navLinks = [
-    { href: '/', label: 'Home' },
-    isAdmin && { href: '/admin/dashboard', label: 'Dashboard' },
-    // Removed: !isAdmin && !loading && { href: '/admin', label: 'Admin Login' },
-  ].filter(Boolean) as { href: string; label: string }[];
+  const navLinks = useMemo(() => {
+    const links = [{ href: '/', label: 'Home' }];
+    if (clientLoaded && isAdmin && !loading) {
+      links.push({ href: '/admin/dashboard', label: 'Dashboard' });
+    }
+    return links;
+  }, [clientLoaded, isAdmin, loading]);
 
   const NavLinkItem = ({ href, label }: { href: string; label: string }) => (
     <Button
       variant={pathname === href ? "secondary" : "ghost"}
-      className={cn(
-        "text-card-foreground hover:bg-primary hover:text-white",
-        pathname === href && "bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
-      )}
+      // Removed custom className to rely on variants. Original:
+      // className={cn(
+      //   "text-card-foreground hover:bg-primary hover:text-white",
+      //   pathname === href && "bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
+      // )}
       asChild
       onClick={() => setIsMobileMenuOpen(false)}
     >
@@ -84,7 +92,7 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
-          {isAdmin && !loading && (
+          {clientLoaded && isAdmin && !loading && (
             <Button variant="ghost" onClick={handleLogout} className="text-card-foreground hover:bg-destructive/20 hover:text-destructive">
               <LogOut className="mr-2 h-4 w-4" /> Logout
             </Button>
@@ -102,7 +110,7 @@ export default function Navbar() {
             <SheetContent side="right" className="w-[250px] bg-card/95 backdrop-blur-lg text-card-foreground border-l border-border/30">
               <div className="flex flex-col gap-4 pt-8">
                 {navLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
-                {isAdmin && !loading && (
+                {clientLoaded && isAdmin && !loading && (
                    <SheetClose asChild>
                     <Button variant="ghost" onClick={handleLogout} className="justify-start text-card-foreground hover:bg-destructive/20 hover:text-destructive">
                       <LogOut className="mr-2 h-4 w-4" /> Logout
