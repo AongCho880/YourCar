@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { CarFilters, CarCondition } from '@/types';
@@ -25,7 +26,7 @@ export default function FilterControls({ initialFilters = {}, onFilterChange }: 
     // Debounce or directly call onFilterChange
     const filters: CarFilters = {};
     if (make) filters.make = make;
-    if (condition) filters.condition = condition as CarCondition;
+    if (condition) filters.condition = condition;
     if (priceRange[0] !== DEFAULT_MIN_PRICE || priceRange[1] !== DEFAULT_MAX_PRICE) filters.priceRange = priceRange;
     if (searchTerm) filters.searchTerm = searchTerm;
     
@@ -62,7 +63,6 @@ export default function FilterControls({ initialFilters = {}, onFilterChange }: 
             <SelectValue placeholder="Any Make" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any Make</SelectItem>
             {CAR_MAKES.map((m) => (
               <SelectItem key={m} value={m}>{m}</SelectItem>
             ))}
@@ -77,7 +77,6 @@ export default function FilterControls({ initialFilters = {}, onFilterChange }: 
             <SelectValue placeholder="Any Condition" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any Condition</SelectItem>
             {CAR_CONDITIONS.map((c) => (
               <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
             ))}
