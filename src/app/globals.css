@@ -24,7 +24,7 @@
     --muted: 223 11% 85%; /* cool_gray.800 #d5d7dd */
     --muted-foreground: 217 15% 26%; /* payne's_gray.300 #383f4c */
     
-    --accent: 150 70% 45%; /* Emerald Green for Neo-Tech */
+    --accent: 207 98% 63%; /* true_blue.700 #4ba3fb (was Emerald Green) */
     --accent-foreground: 217 100% 10%; /* oxford_blue.DEFAULT (#001233 family) #001233 */
     
     --destructive: 0 84% 60%; /* Standard vibrant red */
@@ -67,7 +67,7 @@
     --secondary-foreground: 220 23% 93%;
     --muted: 223 11% 85%;
     --muted-foreground: 217 15% 26%;
-    --accent: 150 70% 45%;
+    --accent: 207 98% 63%; /* true_blue.700 #4ba3fb (was Emerald Green) */
     --accent-foreground: 217 100% 10%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -111,4 +111,3 @@
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-
