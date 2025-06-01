@@ -65,7 +65,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </header>
-      <main className="flex-grow container mx-auto p-4 md:p-8">
+      <main className="flex-grow container mx-auto my-4 bg-card text-card-foreground rounded-lg shadow-xl p-4 md:p-8">
         {children}
       </main>
     </div>
