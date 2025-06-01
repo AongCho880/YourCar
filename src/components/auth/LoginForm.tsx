@@ -1,6 +1,8 @@
+
 "use client";
 
 import { useState } from 'react';
+import Link from 'next/link'; // Added Link import
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -36,7 +38,7 @@ export default function LoginForm() {
     <Card className="w-full max-w-sm mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl font-headline">Admin Login</CardTitle>
-        <CardDescription>Enter your credentials to access the admin dashboard.</CardDescription>
+        <CardDescription>Enter your credentials to access the admin dashboard. <br /> (Username: admin, Password: password)</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -52,7 +54,12 @@ export default function LoginForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <div className="flex justify-between items-center">
+              <Label htmlFor="password">Password</Label>
+              <Link href="#" className="text-xs text-primary hover:underline">
+                Forgot Password?
+              </Link>
+            </div>
             <Input
               id="password"
               type="password"

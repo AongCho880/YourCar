@@ -12,26 +12,28 @@ import { cn } from '@/lib/utils';
 
 // Simple SVG Logo
 const YourCarLogo = () => (
-  <svg 
-    width="32" 
-    height="32" 
-    viewBox="0 0 32 32" 
-    fill="none" 
-    xmlns="http://www.w3.org/2000/svg" 
+  <svg
+    width="32"
+    height="32"
+    viewBox="0 0 32 32"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
     className="h-7 w-7 text-primary group-hover:text-primary/80 transition-colors"
     aria-hidden="true"
   >
-    <rect 
-      x="4" 
-      y="4" 
-      width="24" 
-      height="24" 
-      rx="4" 
-      stroke="currentColor" 
-      strokeWidth="1.5" 
-      fill="none" 
+    <rect
+      x="4"
+      y="4"
+      width="24"
+      height="24"
+      rx="4"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      fill="none"
     />
-    <path d="M8 8L16 16M16 16L24 8M16 16V24" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M16 8L12 14H20L16 8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 20L16 14M16 14L20 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M10 24H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -50,15 +52,15 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: 'Home' },
     isAdmin && { href: '/admin/dashboard', label: 'Dashboard' },
-    !isAdmin && !loading && { href: '/admin', label: 'Admin Login' },
+    // Removed: !isAdmin && !loading && { href: '/admin', label: 'Admin Login' },
   ].filter(Boolean) as { href: string; label: string }[];
 
   const NavLinkItem = ({ href, label }: { href: string; label: string }) => (
     <Button
       variant={pathname === href ? "secondary" : "ghost"}
       className={cn(
-        "text-card-foreground hover:bg-accent/20 hover:text-accent",
-        pathname === href && "bg-primary/10 text-primary hover:bg-primary/20"
+        "text-card-foreground hover:bg-accent hover:text-accent-foreground",
+        pathname === href && "bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
       )}
       asChild
       onClick={() => setIsMobileMenuOpen(false)}
@@ -89,7 +91,7 @@ export default function Navbar() {
         <div className="md:hidden">
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-card-foreground hover:bg-accent/20 hover:text-accent">
+              <Button variant="ghost" size="icon" className="text-card-foreground hover:bg-accent hover:text-accent-foreground">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
