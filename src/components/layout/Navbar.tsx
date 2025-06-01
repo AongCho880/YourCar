@@ -21,8 +21,7 @@ const YourCarLogo = () => (
     className="h-7 w-7 text-primary group-hover:text-primary/80 transition-colors"
     aria-hidden="true"
   >
-    <path d="M8 4L16 16L8 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M16 4L24 16L16 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
+    <path d="M8 8L16 16M16 16L24 8M16 16V24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
 );
 
@@ -59,7 +58,7 @@ export default function Navbar() {
   );
 
   return (
-    <header className="bg-card/80 text-card-foreground shadow-xl backdrop-blur-lg sticky top-0 z-50 border-b border-border/30">
+    <header className="bg-card/70 text-card-foreground shadow-xl backdrop-blur-lg sticky top-0 z-50 border-b border-border/30">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <Link href="/" className="group flex items-center gap-2 text-xl font-bold text-primary hover:text-primary/80 transition-colors">
           <YourCarLogo />
