@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,12 +17,15 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { generateAdCopy } from "@/ai/flows/generate-ad-copy";
 import type { GenerateAdCopyInput } from "@/ai/flows/generate-ad-copy";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusCircle, Trash2, Sparkles, Loader2, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
+const ADD_NEW_MAKE_VALUE = "__ADD_NEW_MAKE__";
+
 const carFormSchema = z.object({
-  make: z.string().min(1, "Make is required"),
+  make: z.string().min(1, "Make selection is required"),
+  customMakeName: z.string().optional(),
   model: z.string().min(1, "Model is required"),
   year: z.coerce.number().min(1900, "Invalid year").max(new Date().getFullYear() + 1, "Invalid year"),
   price: z.coerce.number().min(0, "Price must be positive"),
@@ -30,6 +34,16 @@ const carFormSchema = z.object({
   features: z.array(z.object({ value: z.string().min(1, "Feature cannot be empty") })).optional(),
   images: z.array(z.object({ url: z.string().url("Must be a valid URL") })).min(1, "At least one image is required").max(MAX_IMAGE_UPLOADS, `Maximum ${MAX_IMAGE_UPLOADS} images`),
   description: z.string().min(10, "Description must be at least 10 characters").max(2000, "Description too long"),
+}).superRefine((data, ctx) => {
+  if (data.make === ADD_NEW_MAKE_VALUE) {
+    if (!data.customMakeName || data.customMakeName.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "New brand name is required when 'Add New Brand' is selected.",
+        path: ["customMakeName"],
+      });
+    }
+  }
 });
 
 type CarFormValues = z.infer<typeof carFormSchema>;
@@ -51,11 +65,14 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
     defaultValues: initialData
       ? {
           ...initialData,
+          make: CAR_MAKES.includes(initialData.make) ? initialData.make : ADD_NEW_MAKE_VALUE,
+          customMakeName: CAR_MAKES.includes(initialData.make) ? "" : initialData.make,
           features: initialData.features?.map(f => ({ value: f })) || [{ value: "" }],
           images: initialData.images?.map(img => ({ url: img })) || [{ url: "" }],
         }
       : {
           make: "",
+          customMakeName: "",
           model: "",
           year: new Date().getFullYear(),
           price: 0,
@@ -77,14 +94,28 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
     name: "images",
   });
 
+  const watchedMake = form.watch("make");
+
+  useEffect(() => {
+    if (watchedMake !== ADD_NEW_MAKE_VALUE && form.getValues("customMakeName")) {
+      form.setValue("customMakeName", "", { shouldValidate: true });
+    }
+  }, [watchedMake, form]);
+
   const onSubmit = async (data: CarFormValues) => {
     setIsSubmitting(true);
     try {
+      const actualMake = data.make === ADD_NEW_MAKE_VALUE ? data.customMakeName! : data.make;
+      
       const carDataToSave = {
         ...data,
+        make: actualMake,
         features: data.features?.map(f => f.value).filter(Boolean) || [],
         images: data.images.map(img => img.url),
       };
+      // @ts-expect-error customMakeName is not part of CarType
+      delete carDataToSave.customMakeName;
+
 
       if (isEditMode && initialData) {
         updateCar({ ...initialData, ...carDataToSave });
@@ -94,7 +125,7 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
         toast({ title: "Success", description: "Car listing added successfully." });
       }
       router.push("/admin/dashboard");
-      router.refresh(); // to reflect changes in dashboard
+      router.refresh();
     } catch (error) {
       console.error("Failed to save car:", error);
       toast({ variant: "destructive", title: "Error", description: "Failed to save car listing." });
@@ -105,20 +136,22 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
 
   const handleGenerateAdCopy = async () => {
     const values = form.getValues();
-    if (!values.make || !values.model || !values.year || !values.price || !values.condition) {
-      toast({ variant: "destructive", title: "Missing Information", description: "Please fill in Make, Model, Year, Price, and Condition before generating ad copy." });
+    const makeToUse = values.make === ADD_NEW_MAKE_VALUE ? values.customMakeName : values.make;
+
+    if (!makeToUse || !values.model || !values.year || !values.price || !values.condition) {
+      toast({ variant: "destructive", title: "Missing Information", description: "Please fill in Make/New Brand, Model, Year, Price, and Condition before generating ad copy." });
       return;
     }
     setIsGeneratingCopy(true);
     try {
       const input: GenerateAdCopyInput = {
-        make: values.make,
+        make: makeToUse,
         model: values.model,
-        year: Number(values.year), // Ensure year is a number
-        mileage: Number(values.mileage), // Ensure mileage is a number
+        year: Number(values.year),
+        mileage: Number(values.mileage),
         condition: values.condition,
         features: values.features?.map(f => f.value).filter(Boolean).join(', ') || "Standard",
-        price: Number(values.price), // Ensure price is a number
+        price: Number(values.price),
       };
       const result = await generateAdCopy(input);
       form.setValue("description", result.adCopy);
@@ -140,16 +173,49 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid md:grid-cols-2 gap-6">
-              <FormField control={form.control} name="make" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Make</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Select make" /></SelectTrigger></FormControl>
-                    <SelectContent>{CAR_MAKES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <FormField 
+                control={form.control} 
+                name="make" 
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Make</FormLabel>
+                    <Select 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        // if (value !== ADD_NEW_MAKE_VALUE) { // This logic is now in useEffect
+                        //   form.setValue("customMakeName", "", { shouldValidate: true });
+                        // }
+                      }} 
+                      value={field.value} // Control the component
+                    >
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select make" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {CAR_MAKES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                        <SelectItem value={ADD_NEW_MAKE_VALUE}>+ Add New Brand</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                     {/* Conditional Custom Make Input */}
+                    {watchedMake === ADD_NEW_MAKE_VALUE && (
+                      <div className="mt-4">
+                        <FormField
+                          control={form.control}
+                          name="customMakeName"
+                          render={({ field: customMakeField }) => (
+                            <FormItem>
+                              <FormLabel>New Brand Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Type the new brand name" {...customMakeField} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                  </FormItem>
+                )} 
+              />
               <FormField control={form.control} name="model" render={({ field }) => (
                 <FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., Camry, F-150" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
@@ -165,7 +231,7 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
               <FormField control={form.control} name="condition" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Condition</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select condition" /></SelectTrigger></FormControl>
                     <SelectContent>{CAR_CONDITIONS.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
                   </Select>
@@ -227,3 +293,6 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
     </Card>
   );
 }
+
+
+    
