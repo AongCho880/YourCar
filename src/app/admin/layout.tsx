@@ -16,21 +16,20 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading && !isAdmin) {
-      router.replace('/admin'); // Redirect to login if not admin and not loading
+    if (!loading && !isAdmin && pathname !== '/admin') { // Only redirect if not on the login page itself
+      router.replace('/admin'); 
     }
-  }, [isAdmin, loading, router]);
+  }, [isAdmin, loading, router, pathname]);
 
   if (loading || !isAdmin) {
-    // Show a loader or minimal content while checking auth or if not admin
-    // The header here is for the non-authenticated or loading state.
-    // We'll keep its original styling for now, as the request is for the authenticated panel.
+    // This is the header for the non-authenticated or loading state.
     return (
       <div className="flex flex-col min-h-screen">
-        <header className="bg-primary text-primary-foreground p-4 shadow-md">
+        <header className="bg-card text-card-foreground p-4 shadow-xl">
           <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-xl font-bold font-headline">Admin Panel</h1>
-            <Skeleton className="h-8 w-24" />
+            <h1 className="text-xl font-bold font-headline text-primary">Admin Panel</h1>
+            {/* Placeholder for potential actions if needed, or remove if no action */}
+            <Skeleton className="h-8 w-24" /> 
           </div>
         </header>
         <main className="flex-grow container mx-auto p-4 md:p-8 flex items-center justify-center">
@@ -74,3 +73,4 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
