@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -38,8 +39,8 @@ export default {
           foreground: 'hsl(var(--muted-foreground))',
         },
         accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
+          DEFAULT: 'hsl(var(--primary))', // Changed to primary
+          foreground: 'hsl(var(--primary-foreground))', // Changed to primary-foreground
         },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
@@ -60,8 +61,8 @@ export default {
           foreground: 'hsl(var(--sidebar-foreground))',
           primary: 'hsl(var(--sidebar-primary))',
           'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-          accent: 'hsl(var(--sidebar-accent))',
-          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+          accent: 'hsl(var(--sidebar-primary))', // Changed to sidebar-primary
+          'accent-foreground': 'hsl(var(--sidebar-primary-foreground))', // Changed to sidebar-primary-foreground
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },

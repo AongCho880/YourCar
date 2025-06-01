@@ -24,8 +24,8 @@
     --muted: 223 11% 85%; /* cool_gray.800 #d5d7dd */
     --muted-foreground: 217 15% 26%; /* payne's_gray.300 #383f4c */
     
-    --accent: 207 98% 63%; /* true_blue.700 #4ba3fb (was Emerald Green) */
-    --accent-foreground: 217 100% 10%; /* oxford_blue.DEFAULT (#001233 family) #001233 */
+    --accent: hsl(var(--primary)); /* Changed to primary */
+    --accent-foreground: hsl(var(--primary-foreground)); /* Changed to primary-foreground */
     
     --destructive: 0 84% 60%; /* Standard vibrant red */
     --destructive-foreground: 0 0% 100%;
@@ -47,8 +47,8 @@
     --sidebar-foreground: 214 100% 4%; /* oxford_blue.200 */
     --sidebar-primary: hsl(var(--primary)); /* Sidebar primary based on main primary */
     --sidebar-primary-foreground: hsl(var(--primary-foreground)); /* Sidebar primary foreground based on main */
-    --sidebar-accent: 216 16% 42%; /* payne's_gray.500 #5c677d */
-    --sidebar-accent-foreground: 220 23% 93%; /* cool_gray.900 #eaebee */
+    --sidebar-accent: hsl(var(--sidebar-primary)); /* Changed to sidebar-primary */
+    --sidebar-accent-foreground: hsl(var(--sidebar-primary-foreground)); /* Changed to sidebar-primary-foreground */
     --sidebar-border: 222 11% 82%; /* slate_gray.800 #cbced5 */
     --sidebar-ring: hsl(var(--ring)); /* Sidebar ring based on main ring */
   }
@@ -67,8 +67,8 @@
     --secondary-foreground: 220 23% 93%;
     --muted: 223 11% 85%;
     --muted-foreground: 217 15% 26%;
-    --accent: 207 98% 63%; /* true_blue.700 #4ba3fb (was Emerald Green) */
-    --accent-foreground: 217 100% 10%;
+    --accent: hsl(var(--primary)); /* Changed to primary */
+    --accent-foreground: hsl(var(--primary-foreground)); /* Changed to primary-foreground */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 222 11% 82%;
@@ -85,8 +85,8 @@
     --sidebar-foreground: 214 100% 4%;
     --sidebar-primary: hsl(var(--primary));
     --sidebar-primary-foreground: hsl(var(--primary-foreground));
-    --sidebar-accent: 216 16% 42%;
-    --sidebar-accent-foreground: 220 23% 93%;
+    --sidebar-accent: hsl(var(--sidebar-primary)); /* Changed to sidebar-primary */
+    --sidebar-accent-foreground: hsl(var(--sidebar-primary-foreground)); /* Changed to sidebar-primary-foreground */
     --sidebar-border: 222 11% 82%;
     --sidebar-ring: hsl(var(--ring));
   }
