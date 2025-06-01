@@ -86,7 +86,7 @@ Open a terminal and run:
 npm run dev
 ```
 
-This will start the Next.js application, typically available at `http://localhost:9002`.
+This will start the Next.js application, typically available at `http://localhost:9003`. (Note: Port changed from 9002)
 
 **B. Start the Genkit Development Server:**
 
@@ -104,7 +104,7 @@ npm run genkit:watch
 
 This starts the Genkit development server, which makes the AI flows available to your Next.js application. It usually runs a UI on port 4000 for inspecting flows.
 
-Once both servers are running, you can access the application in your browser at `http://localhost:9002`.
+Once both servers are running, you can access the application in your browser at `http://localhost:9003`.
 
 ## Available Scripts
 
