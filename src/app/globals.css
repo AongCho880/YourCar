@@ -5,77 +5,95 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%; /* Near white, clean */
-    --foreground: 210 30% 15%; /* Dark, slightly cool blue/grey for text */
-    --card: 0 0% 100%; /* Pure white for cards */
-    --card-foreground: 210 30% 15%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 30% 15%;
-    --primary: 205 90% 50%; /* Vibrant, electric blue */
+    /* Neo-Tech Light Theme */
+    --background: 220 60% 97%; /* Very light, slightly cool gray */
+    --foreground: 220 25% 25%; /* Dark, cool-toned gray for text */
+    
+    --card: 0 0% 100%; /* Solid white for cards, opacity applied via utility */
+    --card-foreground: 220 25% 20%; /* Darker text for cards */
+    
+    --popover: 0 0% 100%; /* Solid white for popovers, opacity applied via utility */
+    --popover-foreground: 220 25% 20%;
+    
+    --primary: 200 90% 55%; /* Electric Blue */
     --primary-foreground: 0 0% 100%; /* White text on primary */
-    --secondary: 210 20% 90%; /* Light grey for secondary elements */
-    --secondary-foreground: 210 30% 25%; /* Darker grey text on secondary */
-    --muted: 210 20% 94%; /* Very light grey for muted backgrounds */
-    --muted-foreground: 210 20% 45%; /* Medium grey for muted text */
-    --accent: 260 90% 65%; /* Bright futuristic purple */
+    
+    --secondary: 220 30% 90%; /* Light cool gray */
+    --secondary-foreground: 220 25% 30%; /* Darker gray text on secondary */
+    
+    --muted: 220 40% 94%; /* Subtle background variation */
+    --muted-foreground: 220 20% 50%; /* Muted text color */
+    
+    --accent: 150 70% 50%; /* Emerald Green */
     --accent-foreground: 0 0% 100%; /* White text on accent */
+
+    --accent-2: 30 100% 55%; /* Neon Orange (available for use) */
+    --accent-2-foreground: 220 25% 15%; /* Dark text for neon orange */
+    
     --destructive: 0 84% 60%; /* Standard vibrant red */
     --destructive-foreground: 0 0% 100%;
-    --border: 210 20% 88%; /* Light grey border */
-    --input: 210 20% 92%; /* Slightly off-white input background */
-    --ring: 205 90% 55%; /* Slightly brighter blue for focus rings */
-    --chart-1: 205 90% 60%;
-    --chart-2: 260 80% 70%;
-    --chart-3: 150 80% 50%;
-    --chart-4: 30 100% 60%;
-    --chart-5: 330 90% 60%;
-    --radius: 0.25rem; /* Sharper corners for futuristic look */
+    
+    --border: 220 30% 80%; /* Light, cool border */
+    --input: 220 50% 95%; /* Very light input background */
+    --ring: 200 90% 60%; /* Brighter blue for focus rings */
+    
+    --chart-1: 200 90% 60%; /* Electric Blue variant */
+    --chart-2: 150 70% 55%; /* Emerald Green variant */
+    --chart-3: 270 80% 65%; /* Electric Purple variant */
+    --chart-4: 30 100% 60%; /* Neon Orange variant */
+    --chart-5: 90 80% 55%; /* Lime Green variant */
+    
+    --radius: 0.5rem; /* Modern, slightly rounded */
 
-    --sidebar-background: 0 0% 96%; /* Slightly off-white for sidebar */
-    --sidebar-foreground: 210 30% 20%;
-    --sidebar-primary: 205 90% 50%;
+    /* Sidebar variables (kept for consistency if sidebar is used, follows main theme) */
+    --sidebar-background: 220 50% 96%; 
+    --sidebar-foreground: 220 25% 22%;
+    --sidebar-primary: 200 90% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 88%; /* Light grey for sidebar accent bg */
-    --sidebar-accent-foreground: 210 30% 15%; /* Dark text on sidebar accent */
-    --sidebar-border: 210 15% 85%;
-    --sidebar-ring: 205 90% 55%;
+    --sidebar-accent: 220 30% 88%; 
+    --sidebar-accent-foreground: 220 25% 20%;
+    --sidebar-border: 220 30% 85%;
+    --sidebar-ring: 200 90% 60%;
   }
 
+  /* Enforce light mode by overriding .dark variables to be the same as :root */
   .dark {
-    --background: 0 0% 98%; /* Enforce light mode: Near white, clean */
-    --foreground: 210 30% 15%; /* Enforce light mode: Dark, slightly cool blue/grey for text */
-    --card: 0 0% 100%; /* Enforce light mode: Pure white for cards */
-    --card-foreground: 210 30% 15%;
+    --background: 220 60% 97%;
+    --foreground: 220 25% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 20%;
     --popover: 0 0% 100%;
-    --popover-foreground: 210 30% 15%;
-    --primary: 205 90% 50%; /* Enforce light mode: Vibrant, electric blue */
-    --primary-foreground: 0 0% 100%; /* Enforce light mode: White text on primary */
-    --secondary: 210 20% 90%; /* Enforce light mode: Light grey for secondary elements */
-    --secondary-foreground: 210 30% 25%; /* Enforce light mode: Darker grey text on secondary */
-    --muted: 210 20% 94%; /* Enforce light mode: Very light grey for muted backgrounds */
-    --muted-foreground: 210 20% 45%; /* Enforce light mode: Medium grey for muted text */
-    --accent: 260 90% 65%; /* Enforce light mode: Bright futuristic purple */
-    --accent-foreground: 0 0% 100%; /* Enforce light mode: White text on accent */
-    --destructive: 0 84% 60%; /* Enforce light mode: Standard vibrant red */
+    --popover-foreground: 220 25% 20%;
+    --primary: 200 90% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 30% 90%;
+    --secondary-foreground: 220 25% 30%;
+    --muted: 220 40% 94%;
+    --muted-foreground: 220 20% 50%;
+    --accent: 150 70% 50%;
+    --accent-foreground: 0 0% 100%;
+    --accent-2: 30 100% 55%;
+    --accent-2-foreground: 220 25% 15%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 210 20% 88%; /* Enforce light mode: Light grey border */
-    --input: 210 20% 92%; /* Enforce light mode: Slightly off-white input background */
-    --ring: 205 90% 55%; /* Enforce light mode: Slightly brighter blue for focus rings */
-    --chart-1: 205 90% 60%;
-    --chart-2: 260 80% 70%;
-    --chart-3: 150 80% 50%;
+    --border: 220 30% 80%;
+    --input: 220 50% 95%;
+    --ring: 200 90% 60%;
+    --chart-1: 200 90% 60%;
+    --chart-2: 150 70% 55%;
+    --chart-3: 270 80% 65%;
     --chart-4: 30 100% 60%;
-    --chart-5: 330 90% 60%;
-    --radius: 0.25rem; /* Enforce light mode: Sharper corners */
+    --chart-5: 90 80% 55%;
+    --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 96%; /* Enforce light mode: Slightly off-white for sidebar */
-    --sidebar-foreground: 210 30% 20%;
-    --sidebar-primary: 205 90% 50%;
+    --sidebar-background: 220 50% 96%;
+    --sidebar-foreground: 220 25% 22%;
+    --sidebar-primary: 200 90% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 88%;
-    --sidebar-accent-foreground: 210 30% 15%;
-    --sidebar-border: 210 15% 85%;
-    --sidebar-ring: 205 90% 55%;
+    --sidebar-accent: 220 30% 88%;
+    --sidebar-accent-foreground: 220 25% 20%;
+    --sidebar-border: 220 30% 85%;
+    --sidebar-ring: 200 90% 60%;
   }
 }
 
@@ -84,6 +102,16 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background: linear-gradient(-45deg, hsl(var(--background)) 0%, hsl(var(--primary) / 0.05) 35%, hsl(var(--accent) / 0.05) 70%, hsl(var(--background)) 100%);
+    background-size: 200% 200%;
+    animation: gradientBG 20s ease infinite;
+    min-height: 100vh;
   }
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
