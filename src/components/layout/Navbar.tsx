@@ -8,7 +8,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useState, useEffect, useMemo } from 'react';
-// import { cn } from '@/lib/utils'; // cn might not be needed if complex className is removed
 
 // Simple SVG Logo
 const YourCarLogo = () => (
@@ -34,7 +33,7 @@ const YourCarLogo = () => (
     <path
       d="M8 8L16 16M16 16L24 8M16 16V24"
       stroke="currentColor"
-      strokeWidth="3"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -63,17 +62,13 @@ export default function Navbar() {
     if (clientLoaded && isAdmin && !loading) {
       links.push({ href: '/admin/dashboard', label: 'Dashboard' });
     }
+    // Removed direct admin login link for non-admins
     return links;
   }, [clientLoaded, isAdmin, loading]);
 
   const NavLinkItem = ({ href, label }: { href: string; label: string }) => (
     <Button
       variant={pathname === href ? "secondary" : "ghost"}
-      // Removed custom className to rely on variants. Original:
-      // className={cn(
-      //   "text-card-foreground hover:bg-primary hover:text-white",
-      //   pathname === href && "bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
-      // )}
       asChild
       onClick={() => setIsMobileMenuOpen(false)}
     >
