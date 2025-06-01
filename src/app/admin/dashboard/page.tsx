@@ -66,10 +66,10 @@ export default function AdminDashboardPage() {
           </Button>
         </div>
       ) : (
-        <div className="border rounded-lg shadow-sm max-h-[65vh]">
+        <div className="border rounded-lg shadow-sm max-h-[65vh] overflow-hidden">
         <Table>
-          <TableHeader>
-            <TableRow className="sticky top-0 z-10 bg-card shadow-sm">
+          <TableHeader className="sticky top-0 z-10 bg-card shadow-sm">
+            <TableRow>
               <TableHead className="w-[80px]">Image</TableHead>
               <TableHead>Make & Model</TableHead>
               <TableHead className="hidden md:table-cell">Year</TableHead>
