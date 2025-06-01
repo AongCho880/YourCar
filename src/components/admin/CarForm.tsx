@@ -114,11 +114,11 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
       const input: GenerateAdCopyInput = {
         make: values.make,
         model: values.model,
-        year: values.year,
-        mileage: values.mileage,
+        year: Number(values.year), // Ensure year is a number
+        mileage: Number(values.mileage), // Ensure mileage is a number
         condition: values.condition,
         features: values.features?.map(f => f.value).filter(Boolean).join(', ') || "Standard",
-        price: values.price,
+        price: Number(values.price), // Ensure price is a number
       };
       const result = await generateAdCopy(input);
       form.setValue("description", result.adCopy);
