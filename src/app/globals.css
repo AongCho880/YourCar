@@ -15,8 +15,8 @@
     --popover: 0 0% 100%; /* Solid white for popovers */
     --popover-foreground: 214 100% 4%;
     
-    --primary: 207 97% 40%; /* true_blue.DEFAULT #0466c8 */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary: 230 87% 60%; /* New Primary #405ef2 */
+    --primary-foreground: 214 100% 4%; /* Match main foreground for contrast */
     
     --secondary: 216 16% 42%; /* payne's_gray.DEFAULT #5c677d */
     --secondary-foreground: 220 23% 93%; /* cool_gray.900 #eaebee */
@@ -24,7 +24,7 @@
     --muted: 223 11% 85%; /* cool_gray.800 #d5d7dd */
     --muted-foreground: 217 15% 26%; /* payne's_gray.300 #383f4c */
     
-    --accent: 207 98% 63%; /* true_blue.700 #4ba3fb */
+    --accent: 150 70% 45%; /* Emerald Green for Neo-Tech */
     --accent-foreground: 217 100% 10%; /* oxford_blue.DEFAULT (#001233 family) #001233 */
     
     --destructive: 0 84% 60%; /* Standard vibrant red */
@@ -32,9 +32,9 @@
     
     --border: 222 11% 82%; /* slate_gray.800 #cbced5 */
     --input: 0 0% 100%; /* White for input background */
-    --ring: 207 97% 40%; /* true_blue.DEFAULT #0466c8 for focus rings */
+    --ring: hsl(var(--primary)); /* Ring color based on primary */
     
-    --chart-1: 207 97% 40%; /* true_blue.DEFAULT */
+    --chart-1: hsl(var(--primary)); /* Chart color 1 based on primary */
     --chart-2: 208 97% 33%; /* sapphire.DEFAULT */
     --chart-3: 210 97% 25%; /* yale_blue.DEFAULT */
     --chart-4: 217 29% 28%; /* delft_blue.DEFAULT */
@@ -45,12 +45,12 @@
     /* Sidebar variables */
     --sidebar-background: 223 11% 85%;  /* cool_gray.800 #d5d7dd */
     --sidebar-foreground: 214 100% 4%; /* oxford_blue.200 */
-    --sidebar-primary: 207 97% 40%; /* true_blue.DEFAULT */
-    --sidebar-primary-foreground: 0 0% 100%; /* White */
+    --sidebar-primary: hsl(var(--primary)); /* Sidebar primary based on main primary */
+    --sidebar-primary-foreground: hsl(var(--primary-foreground)); /* Sidebar primary foreground based on main */
     --sidebar-accent: 216 16% 42%; /* payne's_gray.500 #5c677d */
     --sidebar-accent-foreground: 220 23% 93%; /* cool_gray.900 #eaebee */
     --sidebar-border: 222 11% 82%; /* slate_gray.800 #cbced5 */
-    --sidebar-ring: 207 97% 40%; /* true_blue.DEFAULT */
+    --sidebar-ring: hsl(var(--ring)); /* Sidebar ring based on main ring */
   }
 
   /* Enforce light mode by overriding .dark variables to be the same as :root */
@@ -61,20 +61,20 @@
     --card-foreground: 214 100% 4%;
     --popover: 0 0% 100%;
     --popover-foreground: 214 100% 4%;
-    --primary: 207 97% 40%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 230 87% 60%;
+    --primary-foreground: 214 100% 4%;
     --secondary: 216 16% 42%;
     --secondary-foreground: 220 23% 93%;
     --muted: 223 11% 85%;
     --muted-foreground: 217 15% 26%;
-    --accent: 207 98% 63%;
+    --accent: 150 70% 45%;
     --accent-foreground: 217 100% 10%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 222 11% 82%;
     --input: 0 0% 100%;
-    --ring: 207 97% 40%;
-    --chart-1: 207 97% 40%;
+    --ring: hsl(var(--primary));
+    --chart-1: hsl(var(--primary));
     --chart-2: 208 97% 33%;
     --chart-3: 210 97% 25%;
     --chart-4: 217 29% 28%;
@@ -83,12 +83,12 @@
 
     --sidebar-background: 223 11% 85%;
     --sidebar-foreground: 214 100% 4%;
-    --sidebar-primary: 207 97% 40%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: hsl(var(--primary));
+    --sidebar-primary-foreground: hsl(var(--primary-foreground));
     --sidebar-accent: 216 16% 42%;
     --sidebar-accent-foreground: 220 23% 93%;
     --sidebar-border: 222 11% 82%;
-    --sidebar-ring: 207 97% 40%;
+    --sidebar-ring: hsl(var(--ring));
   }
 }
 
@@ -99,7 +99,7 @@
   body {
     @apply text-foreground;
     /* Adjusted gradient to use new primary and secondary, with slightly higher opacity for visibility in light mode */
-    background: linear-gradient(-45deg, hsl(var(--background)) 0%, hsl(var(--primary) / 0.1) 35%, hsl(var(--secondary) / 0.08) 70%, hsl(var(--background)) 100%);
+    background: linear-gradient(-45deg, hsl(var(--background)) 0%, hsl(var(--primary) / 0.08) 35%, hsl(var(--secondary) / 0.05) 70%, hsl(var(--background)) 100%);
     background-size: 200% 200%;
     animation: gradientBG 20s ease infinite;
     min-height: 100vh;
@@ -111,3 +111,4 @@
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
+
