@@ -43,7 +43,7 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isAdmin, logout } = useAuth(); // Get isAdmin and logout state
 
-  const navLinks = [{ href: '/', label: 'View Site' }]; // Changed 'Home' to 'View Site'
+  const navLinks = [{ href: '/', label: 'Home' }]; // Changed 'View Site' to 'Home'
 
   const adminNavLinks = [
     { href: '/admin/dashboard', label: 'Dashboard' },
