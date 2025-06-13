@@ -45,6 +45,12 @@ export default function Navbar() {
 
   const navLinks = [{ href: '/', label: 'Home' }];
 
+  const adminNavLinks = [
+    { href: '/admin/dashboard', label: 'Dashboard' },
+    { href: '/admin/cars/new', label: 'Add Car' },
+    { href: '/admin/settings', label: 'Settings' },
+  ];
+
   const NavLinkItem = ({ href, label }: { href: string; label: string }) => (
     <SheetClose asChild>
       <Button
@@ -73,11 +79,11 @@ export default function Navbar() {
               <Link href={link.href}>{link.label}</Link>
             </Button>
           ))}
-          {isAdmin && (
-            <Button variant="ghost" asChild>
-              <Link href="/admin/dashboard">Dashboard</Link>
+          {isAdmin && adminNavLinks.map(link => (
+            <Button variant="ghost" asChild key={link.href}>
+              <Link href={link.href}>{link.label}</Link>
             </Button>
-          )}
+          ))}
         </nav>
 
         {/* Mobile Navigation */}
@@ -94,7 +100,7 @@ export default function Navbar() {
               </SheetHeader>
               <div className="flex flex-col gap-2">
                 {navLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
-                {isAdmin && <NavLinkItem href="/admin/dashboard" label="Dashboard" />}
+                {isAdmin && adminNavLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
               </div>
             </SheetContent>
           </Sheet>
