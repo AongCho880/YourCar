@@ -69,6 +69,7 @@ You'll need to configure API keys for Clerk (authentication) and Google AI (for 
     *   Go to [Clerk](https://clerk.com/) and sign up for a free account.
     *   Create a new application in your Clerk dashboard.
     *   Navigate to your application's "API Keys" section.
+    *   Under "Paths" in your Clerk dashboard settings, ensure your "Sign in URL" and "Sign up URL" are set to `/admin` and `/admin/sign-up` respectively, and the "After sign in URL" and "After sign up URL" are set to `/admin/dashboard`.
 
 2.  **Create `.env.local` file:**
     Copy the existing `.env` file to `.env.local`:
@@ -78,16 +79,16 @@ You'll need to configure API keys for Clerk (authentication) and Google AI (for 
     *Note: `.env.local` is gitignored by default and should not be committed to version control.*
 
 3.  **Add Clerk API Keys to `.env.local`:**
-    Open `.env.local` and add your Clerk Publishable Key and Secret Key:
+    Open `.env.local` and add your Clerk Publishable Key and Secret Key. **Crucially, the publishable key must be prefixed with `NEXT_PUBLIC_`**.
     ```
-    CLERK_PUBLISHABLE_KEY=pk_YOUR_CLERK_PUBLISHABLE_KEY
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_YOUR_CLERK_PUBLISHABLE_KEY
     CLERK_SECRET_KEY=sk_YOUR_CLERK_SECRET_KEY
     ```
 
 4.  **Add Google AI API Key to `.env.local`:**
     If you plan to use the AI features (like ad copy generation):
     ```
-    GOOGLE_API_KEY=YOUR_GOOGLE_AI_API_KEY
+    GOOGLE_AI_KEY=YOUR_GOOGLE_AI_API_KEY
     ```
     You can obtain a Google AI API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
 
@@ -128,7 +129,7 @@ Once both servers are running, you can access the application in your browser at
 *   Navigate to `http://localhost:9003/admin`.
 *   You will be prompted to sign up or sign in using Clerk.
 *   After successful authentication, you will be redirected to the admin dashboard (`/admin/dashboard`).
-*   You can manage your admin account (email, password, 2FA) via the "Account" link in the admin panel, which uses Clerk's User Profile component.
+*   You can manage your admin account (email, password, 2FA) via the "Account" link in the admin panel, which uses Clerk's User Profile component. This is accessible from the admin layout.
 
 ## Available Scripts
 
