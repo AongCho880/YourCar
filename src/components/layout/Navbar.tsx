@@ -56,7 +56,7 @@ export default function Navbar() {
       <Button
         variant="ghost"
         asChild={!onClick}
-        className="w-full justify-start relative group text-left hover:bg-transparent"
+        className="w-full justify-start relative group text-left hover:bg-transparent hover:text-foreground"
         onClick={() => {
           if (onClick) onClick();
           setIsMobileMenuOpen(false);
@@ -88,7 +88,7 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map(link => (
-            <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent">
+            <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent hover:text-foreground">
               <Link href={link.href} className="relative group">
                 {link.label}
                 <span className="absolute bottom-2 left-0 block h-[2px] w-full origin-left scale-x-0 transform bg-primary transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
@@ -96,7 +96,7 @@ export default function Navbar() {
             </Button>
           ))}
           {isAdmin && adminNavLinks.map(link => (
-            <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent">
+            <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent hover:text-foreground">
               <Link href={link.href} className="relative group">
                 {link.label}
                 <span className="absolute bottom-2 left-0 block h-[2px] w-full origin-left scale-x-0 transform bg-primary transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
