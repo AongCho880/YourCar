@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePathname } from 'next/navigation'; // Import usePathname
+import { cn } from '@/lib/utils'; // Ensure cn is imported
 
 // Simple SVG Logo - Grayscale
 const YourCarLogo = () => (
@@ -42,6 +44,7 @@ const YourCarLogo = () => (
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isAdmin, logout } = useAuth();
+  const pathname = usePathname(); // Get current pathname
 
   const navLinks = [{ href: '/', label: 'Home' }];
 
@@ -51,31 +54,40 @@ export default function Navbar() {
     { href: '/admin/settings', label: 'Settings' },
   ];
 
-  const NavLinkItem = ({ href, label, onClick }: { href: string; label: string, onClick?: () => void }) => (
-    <SheetClose asChild>
-      <Button
-        variant="ghost"
-        asChild={!onClick}
-        className="w-full justify-start relative group text-left hover:bg-transparent hover:text-foreground"
-        onClick={() => {
-          if (onClick) onClick();
-          setIsMobileMenuOpen(false);
-        }}
-      >
-        {onClick ? (
-          <>
-            {label}
-            <span className="absolute bottom-1.5 left-4 right-4 block h-[1px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
-          </>
-        ) : (
-          <Link href={href} className="block w-full"> {/* Button's "relative group" is passed to Link */}
-            {label}
-            <span className="absolute bottom-1.5 left-4 right-4 block h-[1px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
-          </Link>
-        )}
-      </Button>
-    </SheetClose>
-  );
+  const NavLinkItem = ({ href, label, onClick }: { href: string; label: string, onClick?: () => void }) => {
+    const isActive = pathname === href;
+    return (
+      <SheetClose asChild>
+        <Button
+          variant="ghost"
+          asChild={!onClick}
+          className="w-full justify-start relative group text-left hover:bg-transparent hover:text-foreground"
+          onClick={() => {
+            if (onClick) onClick();
+            setIsMobileMenuOpen(false);
+          }}
+        >
+          {onClick ? (
+            <>
+              {label}
+              <span className={cn(
+                "absolute bottom-1.5 left-4 right-4 block h-[1px] bg-primary transform transition-transform duration-300 ease-out origin-left",
+                isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+              )}></span>
+            </>
+          ) : (
+            <Link href={href} className="block w-full">
+              {label}
+              <span className={cn(
+                "absolute bottom-1.5 left-4 right-4 block h-[1px] bg-primary transform transition-transform duration-300 ease-out origin-left",
+                isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+              )}></span>
+            </Link>
+          )}
+        </Button>
+      </SheetClose>
+    );
+  };
 
   return (
     <header className="bg-card/70 text-card-foreground shadow-xl backdrop-blur-lg sticky top-0 z-50 border-b border-border/30">
@@ -87,24 +99,36 @@ export default function Navbar() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map(link => (
-            <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent hover:text-foreground">
-              <Link href={link.href} className="relative group">
-                {link.label}
-                <span className="absolute bottom-2 left-0 block h-[2px] w-full origin-left scale-x-0 transform bg-primary transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
-              </Link>
-            </Button>
-          ))}
-          {isAdmin && adminNavLinks.map(link => (
-            <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent hover:text-foreground">
-              <Link href={link.href} className="relative group">
-                {link.label}
-                <span className="absolute bottom-2 left-0 block h-[2px] w-full origin-left scale-x-0 transform bg-primary transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
-              </Link>
-            </Button>
-          ))}
+          {navLinks.map(link => {
+            const isActive = pathname === link.href;
+            return (
+              <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent hover:text-foreground">
+                <Link href={link.href} className="relative group">
+                  {link.label}
+                  <span className={cn(
+                    "absolute bottom-2 left-0 block h-[2px] w-full origin-left transform bg-primary transition-transform duration-300 ease-out",
+                    isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                  )}></span>
+                </Link>
+              </Button>
+            );
+          })}
+          {isAdmin && adminNavLinks.map(link => {
+             const isActive = pathname === link.href;
+            return (
+              <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent hover:text-foreground">
+                <Link href={link.href} className="relative group">
+                  {link.label}
+                  <span className={cn(
+                    "absolute bottom-2 left-0 block h-[2px] w-full origin-left transform bg-primary transition-transform duration-300 ease-out",
+                    isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                  )}></span>
+                </Link>
+              </Button>
+            );
+          })}
           {isAdmin && (
-            <Button variant="outline" size="sm" onClick={logout}>
+            <Button variant="outline" size="sm" onClick={logout} className="ml-2">
               <LogOut className="mr-2 h-4 w-4" />Logout
             </Button>
           )}
