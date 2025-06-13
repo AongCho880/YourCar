@@ -69,7 +69,12 @@ You'll need to configure API keys for Clerk (authentication) and Google AI (for 
     *   Go to [Clerk](https://clerk.com/) and sign up for a free account.
     *   Create a new application in your Clerk dashboard.
     *   Navigate to your application's "API Keys" section.
-    *   Under "Paths" in your Clerk dashboard settings, ensure your "Sign in URL" and "Sign up URL" are set to `/admin` and `/admin/sign-up` respectively, and the "After sign in URL" and "After sign up URL" are set to `/admin/dashboard`.
+    *   **Configure Paths in Clerk Dashboard:** In your Clerk application dashboard, go to "Paths".
+        *   Set "Sign in URL" to `/admin`.
+        *   Set "Sign up URL" to `/admin/sign-up`.
+        *   Set "After sign in URL" to `/admin/dashboard`.
+        *   Set "After sign up URL" to `/admin/dashboard`.
+        *   If prompted for a "Home URL" or similar, you can set it to `/`.
 
 2.  **Create `.env.local` file:**
     Copy the existing `.env` file to `.env.local` (this file should be in the root of your project):
@@ -81,7 +86,7 @@ You'll need to configure API keys for Clerk (authentication) and Google AI (for 
 3.  **Add Clerk API Keys to `.env.local`:**
     Open `.env.local` and add your Clerk Publishable Key and Secret Key.
     **CRITICAL:** The publishable key **MUST** be prefixed with `NEXT_PUBLIC_`.
-    Your `.env.local` should look like this:
+    Your `.env.local` file should look like this (replace with your actual keys):
     ```env
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_ZW5nYWdpbmctZm94aG91bmQtMTkuY2xlcmsuYWNjb3VudHMuZGV2JA
     CLERK_SECRET_KEY=sk_test_FbS2PyRmiJwkNbTUe4Q0Ce8cF4A7Yx55mA5MhfcACr
@@ -106,7 +111,7 @@ Open a terminal and run:
 npm run dev
 ```
 
-This will start the Next.js application, typically available at `http://localhost:9003`.
+This will start the Next.js application, typically available at `http://localhost:9003` (or as specified by the `-p` flag in your `dev` script).
 
 **VERY IMPORTANT:** If you have just created or modified your `.env.local` file, you **MUST stop and restart** your Next.js development server for the changes to take effect. Next.js only loads these variables on startup.
 
@@ -126,11 +131,11 @@ npm run genkit:watch
 
 This starts the Genkit development server, which makes the AI flows available to your Next.js application. It usually runs a UI on port 4000 for inspecting flows.
 
-Once both servers are running, you can access the application in your browser at `http://localhost:9003`.
+Once both servers are running, you can access the application in your browser at the URL provided by the Next.js server.
 
 ## Admin Access
 
-*   Navigate to `http://localhost:9003/admin`.
+*   Navigate to the URL provided by your Next.js development server (e.g., `http://localhost:9003/admin`).
 *   You will be prompted to sign up or sign in using Clerk.
 *   After successful authentication, you will be redirected to the admin dashboard (`/admin/dashboard`).
 *   You can manage your admin account (email, password, 2FA - if enabled in your Clerk dashboard) via the "Account" link in the admin panel, which uses Clerk's User Profile component. This is accessible from the admin layout.
@@ -160,3 +165,4 @@ Contributions are welcome! Please follow the standard fork-and-pull-request work
 ---
 
 Happy Coding!
+
