@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Menu, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useState, useEffect } from 'react'; // Added useEffect
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -48,10 +48,11 @@ const NavbarLoadingSkeleton = () => (
         <YourCarLogo />
         <span className="font-headline">YourCar</span>
       </Link>
-      <div className="hidden md:flex items-center gap-4">
+      {/* Ensure this structure matches the real nav for desktop */}
+      <nav className="hidden md:flex items-center gap-1"> {/* Changed div to nav, and gap-4 to gap-1 */}
         <div className="h-5 w-16 bg-muted rounded animate-pulse"></div>
         <div className="h-5 w-20 bg-muted rounded animate-pulse"></div>
-      </div>
+      </nav>
       <div className="md:hidden">
         <div className="h-8 w-8 bg-muted rounded animate-pulse"></div> {/* Placeholder for menu icon */}
       </div>
@@ -188,3 +189,4 @@ export default function Navbar() {
     </header>
   );
 }
+
