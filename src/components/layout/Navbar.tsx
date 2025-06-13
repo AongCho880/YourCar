@@ -2,9 +2,9 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu } from 'lucide-react'; // Removed LogIn import
+import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useState } from 'react';
 
 // Simple SVG Logo - Grayscale
@@ -44,13 +44,15 @@ export default function Navbar() {
   const navLinks = [{ href: '/', label: 'Home' }];
 
   const NavLinkItem = ({ href, label }: { href: string; label: string }) => (
-    <Button
-      variant="ghost"
-      asChild
-      onClick={() => setIsMobileMenuOpen(false)}
-    >
-      <Link href={href}>{label}</Link>
-    </Button>
+    <SheetClose asChild>
+      <Button
+        variant="ghost"
+        asChild
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
+        <Link href={href}>{label}</Link>
+      </Button>
+    </SheetClose>
   );
 
   return (
@@ -63,8 +65,11 @@ export default function Navbar() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
-          {/* Admin Login button removed from here */}
+          {navLinks.map(link => (
+            <Button variant="ghost" asChild key={link.href}>
+              <Link href={link.href}>{link.label}</Link>
+            </Button>
+          ))}
         </nav>
 
         {/* Mobile Navigation */}
@@ -76,9 +81,11 @@ export default function Navbar() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[250px] bg-card/95 backdrop-blur-lg text-card-foreground border-l border-border/30">
-              <div className="flex flex-col gap-4 pt-8">
+              <SheetHeader className="text-left border-b border-border/30 pb-4 mb-4">
+                <SheetTitle>Navigation</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col gap-2">
                 {navLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
-                {/* Admin Login button removed from here */}
               </div>
             </SheetContent>
           </Sheet>
