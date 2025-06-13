@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useParams, notFound } from 'next/navigation';
@@ -56,7 +57,7 @@ export default function CarDetailPage() {
                 <Badge variant="secondary" className="text-sm">{car.condition}</Badge> - {car.year}
               </div>
             </div>
-            <div className="text-2xl md:text-3xl font-semibold text-accent mt-2 md:mt-0">
+            <div className="text-2xl md:text-3xl font-semibold text-foreground mt-2 md:mt-0">
               ${car.price.toLocaleString()}
             </div>
           </div>
@@ -64,23 +65,23 @@ export default function CarDetailPage() {
           <Separator className="my-6" />
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6 text-sm">
-            <div className="flex items-center p-3 bg-secondary/50 rounded-md">
+            <div className="flex items-center p-3 bg-muted rounded-md">
               <Tag className="w-5 h-5 mr-2 text-primary" />
               <strong>Make:</strong><span className="ml-1">{car.make}</span>
             </div>
-            <div className="flex items-center p-3 bg-secondary/50 rounded-md">
+            <div className="flex items-center p-3 bg-muted rounded-md">
               <Tag className="w-5 h-5 mr-2 text-primary" />
               <strong>Model:</strong><span className="ml-1">{car.model}</span>
             </div>
-            <div className="flex items-center p-3 bg-secondary/50 rounded-md">
+            <div className="flex items-center p-3 bg-muted rounded-md">
               <CalendarDays className="w-5 h-5 mr-2 text-primary" />
               <strong>Year:</strong><span className="ml-1">{car.year}</span>
             </div>
-            <div className="flex items-center p-3 bg-secondary/50 rounded-md">
+            <div className="flex items-center p-3 bg-muted rounded-md">
               <Gauge className="w-5 h-5 mr-2 text-primary" />
               <strong>Mileage:</strong><span className="ml-1">{car.mileage.toLocaleString()} miles</span>
             </div>
-            <div className="flex items-center p-3 bg-secondary/50 rounded-md">
+            <div className="flex items-center p-3 bg-muted rounded-md">
               <Info className="w-5 h-5 mr-2 text-primary" />
               <strong>Condition:</strong><span className="ml-1">{car.condition}</span>
             </div>
@@ -93,8 +94,8 @@ export default function CarDetailPage() {
               </h2>
               <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mb-6 list-none p-0">
                 {car.features.map((feature, index) => (
-                  <li key={index} className="flex items-center text-sm p-2 bg-secondary/30 rounded-md">
-                    <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                  <li key={index} className="flex items-center text-sm p-2 bg-muted/70 rounded-md">
+                    <CheckCircle className="w-4 h-4 mr-2 text-foreground" />
                     {feature}
                   </li>
                 ))}

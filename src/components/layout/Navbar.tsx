@@ -9,7 +9,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useState, useEffect, useMemo } from 'react';
 
-// Simple SVG Logo
+// Simple SVG Logo - Grayscale
 const YourCarLogo = () => (
   <svg
     width="32"
@@ -17,7 +17,7 @@ const YourCarLogo = () => (
     viewBox="0 0 32 32"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    className="h-7 w-7 text-primary group-hover:text-primary/80 transition-colors"
+    className="h-7 w-7 text-foreground group-hover:text-muted-foreground transition-colors"
     aria-hidden="true"
   >
     <rect
@@ -28,7 +28,7 @@ const YourCarLogo = () => (
       rx="4"
       stroke="currentColor"
       strokeWidth="1.5"
-      fill="hsl(var(--primary)/0.1)"
+      fill="hsl(var(--foreground)/0.03)"
     />
     <path
       d="M8 8L16 16M16 16L24 8M16 16V24"
@@ -79,7 +79,7 @@ export default function Navbar() {
   return (
     <header className="bg-card/70 text-card-foreground shadow-xl backdrop-blur-lg sticky top-0 z-50 border-b border-border/30">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <Link href="/" className="group flex items-center gap-2 text-xl font-bold text-primary hover:text-primary/80 transition-colors">
+        <Link href="/" className="group flex items-center gap-2 text-xl font-bold text-foreground hover:text-muted-foreground transition-colors">
           <YourCarLogo />
           <span className="font-headline">YourCar</span>
         </Link>
