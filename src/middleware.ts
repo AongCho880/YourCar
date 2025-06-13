@@ -1,14 +1,18 @@
-
 // middleware.ts
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-export default clerkMiddleware({
-  publicRoutes: [
-    '/', // Make the homepage public
-    '/cars/(.*)', // Make individual car detail pages public
-    // Add any other public API routes or webhook handlers here if needed
-  ],
-  // ignoredRoutes: ['/api/webhooks/clerk'], // Example: if you had Clerk webhooks
+// Define routes that should be public
+const isPublicRoute = createRouteMatcher([
+  '/', // Make the homepage public
+  '/cars/(.*)', // Make individual car detail pages public
+  // Add any other public API routes or webhook handlers here if needed
+]);
+
+export default clerkMiddleware((auth, req) => {
+  // If the route is not public, then protect it.
+  if (!isPublicRoute(req)) {
+    auth().protect();
+  }
 });
 
 export const config = {
