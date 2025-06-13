@@ -40,8 +40,8 @@ export default function ContactSection() {
     window.open(messengerUrl, '_blank');
   };
 
-  if (!isClient || (!whatsappNumber && !messengerId)) {
-    // Don't render the section if no contact info is set or on SSR to avoid hydration issues with localStorage
+  if (!isClient) {
+    // Don't render the section on SSR to avoid hydration issues with localStorage
     return null;
   }
 
@@ -88,8 +88,8 @@ export default function ContactSection() {
               </div>
             )}
 
-            {!whatsappNumber && !messengerId && isClient && (
-                 <p className="text-center text-muted-foreground">Contact details will be available soon.</p>
+            {!whatsappNumber && !messengerId && (
+                 <p className="text-center text-muted-foreground">Contact details will be available soon. Please check back later or contact support if this persists after admin configuration.</p>
             )}
           </CardContent>
         </Card>
