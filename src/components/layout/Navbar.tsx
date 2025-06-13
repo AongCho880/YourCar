@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Menu, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useState, useEffect } from 'react'; // useEffect might not be needed if isClient is removed
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -51,13 +51,14 @@ const NavbarLoadingSkeleton = () => (
       {/* Desktop nav placeholder */}
       <nav className="hidden md:flex items-center gap-1">
         {/* Placeholder for a single nav item like "Home" */}
-        <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 hover:bg-transparent hover:text-foreground"> {/* Mimic Button classes & hover style */}
+        {/* This structure is based on the hydration error's "+ div" part */}
+        <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2">
           <div className="h-5 w-16 bg-muted rounded animate-pulse"></div> {/* Mimic text content for "Home" */}
         </div>
       </nav>
       {/* Mobile menu icon placeholder */}
       <div className="md:hidden">
-        <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
+        <div className="h-8 w-8 bg-muted rounded animate-pulse"></div> {/* Mimic Menu icon */}
       </div>
     </div>
   </header>
@@ -68,10 +69,15 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isAdmin, logout, loading: authContextIsLoading } = useAuth();
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
 
-  // If auth context is loading, show skeleton.
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Render skeleton if not mounted on client yet, or if auth context is still loading.
   // This ensures server and initial client render match.
-  if (authContextIsLoading) {
+  if (!mounted || authContextIsLoading) {
     return <NavbarLoadingSkeleton />;
   }
 
