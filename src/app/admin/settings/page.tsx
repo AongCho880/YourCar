@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Save, Info } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const WHATSAPP_NUMBER_KEY = 'adminWhatsappNumber';
 const MESSENGER_ID_KEY = 'adminMessengerId';
@@ -15,18 +16,31 @@ const MESSENGER_ID_KEY = 'adminMessengerId';
 export default function AdminSettingsPage() {
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [messengerId, setMessengerId] = useState('');
+  const [isLoading, setIsLoading] = useState(true); // For initial localStorage load
   const { toast } = useToast();
 
   useEffect(() => {
-    const storedWhatsapp = localStorage.getItem(WHATSAPP_NUMBER_KEY);
-    const storedMessenger = localStorage.getItem(MESSENGER_ID_KEY);
-    if (storedWhatsapp) {
-      setWhatsappNumber(storedWhatsapp);
+    setIsLoading(true);
+    try {
+      const storedWhatsapp = localStorage.getItem(WHATSAPP_NUMBER_KEY);
+      const storedMessenger = localStorage.getItem(MESSENGER_ID_KEY);
+      if (storedWhatsapp) {
+        setWhatsappNumber(storedWhatsapp);
+      }
+      if (storedMessenger) {
+        setMessengerId(storedMessenger);
+      }
+    } catch (error) {
+      console.error("Error reading from localStorage", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not load saved settings.",
+      });
+    } finally {
+      setIsLoading(false);
     }
-    if (storedMessenger) {
-      setMessengerId(storedMessenger);
-    }
-  }, []);
+  }, [toast]);
 
   const handleSaveSettings = () => {
     if (!whatsappNumber.match(/^\+?[1-9]\d{1,14}$/)) {
@@ -46,13 +60,50 @@ export default function AdminSettingsPage() {
         return;
     }
 
-    localStorage.setItem(WHATSAPP_NUMBER_KEY, whatsappNumber);
-    localStorage.setItem(MESSENGER_ID_KEY, messengerId);
-    toast({
-      title: "Settings Saved",
-      description: "Your contact information has been updated.",
-    });
+    try {
+      localStorage.setItem(WHATSAPP_NUMBER_KEY, whatsappNumber);
+      localStorage.setItem(MESSENGER_ID_KEY, messengerId);
+      toast({
+        title: "Settings Saved",
+        description: "Your contact information has been updated.",
+      });
+    } catch (error) {
+      console.error("Error saving to localStorage", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not save settings. LocalStorage might be full or disabled.",
+      });
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-1/3" /> {/* Title: Contact Settings */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-7 w-1/2" /> {/* CardTitle */}
+            <Skeleton className="h-4 w-full mt-1" /> {/* CardDescription line 1 */}
+            <Skeleton className="h-4 w-3/4 mt-1" /> {/* CardDescription line 2 */}
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-1/4" /> {/* Label */}
+              <Skeleton className="h-10 w-full" /> {/* Input */}
+              <Skeleton className="h-4 w-2/3 mt-1" /> {/* Help text */}
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-1/4" /> {/* Label */}
+              <Skeleton className="h-10 w-full" /> {/* Input */}
+              <Skeleton className="h-4 w-2/3 mt-1" /> {/* Help text */}
+            </div>
+            <Skeleton className="h-10 w-36 rounded-md" /> {/* Save button */}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -102,3 +153,4 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
+
