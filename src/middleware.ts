@@ -1,19 +1,21 @@
-// middleware.ts
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Define routes that should be public
-const isPublicRoute = createRouteMatcher([
-  '/', // Make the homepage public
-  '/cars/(.*)', // Make individual car detail pages public
-  // Add any other public API routes or webhook handlers here if needed
-]);
+import { clerkMiddleware } from "@clerk/nextjs/server";
+import type { AuthObject, NextRequest } from '@clerk/nextjs/server';
+import type { NextFetchEvent } from 'next/server';
 
-export default clerkMiddleware((auth, req) => {
-  // If the route is not public, then protect it.
-  if (!isPublicRoute(req)) {
-    auth().protect();
+export default clerkMiddleware(
+  (auth: AuthObject, req: NextRequest, evt: NextFetchEvent) => {
+    // This is the auth handler.
+    // For routes listed in `publicRoutes`, Clerk's protection logic is bypassed.
+    // For routes NOT in `publicRoutes`, Clerk's default behavior (e.g., redirect to sign-in)
+    // will apply because this handler doesn't return a custom Response to override it.
+    // No explicit auth().protect() is needed here for default behavior.
+  },
+  {
+    publicRoutes: ["/", "/cars/(.*)"],
+    // ignoredRoutes: [] // Optional: if you had specific routes Clerk should completely ignore
   }
-});
+);
 
 export const config = {
   matcher: [
