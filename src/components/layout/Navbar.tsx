@@ -2,12 +2,11 @@
 "use client";
 
 import Link from 'next/link';
-import { LogIn, LogOut, LayoutDashboard, Menu } from 'lucide-react';
+import { Menu, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter, usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useState, useEffect, useMemo } from 'react';
+import { SignedIn, SignedOut, UserButton, useUser } from '@clerk/nextjs';
 
 // Simple SVG Logo - Grayscale
 const YourCarLogo = () => (
@@ -42,33 +41,25 @@ const YourCarLogo = () => (
 
 
 export default function Navbar() {
-  const { isAdmin, logout, loading } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
+  const { isLoaded, isSignedIn } = useUser();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [clientLoaded, setClientLoaded] = useState(false);
+  const [clientLoaded, setClientLoaded] = useState(false); // To ensure client-side rendering for Clerk status
 
   useEffect(() => {
     setClientLoaded(true);
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
-
   const navLinks = useMemo(() => {
     const links = [{ href: '/', label: 'Home' }];
-    if (clientLoaded && isAdmin && !loading) {
+    if (clientLoaded && isSignedIn && isLoaded) {
       links.push({ href: '/admin/dashboard', label: 'Dashboard' });
     }
-    // Removed direct admin login link for non-admins
     return links;
-  }, [clientLoaded, isAdmin, loading]);
+  }, [clientLoaded, isSignedIn, isLoaded]);
 
   const NavLinkItem = ({ href, label }: { href: string; label: string }) => (
     <Button
-      variant={pathname === href ? "secondary" : "ghost"}
+      variant="ghost" // Using ghost for nav links, can be adjusted
       asChild
       onClick={() => setIsMobileMenuOpen(false)}
     >
@@ -87,10 +78,17 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
-          {clientLoaded && isAdmin && !loading && (
-            <Button variant="ghost" onClick={handleLogout} className="text-card-foreground hover:bg-destructive/20 hover:text-destructive">
-              <LogOut className="mr-2 h-4 w-4" /> Logout
-            </Button>
+          {clientLoaded && isLoaded && (
+            <>
+              <SignedIn>
+                <UserButton afterSignOutUrl="/" />
+              </SignedIn>
+              <SignedOut>
+                <Button variant="ghost" asChild>
+                  <Link href="/admin"><LogIn className="mr-2 h-4 w-4" />Admin Login</Link>
+                </Button>
+              </SignedOut>
+            </>
           )}
         </nav>
 
@@ -105,13 +103,24 @@ export default function Navbar() {
             <SheetContent side="right" className="w-[250px] bg-card/95 backdrop-blur-lg text-card-foreground border-l border-border/30">
               <div className="flex flex-col gap-4 pt-8">
                 {navLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
-                {clientLoaded && isAdmin && !loading && (
-                   <SheetClose asChild>
-                    <Button variant="ghost" onClick={handleLogout} className="justify-start text-card-foreground hover:bg-destructive/20 hover:text-destructive">
-                      <LogOut className="mr-2 h-4 w-4" /> Logout
-                    </Button>
-                   </SheetClose>
-                )}
+                 {clientLoaded && isLoaded && (
+                  <>
+                    <SignedIn>
+                       <SheetClose asChild>
+                          <div className="px-2 py-1.5"> {/* Added padding for UserButton consistency */}
+                            <UserButton afterSignOutUrl="/" />
+                          </div>
+                       </SheetClose>
+                    </SignedIn>
+                    <SignedOut>
+                      <SheetClose asChild>
+                        <Button variant="ghost" asChild className="justify-start">
+                            <Link href="/admin"><LogIn className="mr-2 h-4 w-4" />Admin Login</Link>
+                        </Button>
+                      </SheetClose>
+                    </SignedOut>
+                  </>
+                 )}
               </div>
             </SheetContent>
           </Sheet>

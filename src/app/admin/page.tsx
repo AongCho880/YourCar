@@ -1,23 +1,22 @@
+
 "use client";
 
-import LoginForm from '@/components/auth/LoginForm';
-import { useAuth } from '@/contexts/AuthContext';
+import { SignIn, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminLoginPage() {
-  const { isAdmin, loading } = useAuth();
+  const { isSignedIn, isLoaded } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && isAdmin) {
+    if (isLoaded && isSignedIn) {
       router.replace('/admin/dashboard');
     }
-  }, [isAdmin, loading, router]);
+  }, [isSignedIn, isLoaded, router]);
 
-  if (loading || isAdmin) {
-    // Show a loader or empty screen while redirecting or checking auth
+  if (!isLoaded || isSignedIn) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
         <Skeleton className="w-full max-w-sm h-96" />
@@ -27,7 +26,7 @@ export default function AdminLoginPage() {
 
   return (
     <div className="flex items-center justify-center py-12">
-      <LoginForm />
+      <SignIn path="/admin" routing="path" signUpUrl="/admin/sign-up" afterSignInUrl="/admin/dashboard" />
     </div>
   );
 }

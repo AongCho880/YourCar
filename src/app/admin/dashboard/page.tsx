@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Edit, Trash2, PlusCircle, Eye, Car, Cog } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, Eye, Car } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminDashboardPage() {
-  const { cars, deleteCar, loading } = useCars();
+  const { cars, deleteCar, loading: carsLoading } = useCars(); // Renamed loading to avoid conflict
   const { toast } = useToast();
 
   const handleDelete = (carId: string) => {
@@ -31,7 +31,10 @@ export default function AdminDashboardPage() {
     toast({ title: "Car Deleted", description: "The car listing has been removed." });
   };
 
-  if (loading) {
+  // Clerk's useUser can be used here if admin-specific user info is needed
+  // For now, route protection is handled by middleware and AdminLayout
+
+  if (carsLoading) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
