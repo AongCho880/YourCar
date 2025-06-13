@@ -50,7 +50,7 @@ export default function CarDetailPage() {
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row justify-between md:items-center mb-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold font-headline text-primary mb-1">
+              <h1 className="text-2xl md:text-4xl font-bold font-headline text-primary mb-1">
                 {car.make} {car.model}
               </h1>
               <div className="text-lg text-muted-foreground">
@@ -116,3 +116,4 @@ export default function CarDetailPage() {
     </div>
   );
 }
+
