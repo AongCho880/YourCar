@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Car, PlusCircle, LogOut, Home } from 'lucide-react';
+import { LayoutDashboard, Car, PlusCircle, LogOut, Home, Settings } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -58,6 +58,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <Button variant={pathname === '/admin/cars/new' ? 'secondary' : 'ghost'} asChild size="sm">
               <Link href="/admin/cars/new"><PlusCircle className="mr-2 h-4 w-4" />Add Car</Link>
             </Button>
+             <Button variant={pathname === '/admin/settings' ? 'secondary' : 'ghost'} asChild size="sm">
+              <Link href="/admin/settings"><Settings className="mr-2 h-4 w-4" />Settings</Link>
+            </Button>
             <Button variant="ghost" asChild size="sm">
               <Link href="/"><Home className="mr-2 h-4 w-4" />View Site</Link>
             </Button>
@@ -73,4 +76,3 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
-
