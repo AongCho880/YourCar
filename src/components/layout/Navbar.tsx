@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu, LogIn } from 'lucide-react';
+import { Menu } from 'lucide-react'; // Removed LogIn import
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useState } from 'react';
@@ -64,9 +64,7 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
-          <Button variant="ghost" asChild>
-            <Link href="/admin"><LogIn className="mr-2 h-4 w-4" />Admin Login</Link>
-          </Button>
+          {/* Admin Login button removed from here */}
         </nav>
 
         {/* Mobile Navigation */}
@@ -80,11 +78,7 @@ export default function Navbar() {
             <SheetContent side="right" className="w-[250px] bg-card/95 backdrop-blur-lg text-card-foreground border-l border-border/30">
               <div className="flex flex-col gap-4 pt-8">
                 {navLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
-                <SheetClose asChild>
-                  <Button variant="ghost" asChild className="justify-start">
-                      <Link href="/admin"><LogIn className="mr-2 h-4 w-4" />Admin Login</Link>
-                  </Button>
-                </SheetClose>
+                {/* Admin Login button removed from here */}
               </div>
             </SheetContent>
           </Sheet>
