@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -5,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { CarProvider } from '@/contexts/CarContext';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import ContactSection from '@/components/layout/ContactSection';
 
 export const metadata: Metadata = {
   title: 'YourCar - Your Premier Car Marketplace',
@@ -30,6 +32,7 @@ export default function RootLayout({
             <main className="flex-grow container mx-auto px-4 py-8">
               {children}
             </main>
+            <ContactSection />
             <Footer />
             <Toaster />
           </CarProvider>
