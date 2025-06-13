@@ -6,6 +6,7 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
 
 // Simple SVG Logo - Grayscale
 const YourCarLogo = () => (
@@ -40,6 +41,7 @@ const YourCarLogo = () => (
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAdmin } = useAuth(); // Get isAdmin state
 
   const navLinks = [{ href: '/', label: 'Home' }];
 
@@ -48,6 +50,7 @@ export default function Navbar() {
       <Button
         variant="ghost"
         asChild
+        className="w-full justify-start"
         onClick={() => setIsMobileMenuOpen(false)}
       >
         <Link href={href}>{label}</Link>
@@ -70,6 +73,11 @@ export default function Navbar() {
               <Link href={link.href}>{link.label}</Link>
             </Button>
           ))}
+          {isAdmin && (
+            <Button variant="ghost" asChild>
+              <Link href="/admin/dashboard">Dashboard</Link>
+            </Button>
+          )}
         </nav>
 
         {/* Mobile Navigation */}
@@ -80,12 +88,13 @@ export default function Navbar() {
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[250px] bg-card/95 backdrop-blur-lg text-card-foreground border-l border-border/30">
+            <SheetContent side="right" className="w-[250px] bg-card/95 backdrop-blur-lg text-card-foreground border-l border-border/30 p-4">
               <SheetHeader className="text-left border-b border-border/30 pb-4 mb-4">
                 <SheetTitle>Navigation</SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-2">
                 {navLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
+                {isAdmin && <NavLinkItem href="/admin/dashboard" label="Dashboard" />}
               </div>
             </SheetContent>
           </Sheet>
