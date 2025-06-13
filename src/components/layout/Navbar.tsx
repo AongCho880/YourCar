@@ -2,11 +2,11 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu } from 'lucide-react';
+import { Menu, LogOut } from 'lucide-react'; // Added LogOut
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext'; // Import useAuth
+import { useAuth } from '@/contexts/AuthContext';
 
 // Simple SVG Logo - Grayscale
 const YourCarLogo = () => (
@@ -41,9 +41,9 @@ const YourCarLogo = () => (
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAdmin } = useAuth(); // Get isAdmin state
+  const { isAdmin, logout } = useAuth(); // Get isAdmin and logout state
 
-  const navLinks = [{ href: '/', label: 'Home' }];
+  const navLinks = [{ href: '/', label: 'View Site' }]; // Changed 'Home' to 'View Site'
 
   const adminNavLinks = [
     { href: '/admin/dashboard', label: 'Dashboard' },
@@ -51,15 +51,18 @@ export default function Navbar() {
     { href: '/admin/settings', label: 'Settings' },
   ];
 
-  const NavLinkItem = ({ href, label }: { href: string; label: string }) => (
+  const NavLinkItem = ({ href, label, onClick }: { href: string; label: string, onClick?: () => void }) => (
     <SheetClose asChild>
       <Button
         variant="ghost"
-        asChild
+        asChild={!onClick} // Use asChild only if no onClick handler
         className="w-full justify-start"
-        onClick={() => setIsMobileMenuOpen(false)}
+        onClick={() => {
+          if (onClick) onClick();
+          setIsMobileMenuOpen(false);
+        }}
       >
-        <Link href={href}>{label}</Link>
+        {onClick ? label : <Link href={href}>{label}</Link>}
       </Button>
     </SheetClose>
   );
@@ -84,6 +87,11 @@ export default function Navbar() {
               <Link href={link.href}>{link.label}</Link>
             </Button>
           ))}
+          {isAdmin && (
+            <Button variant="outline" size="sm" onClick={logout}>
+              <LogOut className="mr-2 h-4 w-4" />Logout
+            </Button>
+          )}
         </nav>
 
         {/* Mobile Navigation */}
@@ -101,6 +109,9 @@ export default function Navbar() {
               <div className="flex flex-col gap-2">
                 {navLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
                 {isAdmin && adminNavLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
+                {isAdmin && (
+                  <NavLinkItem href="#" label="Logout" onClick={logout} />
+                )}
               </div>
             </SheetContent>
           </Sheet>
