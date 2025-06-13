@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePathname } from 'next/navigation'; // Import usePathname
-import { cn } from '@/lib/utils'; // Ensure cn is imported
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 // Simple SVG Logo - Grayscale
 const YourCarLogo = () => (
@@ -41,10 +41,33 @@ const YourCarLogo = () => (
   </svg>
 );
 
+const NavbarLoadingSkeleton = () => (
+  <header className="bg-card/70 text-card-foreground shadow-xl backdrop-blur-lg sticky top-0 z-50 border-b border-border/30">
+    <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+      <Link href="/" className="group flex items-center gap-2 text-xl font-bold text-foreground hover:text-muted-foreground transition-colors">
+        <YourCarLogo />
+        <span className="font-headline">YourCar</span>
+      </Link>
+      <div className="hidden md:flex items-center gap-4">
+        <div className="h-5 w-16 bg-muted rounded animate-pulse"></div>
+        <div className="h-5 w-20 bg-muted rounded animate-pulse"></div>
+      </div>
+      <div className="md:hidden">
+        <div className="h-8 w-8 bg-muted rounded animate-pulse"></div> {/* Placeholder for menu icon */}
+      </div>
+    </div>
+  </header>
+);
+
+
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAdmin, logout } = useAuth();
-  const pathname = usePathname(); // Get current pathname
+  const { isAdmin, logout, loading: authContextIsLoading } = useAuth();
+  const pathname = usePathname();
+
+  if (authContextIsLoading) {
+    return <NavbarLoadingSkeleton />;
+  }
 
   const navLinks = [{ href: '/', label: 'Home' }];
 
@@ -128,7 +151,7 @@ export default function Navbar() {
             );
           })}
           {isAdmin && (
-            <Button variant="outline" size="sm" onClick={logout} className="ml-2">
+            <Button variant="outline" size="sm" onClick={logout} className="ml-2 hover:bg-transparent">
               <LogOut className="mr-2 h-4 w-4" />Logout
             </Button>
           )}
@@ -142,13 +165,13 @@ export default function Navbar() {
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[250px] bg-card/95 backdrop-blur-lg text-card-foreground border-l border-border/30 p-4">
-              <SheetHeader className="text-left border-b border-border/30 pb-4 mb-4">
+            <SheetContent side="right" className="w-[250px] bg-card/95 backdrop-blur-lg text-card-foreground border-l border-border/30 p-0">
+              <SheetHeader className="text-left border-b border-border/30 p-4 mb-2">
                 <SheetTitle>Navigation</SheetTitle>
               </SheetHeader>
-              <div className="flex flex-col gap-2">
-                {navLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
-                {isAdmin && adminNavLinks.map(link => <NavLinkItem key={link.href} {...link} />)}
+              <div className="flex flex-col gap-1 p-2">
+                {navLinks.map(link => <NavLinkItem key={`mobile-${link.href}`} {...link} />)}
+                {isAdmin && adminNavLinks.map(link => <NavLinkItem key={`mobile-admin-${link.href}`} {...link} />)}
                 {isAdmin && (
                   <NavLinkItem href="#" label="Logout" onClick={logout} />
                 )}
