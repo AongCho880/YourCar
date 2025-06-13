@@ -7,7 +7,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ContactSection from '@/components/layout/ContactSection';
 import { ClerkProvider } from '@clerk/nextjs';
-import { dark } from '@clerk/nextjs'; // Optional: if you want a dark theme for Clerk components
+import { dark } from '@clerk/themes'; // Optional: if you want a dark theme for Clerk components
 
 export const metadata: Metadata = {
   title: 'YourCar - Your Premier Car Marketplace',
