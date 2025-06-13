@@ -4,7 +4,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, PlusCircle, Home, Settings, LogOut, Loader2 } from 'lucide-react';
+import { Home, LogOut, Loader2 } from 'lucide-react'; // Removed LayoutDashboard, PlusCircle, Settings
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
@@ -52,15 +52,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <div className="container mx-auto flex flex-wrap justify-between items-center gap-4">
           <Link href="/admin/dashboard" className="text-xl font-bold font-headline text-primary hover:text-primary/80 transition-opacity">Admin Panel</Link>
           <nav className="flex flex-wrap items-center gap-2">
-            <Button variant={pathname === '/admin/dashboard' ? 'secondary' : 'ghost'} asChild size="sm">
-              <Link href="/admin/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" />Dashboard</Link>
-            </Button>
-            <Button variant={pathname === '/admin/cars/new' ? 'secondary' : 'ghost'} asChild size="sm">
-              <Link href="/admin/cars/new"><PlusCircle className="mr-2 h-4 w-4" />Add Car</Link>
-            </Button>
-            <Button variant={pathname === '/admin/settings' ? 'secondary' : 'ghost'} asChild size="sm">
-              <Link href="/admin/settings"><Settings className="mr-2 h-4 w-4" />Contact Settings</Link>
-            </Button>
+            {/* Admin navigation links are now in the main Navbar when admin is logged in */}
             <Button variant="ghost" asChild size="sm">
               <Link href="/"><Home className="mr-2 h-4 w-4" />View Site</Link>
             </Button>
