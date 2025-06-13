@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Menu, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'; // useEffect might not be needed if isClient is removed
 import { useAuth } from '@/contexts/AuthContext';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -48,11 +48,16 @@ const NavbarLoadingSkeleton = () => (
         <YourCarLogo />
         <span className="font-headline">YourCar</span>
       </Link>
+      {/* Desktop nav placeholder */}
       <nav className="hidden md:flex items-center gap-1">
-        <div className="h-5 w-20 bg-muted rounded animate-pulse"></div> {/* Single placeholder for "Home" */}
+        {/* Placeholder for a single nav item like "Home" */}
+        <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 hover:bg-transparent hover:text-foreground"> {/* Mimic Button classes & hover style */}
+          <div className="h-5 w-16 bg-muted rounded animate-pulse"></div> {/* Mimic text content for "Home" */}
+        </div>
       </nav>
+      {/* Mobile menu icon placeholder */}
       <div className="md:hidden">
-        <div className="h-8 w-8 bg-muted rounded animate-pulse"></div> {/* Placeholder for menu icon */}
+        <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
       </div>
     </div>
   </header>

@@ -182,11 +182,8 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
                     <Select 
                       onValueChange={(value) => {
                         field.onChange(value);
-                        // if (value !== ADD_NEW_MAKE_VALUE) { // This logic is now in useEffect
-                        //   form.setValue("customMakeName", "", { shouldValidate: true });
-                        // }
                       }} 
-                      value={field.value} // Control the component
+                      value={field.value}
                     >
                       <FormControl><SelectTrigger><SelectValue placeholder="Select make" /></SelectTrigger></FormControl>
                       <SelectContent>
@@ -195,7 +192,6 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                     {/* Conditional Custom Make Input */}
                     {watchedMake === ADD_NEW_MAKE_VALUE && (
                       <div className="mt-4">
                         <FormField
@@ -293,6 +289,3 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
     </Card>
   );
 }
-
-
-    
