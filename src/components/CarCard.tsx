@@ -36,7 +36,7 @@ export default function CarCard({ car }: CarCardProps) {
 
       <div className="p-4 flex flex-col flex-grow">
         <Link href={`/cars/${car.id}`} className="block group">
-          <h2 className="text-xl font-bold font-headline mb-2 text-foreground group-hover:text-primary transition-colors">
+          <h2 className="text-lg md:text-xl font-bold font-headline mb-2 text-foreground group-hover:text-primary transition-colors">
             {car.make} {car.model}
           </h2>
         </Link>
