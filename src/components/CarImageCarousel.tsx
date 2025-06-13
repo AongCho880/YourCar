@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -8,10 +9,11 @@ import { cn } from '@/lib/utils';
 
 interface CarImageCarouselProps {
   images: string[];
-  altText: string;
+  make: string;
+  model: string;
 }
 
-export default function CarImageCarousel({ images, altText }: CarImageCarouselProps) {
+export default function CarImageCarousel({ images, make, model }: CarImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   if (!images || images.length === 0) {
@@ -38,6 +40,17 @@ export default function CarImageCarousel({ images, altText }: CarImageCarouselPr
     setCurrentIndex(slideIndex);
   };
 
+  const altText = `${make} ${model}`;
+
+  const makeKeywords = make.split(' ');
+  let aiHint = '';
+  if (makeKeywords.length >= 2) {
+    aiHint = make;
+  } else {
+    const modelType = model.split(' ')[0] || 'car';
+    aiHint = `${make} ${modelType}`;
+  }
+
   return (
     <div className="relative w-full group">
       <div className="aspect-video overflow-hidden rounded-lg shadow-lg">
@@ -47,8 +60,8 @@ export default function CarImageCarousel({ images, altText }: CarImageCarouselPr
           width={800}
           height={600}
           className="w-full h-full object-cover transition-opacity duration-500 ease-in-out"
-          priority={currentIndex === 0} // Prioritize first image
-          data-ai-hint="car side"
+          priority={currentIndex === 0}
+          data-ai-hint={aiHint}
         />
       </div>
       

@@ -38,14 +38,14 @@ export default function CarDetailPage() {
 
   if (!car) {
     notFound();
-    return null; // Ensure notFound is called and component returns
+    return null; 
   }
 
   return (
     <div className="max-w-5xl mx-auto py-8 px-4">
       <Card className="overflow-hidden shadow-xl">
         <CardHeader className="p-0">
-          <CarImageCarousel images={car.images} altText={`${car.make} ${car.model}`} />
+          <CarImageCarousel images={car.images} make={car.make} model={car.model} />
         </CardHeader>
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row justify-between md:items-center mb-4">
