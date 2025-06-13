@@ -96,7 +96,7 @@ export default function HomePage() {
       <div className="lg:hidden mb-6">
         <Sheet open={isMobileFilterOpen} onOpenChange={setIsMobileFilterOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full border-border">
               <FilterIcon className="mr-2 h-4 w-4" /> Filters
             </Button>
           </SheetTrigger>
