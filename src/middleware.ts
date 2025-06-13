@@ -1,27 +1,16 @@
+// This file was used for Clerk integration.
+// It can be deleted if you are no longer using Clerk or a similar middleware.
+// For basic Next.js apps without advanced routing middleware, this file is often not needed.
 
-import { clerkMiddleware } from "@clerk/nextjs/server";
-import type { AuthObject, NextRequest } from '@clerk/nextjs/server';
-import type { NextFetchEvent } from 'next/server';
+// import { NextResponse } from 'next/server'
+// import type { NextRequest } from 'next/server'
 
-export default clerkMiddleware(
-  (auth: AuthObject, req: NextRequest, evt: NextFetchEvent) => {
-    // This is the auth handler.
-    // For routes listed in `publicRoutes`, Clerk's protection logic is bypassed.
-    // For routes NOT in `publicRoutes`, Clerk's default behavior (e.g., redirect to sign-in)
-    // will apply because this handler doesn't return a custom Response to override it.
-    // No explicit auth().protect() is needed here for default behavior.
-  },
-  {
-    publicRoutes: ["/", "/cars/(.*)"],
-    // ignoredRoutes: [] // Optional: if you had specific routes Clerk should completely ignore
-  }
-);
+// export function middleware(request: NextRequest) {
+//   // Your middleware logic here
+//   return NextResponse.next()
+// }
 
-export const config = {
-  matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    "/((?!_next|[^?]*\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
-    "/(api|trpc)(.*)",
-  ],
-};
+// See "Matching Paths" below to learn more
+// export const config = {
+//   matcher: '/about/:path*',
+// }

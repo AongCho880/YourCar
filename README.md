@@ -1,16 +1,16 @@
 
 # YourCar - Premier Car Marketplace
 
-YourCar is a Next.js application designed as a premier marketplace for buying and selling cars. It features an admin panel for managing listings and utilizes AI (via Genkit) for tasks like generating ad copy. The frontend is built with React, ShadCN UI components, and Tailwind CSS. Authentication is handled by Clerk.
+YourCar is a Next.js application designed as a premier marketplace for buying and selling cars. It features an admin panel for managing listings and utilizes AI (via Genkit) for tasks like generating ad copy. The frontend is built with React, ShadCN UI components, and Tailwind CSS.
 
 ## Features
 
 *   **Car Listings:** Browse, filter, and view detailed car listings.
-*   **Admin Dashboard:** Securely manage car listings (add, edit, delete) using Clerk authentication.
-*   **User Authentication:** Powered by Clerk, including sign-up, sign-in, multi-factor authentication (2FA), and account management (email/password updates).
+*   **Admin Dashboard:** Securely manage car listings (add, edit, delete).
+*   **Mock Admin Authentication:** Simple client-side authentication for the admin panel.
 *   **AI-Powered Ad Copy:** Automatically generate compelling ad descriptions for car listings using Genkit.
 *   **Responsive Design:** User interface optimized for various screen sizes.
-*   **Modern Tech Stack:** Built with Next.js 15 (App Router), React, TypeScript, ShadCN UI, Tailwind CSS, Genkit, and Clerk.
+*   **Modern Tech Stack:** Built with Next.js 15 (App Router), React, TypeScript, ShadCN UI, Tailwind CSS, and Genkit.
 *   **Client-Side Filtering & Pagination:** Efficiently browse through numerous car listings.
 *   **Configurable Contact Information:** Admin can set WhatsApp and Messenger details for customer contact.
 
@@ -18,11 +18,10 @@ YourCar is a Next.js application designed as a premier marketplace for buying an
 
 *   **Framework:** Next.js 15 (App Router)
 *   **Language:** TypeScript
-*   **Authentication:** Clerk
 *   **UI Components:** ShadCN UI
 *   **Styling:** Tailwind CSS
 *   **AI Integration:** Genkit (with Google AI)
-*   **State Management (Cars):** React Context API
+*   **State Management (Cars & Mock Auth):** React Context API
 *   **Form Handling:** React Hook Form with Zod for validation
 
 ## Prerequisites
@@ -63,37 +62,17 @@ yarn install
 
 ### 3. Set Up Environment Variables
 
-You'll need to configure API keys for Clerk (authentication) and Google AI (for Genkit features).
+You may need to configure an API key for Google AI if you plan to use the AI features.
 
-1.  **Create a Clerk Account:**
-    *   Go to [Clerk](https://clerk.com/) and sign up for a free account.
-    *   Create a new application in your Clerk dashboard.
-    *   Navigate to your application's "API Keys" section.
-    *   **Configure Paths in Clerk Dashboard:** In your Clerk application dashboard, go to "Paths".
-        *   Set "Sign in URL" to `/admin`.
-        *   Set "Sign up URL" to `/admin/sign-up`.
-        *   Set "After sign in URL" to `/admin/dashboard`.
-        *   Set "After sign up URL" to `/admin/dashboard`.
-        *   If prompted for a "Home URL" or similar, you can set it to `/`.
-
-2.  **Create `.env.local` file:**
+1.  **Create `.env.local` file:**
     Copy the existing `.env` file to `.env.local` (this file should be in the root of your project):
     ```bash
     cp .env .env.local
     ```
     *Note: `.env.local` is gitignored by default and should not be committed to version control.*
 
-3.  **Add Clerk API Keys to `.env.local`:**
-    Open `.env.local` and add your Clerk Publishable Key and Secret Key.
-    **CRITICAL:** The publishable key **MUST** be prefixed with `NEXT_PUBLIC_`.
-    Your `.env.local` file should look like this (replace with your actual keys):
-    ```env
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_ZW5nYWdpbmctZm94aG91bmQtMTkuY2xlcmsuYWNjb3VudHMuZGV2JA
-    CLERK_SECRET_KEY=sk_test_FbS2PyRmiJwkNbTUe4Q0Ce8cF4A7Yx55mA5MhfcACr
-    ```
-
-4.  **Add Google AI API Key to `.env.local` (Optional):**
-    If you plan to use the AI features (like ad copy generation):
+2.  **Add Google AI API Key to `.env.local` (Optional):**
+    If you plan to use the AI features (like ad copy generation), open `.env.local` and add your Google AI API Key:
     ```env
     GOOGLE_AI_KEY=YOUR_GOOGLE_AI_API_KEY
     ```
@@ -135,10 +114,12 @@ Once both servers are running, you can access the application in your browser at
 
 ## Admin Access
 
-*   Navigate to the URL provided by your Next.js development server (e.g., `http://localhost:9003/admin`).
-*   You will be prompted to sign up or sign in using Clerk.
-*   After successful authentication, you will be redirected to the admin dashboard (`/admin/dashboard`).
-*   You can manage your admin account (email, password, 2FA - if enabled in your Clerk dashboard) via the "Account" link in the admin panel, which uses Clerk's User Profile component. This is accessible from the admin layout.
+*   Navigate to `/admin` on your local site (e.g., `http://localhost:9003/admin`).
+*   Use the following credentials for the mock login:
+    *   **Username:** `admin`
+    *   **Password:** `password`
+*   After successful login, you will be redirected to the admin dashboard (`/admin/dashboard`).
+*   The admin session is maintained using client-side `localStorage`. Logging out clears this.
 
 ## Available Scripts
 
@@ -165,4 +146,3 @@ Contributions are welcome! Please follow the standard fork-and-pull-request work
 ---
 
 Happy Coding!
-

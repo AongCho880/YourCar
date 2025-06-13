@@ -1,32 +1,33 @@
 
 "use client";
 
-import { SignIn, useUser } from '@clerk/nextjs';
+import LoginForm from '@/components/auth/LoginForm';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Loader2 } from 'lucide-react';
 
 export default function AdminLoginPage() {
-  const { isSignedIn, isLoaded } = useUser();
+  const { isAdmin, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
+    if (!loading && isAdmin) {
       router.replace('/admin/dashboard');
     }
-  }, [isSignedIn, isLoaded, router]);
+  }, [isAdmin, loading, router]);
 
-  if (!isLoaded || isSignedIn) {
+  if (loading || (!loading && isAdmin)) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
-        <Skeleton className="w-full max-w-sm h-96" />
+         <div className="flex flex-col items-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+            <p className="text-lg">Loading...</p>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="flex items-center justify-center py-12">
-      <SignIn path="/admin" routing="path" signUpUrl="/admin/sign-up" afterSignInUrl="/admin/dashboard" />
-    </div>
-  );
+  return <LoginForm />;
 }
