@@ -16,27 +16,27 @@ export default function AccountPage() {
           <UserProfile 
             path="/admin/account" 
             routing="path"
-            appearance={{
-              elements: {
-                card: "shadow-none border-none",
-                headerTitle: "text-foreground",
-                headerSubtitle: "text-muted-foreground",
-                navbar: "text-foreground",
-                navbarButton: "text-foreground hover:bg-muted",
-                navbarButton__active: "text-primary bg-muted",
-                formFieldLabel: "text-foreground",
-                formFieldInput: "bg-input text-foreground border-border",
-                formButtonPrimary: "bg-primary text-primary-foreground hover:bg-primary/90",
-                formButtonReset: "text-destructive hover:bg-destructive/10",
-                dividerLine: "bg-border",
-                accordionTrigger: "text-foreground hover:bg-muted",
-                accordionContent: "text-foreground",
-                selectOptionsContainer: "bg-popover",
-                selectOption__active: "bg-muted",
-                selectOption: "hover:bg-muted/50",
-                
-              }
-            }}
+            // Removed appearance prop to simplify Clerk setup
+            // appearance={{
+            //   elements: {
+            //     card: "shadow-none border-none",
+            //     headerTitle: "text-foreground",
+            //     headerSubtitle: "text-muted-foreground",
+            //     navbar: "text-foreground",
+            //     navbarButton: "text-foreground hover:bg-muted",
+            //     navbarButton__active: "text-primary bg-muted",
+            //     formFieldLabel: "text-foreground",
+            //     formFieldInput: "bg-input text-foreground border-border",
+            //     formButtonPrimary: "bg-primary text-primary-foreground hover:bg-primary/90",
+            //     formButtonReset: "text-destructive hover:bg-destructive/10",
+            //     dividerLine: "bg-border",
+            //     accordionTrigger: "text-foreground hover:bg-muted",
+            //     accordionContent: "text-foreground",
+            //     selectOptionsContainer: "bg-popover",
+            //     selectOption__active: "bg-muted",
+            //     selectOption: "hover:bg-muted/50",
+            //   }
+            // }}
           />
         </CardContent>
       </Card>

@@ -7,7 +7,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ContactSection from '@/components/layout/ContactSection';
 import { ClerkProvider } from '@clerk/nextjs';
-import { dark } from '@clerk/themes'; // Optional: if you want a dark theme for Clerk components
+// Removed: import { dark } from '@clerk/themes';
 
 export const metadata: Metadata = {
   title: 'YourCar - Your Premier Car Marketplace',
@@ -21,15 +21,18 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider
-      appearance={{
-        baseTheme: dark, // Example: using Clerk's dark theme; remove or change as needed
-        variables: { 
-            colorPrimary: 'hsl(0 0% 20%)', // Corresponds to your primary theme color
-            colorBackground: 'hsl(0 0% 96%)', // Corresponds to your background
-            colorInputBackground: 'hsl(0 0% 100%)',
-            colorInputText: 'hsl(0 0% 13%)',
-         },
-      }}
+      // Simplified ClerkProvider setup as per the new guidelines
+      // The appearance prop can be added back if specific theme customizations are needed
+      // and confirmed to work with the latest Clerk version.
+      // appearance={{
+      //   baseTheme: dark, 
+      //   variables: { 
+      //       colorPrimary: 'hsl(0 0% 20%)', 
+      //       colorBackground: 'hsl(0 0% 96%)', 
+      //       colorInputBackground: 'hsl(0 0% 100%)',
+      //       colorInputText: 'hsl(0 0% 13%)',
+      //    },
+      // }}
     >
       <html lang="en">
         <head>

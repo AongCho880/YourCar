@@ -72,22 +72,24 @@ You'll need to configure API keys for Clerk (authentication) and Google AI (for 
     *   Under "Paths" in your Clerk dashboard settings, ensure your "Sign in URL" and "Sign up URL" are set to `/admin` and `/admin/sign-up` respectively, and the "After sign in URL" and "After sign up URL" are set to `/admin/dashboard`.
 
 2.  **Create `.env.local` file:**
-    Copy the existing `.env` file to `.env.local`:
+    Copy the existing `.env` file to `.env.local` (this file should be in the root of your project):
     ```bash
     cp .env .env.local
     ```
     *Note: `.env.local` is gitignored by default and should not be committed to version control.*
 
 3.  **Add Clerk API Keys to `.env.local`:**
-    Open `.env.local` and add your Clerk Publishable Key and Secret Key. **Crucially, the publishable key must be prefixed with `NEXT_PUBLIC_`**.
-    ```
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_YOUR_CLERK_PUBLISHABLE_KEY
-    CLERK_SECRET_KEY=sk_YOUR_CLERK_SECRET_KEY
+    Open `.env.local` and add your Clerk Publishable Key and Secret Key.
+    **CRITICAL:** The publishable key **MUST** be prefixed with `NEXT_PUBLIC_`.
+    Your `.env.local` should look like this:
+    ```env
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_ZW5nYWdpbmctZm94aG91bmQtMTkuY2xlcmsuYWNjb3VudHMuZGV2JA
+    CLERK_SECRET_KEY=sk_test_FbS2PyRmiJwkNbTUe4Q0Ce8cF4A7Yx55mA5MhfcACr
     ```
 
-4.  **Add Google AI API Key to `.env.local`:**
+4.  **Add Google AI API Key to `.env.local` (Optional):**
     If you plan to use the AI features (like ad copy generation):
-    ```
+    ```env
     GOOGLE_AI_KEY=YOUR_GOOGLE_AI_API_KEY
     ```
     You can obtain a Google AI API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
@@ -105,6 +107,8 @@ npm run dev
 ```
 
 This will start the Next.js application, typically available at `http://localhost:9003`.
+
+**VERY IMPORTANT:** If you have just created or modified your `.env.local` file, you **MUST stop and restart** your Next.js development server for the changes to take effect. Next.js only loads these variables on startup.
 
 **B. Start the Genkit Development Server:**
 
@@ -129,7 +133,7 @@ Once both servers are running, you can access the application in your browser at
 *   Navigate to `http://localhost:9003/admin`.
 *   You will be prompted to sign up or sign in using Clerk.
 *   After successful authentication, you will be redirected to the admin dashboard (`/admin/dashboard`).
-*   You can manage your admin account (email, password, 2FA) via the "Account" link in the admin panel, which uses Clerk's User Profile component. This is accessible from the admin layout.
+*   You can manage your admin account (email, password, 2FA - if enabled in your Clerk dashboard) via the "Account" link in the admin panel, which uses Clerk's User Profile component. This is accessible from the admin layout.
 
 ## Available Scripts
 
