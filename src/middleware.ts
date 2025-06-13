@@ -1,22 +1,24 @@
 // middleware.ts
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Updated to match the new guidelines for protected routes.
-// The default behavior of clerkMiddleware is to protect all routes.
-// We can define public routes if needed, or use createRouteMatcher for specific protected routes.
+// Define routes that should be public (accessible without authentication)
+const isPublicRoute = createRouteMatcher([
+  '/', // Make the homepage public
+  '/cars/(.*)', // Make individual car detail pages public
+  // Add any other public routes here, e.g., '/about', '/contact'
+]);
 
-const isAdminRoute = createRouteMatcher([
-  '/admin(.*)',
+// Define routes that are part of the authentication flow (Clerk's own pages)
+const isAuthRoute = createRouteMatcher([
+  '/admin/sign-in(.*)',
+  '/admin/sign-up(.*)',
 ]);
 
 export default clerkMiddleware((auth, req) => {
-  if (isAdminRoute(req)) {
+  // If it's not a public route and not an auth route, protect it.
+  if (!isPublicRoute(req) && !isAuthRoute(req)) {
     auth().protect();
   }
-  // For other routes, they are public by default unless configured otherwise.
-  // If you want to make all routes private by default and only specify public ones:
-  // export default clerkMiddleware();
-  // Then define public routes in the config below or using `publicRoutes` in clerkMiddleware.
 });
 
 export const config = {
