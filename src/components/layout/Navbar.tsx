@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu, LogOut } from 'lucide-react'; // Added LogOut
+import { Menu, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useState } from 'react';
@@ -41,9 +41,9 @@ const YourCarLogo = () => (
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAdmin, logout } = useAuth(); // Get isAdmin and logout state
+  const { isAdmin, logout } = useAuth();
 
-  const navLinks = [{ href: '/', label: 'Home' }]; // Changed 'View Site' to 'Home'
+  const navLinks = [{ href: '/', label: 'Home' }];
 
   const adminNavLinks = [
     { href: '/admin/dashboard', label: 'Dashboard' },
@@ -55,14 +55,24 @@ export default function Navbar() {
     <SheetClose asChild>
       <Button
         variant="ghost"
-        asChild={!onClick} // Use asChild only if no onClick handler
-        className="w-full justify-start"
+        asChild={!onClick}
+        className="w-full justify-start relative group text-left" // Added relative group, text-left
         onClick={() => {
           if (onClick) onClick();
           setIsMobileMenuOpen(false);
         }}
       >
-        {onClick ? label : <Link href={href}>{label}</Link>}
+        {onClick ? (
+          <>
+            {label}
+            <span className="absolute bottom-1.5 left-4 right-4 block h-[1px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
+          </>
+        ) : (
+          <Link href={href} className="block w-full"> {/* Button's "relative group" is passed to Link */}
+            {label}
+            <span className="absolute bottom-1.5 left-4 right-4 block h-[1px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left"></span>
+          </Link>
+        )}
       </Button>
     </SheetClose>
   );
@@ -79,12 +89,18 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map(link => (
             <Button variant="ghost" asChild key={link.href}>
-              <Link href={link.href}>{link.label}</Link>
+              <Link href={link.href} className="relative group">
+                {link.label}
+                <span className="absolute bottom-2 left-0 block h-[2px] w-full origin-left scale-x-0 transform bg-primary transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+              </Link>
             </Button>
           ))}
           {isAdmin && adminNavLinks.map(link => (
             <Button variant="ghost" asChild key={link.href}>
-              <Link href={link.href}>{link.label}</Link>
+              <Link href={link.href} className="relative group">
+                {link.label}
+                <span className="absolute bottom-2 left-0 block h-[2px] w-full origin-left scale-x-0 transform bg-primary transition-transform duration-300 ease-out group-hover:scale-x-100"></span>
+              </Link>
             </Button>
           ))}
           {isAdmin && (
