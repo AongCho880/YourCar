@@ -48,10 +48,8 @@ const NavbarLoadingSkeleton = () => (
         <YourCarLogo />
         <span className="font-headline">YourCar</span>
       </Link>
-      {/* Ensure this structure matches the real nav for desktop */}
-      <nav className="hidden md:flex items-center gap-1"> {/* Changed div to nav, and gap-4 to gap-1 */}
-        <div className="h-5 w-16 bg-muted rounded animate-pulse"></div>
-        <div className="h-5 w-20 bg-muted rounded animate-pulse"></div>
+      <nav className="hidden md:flex items-center gap-1">
+        <div className="h-5 w-20 bg-muted rounded animate-pulse"></div> {/* Single placeholder for "Home" */}
       </nav>
       <div className="md:hidden">
         <div className="h-8 w-8 bg-muted rounded animate-pulse"></div> {/* Placeholder for menu icon */}
@@ -65,13 +63,10 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isAdmin, logout, loading: authContextIsLoading } = useAuth();
   const pathname = usePathname();
-  const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient || authContextIsLoading) {
+  // If auth context is loading, show skeleton.
+  // This ensures server and initial client render match.
+  if (authContextIsLoading) {
     return <NavbarLoadingSkeleton />;
   }
 
@@ -157,7 +152,7 @@ export default function Navbar() {
             );
           })}
           {isAdmin && (
-            <Button variant="outline" size="sm" onClick={logout} className="ml-2 hover:bg-transparent">
+            <Button variant="outline" size="sm" onClick={logout} className="ml-2 hover:bg-transparent hover:text-foreground">
               <LogOut className="mr-2 h-4 w-4" />Logout
             </Button>
           )}
@@ -189,4 +184,3 @@ export default function Navbar() {
     </header>
   );
 }
-
