@@ -48,11 +48,10 @@ const NavbarLoadingSkeleton = () => (
         <YourCarLogo />
         <span className="font-headline">YourCar</span>
       </Link>
-      {/* Desktop nav placeholder */}
-      <nav className="hidden md:flex items-center gap-1">
+      {/* Ensure this structure matches the real nav for desktop */}
+      <nav className="hidden md:flex items-center gap-1"> {/* Changed div to nav, and gap-4 to gap-1 */}
         {/* Placeholder for a single nav item like "Home" */}
-        {/* This structure is based on the hydration error's "+ div" part */}
-        <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2">
+        <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 hover:bg-transparent hover:text-foreground"> {/* Mimic Button classes & hover style */}
           <div className="h-5 w-16 bg-muted rounded animate-pulse"></div> {/* Mimic text content for "Home" */}
         </div>
       </nav>
@@ -76,7 +75,6 @@ export default function Navbar() {
   }, []);
 
   // Render skeleton if not mounted on client yet, or if auth context is still loading.
-  // This ensures server and initial client render match.
   if (!mounted || authContextIsLoading) {
     return <NavbarLoadingSkeleton />;
   }
@@ -96,7 +94,7 @@ export default function Navbar() {
         <Button
           variant="ghost"
           asChild={!onClick}
-          className="w-full justify-start relative group text-left hover:bg-transparent hover:text-foreground"
+          className="w-full justify-start relative group text-left hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground"
           onClick={() => {
             if (onClick) onClick();
             setIsMobileMenuOpen(false);
@@ -137,7 +135,7 @@ export default function Navbar() {
           {navLinks.map(link => {
             const isActive = pathname === link.href;
             return (
-              <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent hover:text-foreground">
+              <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
                 <Link href={link.href} className="relative group">
                   {link.label}
                   <span className={cn(
@@ -151,7 +149,7 @@ export default function Navbar() {
           {isAdmin && adminNavLinks.map(link => {
              const isActive = pathname === link.href;
             return (
-              <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent hover:text-foreground">
+              <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
                 <Link href={link.href} className="relative group">
                   {link.label}
                   <span className={cn(
