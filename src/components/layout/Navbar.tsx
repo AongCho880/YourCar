@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Menu, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // Added useEffect
 import { useAuth } from '@/contexts/AuthContext';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -64,8 +64,13 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isAdmin, logout, loading: authContextIsLoading } = useAuth();
   const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
 
-  if (authContextIsLoading) {
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient || authContextIsLoading) {
     return <NavbarLoadingSkeleton />;
   }
 
