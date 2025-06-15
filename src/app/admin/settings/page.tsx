@@ -24,8 +24,15 @@ export default function AdminSettingsPage() {
       try {
         const response = await fetch('/api/admin-settings');
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch settings');
+          let errorDetail = `Server responded with status ${response.status}`;
+          try {
+            const errorData = await response.json();
+            errorDetail = errorData.error || errorData.details || errorDetail;
+          } catch (jsonError) {
+            // If parsing JSON fails, use status text or the initial generic message
+            errorDetail = `${errorDetail}: ${response.statusText || 'Non-JSON error response'}`;
+          }
+          throw new Error(errorDetail);
         }
         const data: AdminContactSettings = await response.json();
         setWhatsappNumber(data.whatsappNumber || '');
@@ -46,7 +53,7 @@ export default function AdminSettingsPage() {
   }, [toast]);
 
   const handleSaveSettings = async () => {
-    if (!whatsappNumber.match(/^\+?[1-9]\d{1,14}$/) && whatsappNumber !== "") { // Allow empty string to clear
+    if (whatsappNumber && !whatsappNumber.match(/^\+?[1-9]\d{1,14}$/)) { 
         toast({
             variant: "destructive",
             title: "Invalid WhatsApp Number",
@@ -64,8 +71,15 @@ export default function AdminSettingsPage() {
         body: JSON.stringify({ whatsappNumber, messengerId }),
       });
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save settings');
+        let errorDetail = `Server responded with status ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorDetail = errorData.error || errorData.details || errorDetail;
+        } catch (jsonError) {
+          // If parsing JSON fails, use status text or the initial generic message
+           errorDetail = `${errorDetail}: ${response.statusText || 'Non-JSON error response'}`;
+        }
+        throw new Error(errorDetail);
       }
       toast({
         title: "Settings Saved",
@@ -77,7 +91,7 @@ export default function AdminSettingsPage() {
       toast({
         variant: "destructive",
         title: "Save Error",
-        description: `Could not save settings: ${errorMessage}`,
+        description: `${errorMessage}`,
       });
     } finally {
       setIsSaving(false);
