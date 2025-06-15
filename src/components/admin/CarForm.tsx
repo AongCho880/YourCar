@@ -18,10 +18,10 @@ import { useToast } from "@/hooks/use-toast";
 import { generateAdCopy } from "@/ai/flows/generate-ad-copy";
 import type { GenerateAdCopyInput } from "@/ai/flows/generate-ad-copy";
 import { useState, useEffect } from "react";
-import { PlusCircle, Trash2, Sparkles, Loader2, FileImage, Upload, XCircle } from "lucide-react";
+import { PlusCircle, Trash2, Sparkles, Loader2, FileImage } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import Image from 'next/image';
-import { Progress } from '@/components/ui/progress';
+// Image component might not be needed here if not displaying previews of manually entered URLs
+// import { Progress } from '@/components/ui/progress'; // Progress not needed
 
 const ADD_NEW_MAKE_VALUE = "__ADD_NEW_MAKE__";
 
@@ -34,9 +34,9 @@ const carFormSchema = z.object({
   mileage: z.coerce.number().min(0, "Mileage must be positive"),
   condition: z.nativeEnum(CarCondition, { errorMap: () => ({ message: "Condition is required" }) }),
   features: z.array(z.object({ value: z.string().min(1, "Feature cannot be empty") })).optional(),
-  // images field stores existing URLs (if editing) or manually added URLs.
-  // Files selected for upload are handled separately and their URLs are merged on submit.
-  images: z.array(z.string().url("Must be a valid URL.").min(1, "URL cannot be empty.")), 
+  images: z.array(z.string().url("Must be a valid URL.").min(1, "URL cannot be empty."))
+             .min(1, "At least one image URL is required.") // Ensure at least one URL
+             .max(MAX_IMAGE_UPLOADS, `Maximum ${MAX_IMAGE_UPLOADS} image URLs allowed.`),
   description: z.string().min(10, "Description must be at least 10 characters").max(2000, "Description too long"),
 }).superRefine((data, ctx) => {
   if (data.make === ADD_NEW_MAKE_VALUE) {
@@ -47,19 +47,6 @@ const carFormSchema = z.object({
         path: ["customMakeName"],
       });
     }
-  }
-  // This validation will be re-checked in onSubmit after files are uploaded and merged.
-  if (data.images.length === 0) { 
-    // This might trigger initially if no URLs are provided; main validation is post-upload.
-    // To avoid premature error, we could check if filesToUpload is also empty.
-    // For now, this will mainly catch if manual URLs are expected but not given.
-  }
-  if (data.images.length > MAX_IMAGE_UPLOADS) {
-     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: `Maximum ${MAX_IMAGE_UPLOADS} images allowed through manual URLs. Total images (uploads + URLs) also checked on submit.`,
-      path: ["images"],
-    });
   }
 });
 
@@ -74,15 +61,9 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
   const router = useRouter();
   const { addCar, updateCar } = useCars();
   const { toast } = useToast();
-  const [isSubmittingForm, setIsSubmittingForm] = useState(false); // Renamed from isSubmitting
+  const [isSubmittingForm, setIsSubmittingForm] = useState(false);
   const [isGeneratingCopy, setIsGeneratingCopy] = useState(false);
   
-  const [filesToUpload, setFilesToUpload] = useState<File[]>([]);
-  const [uploadProgresses, setUploadProgresses] = useState<Map<string, number>>(new Map());
-  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
-  const [imagePreviews, setImagePreviews] = useState<Map<string, string>>(new Map());
-
-
   const form = useForm<CarFormValues>({
     resolver: zodResolver(carFormSchema),
     defaultValues: initialData
@@ -114,7 +95,7 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
 
   const { fields: imageUrlFields, append: appendImageUrl, remove: removeImageUrl, update: updateImageUrl } = useFieldArray({
     control: form.control,
-    name: "images", // This RHF array tracks manually entered/existing URLs
+    name: "images",
   });
 
   const watchedMake = form.watch("make");
@@ -125,117 +106,21 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
     }
   }, [watchedMake, form]);
 
-  const handleFileSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(event.target.files || []);
-    const currentManualUrlsCount = form.getValues("images").filter(url => url && url.trim() !== "").length;
-    const currentFilesToUploadCount = filesToUpload.length;
-    
-    if (selectedFiles.length + currentManualUrlsCount + currentFilesToUploadCount > MAX_IMAGE_UPLOADS) {
-      toast({
-        variant: "destructive",
-        title: "Too Many Images",
-        description: `You can have a maximum of ${MAX_IMAGE_UPLOADS} images in total (uploaded + manual URLs).`,
-      });
-      event.target.value = ""; 
-      return;
-    }
-
-    setFilesToUpload(prev => [...prev, ...selectedFiles]);
-
-    selectedFiles.forEach(file => {
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreviews(prev => new Map(prev).set(file.name, previewUrl));
-    });
-    event.target.value = ""; 
-  };
-  
-  const removeSelectedFile = (fileName: string) => {
-    setFilesToUpload(prev => prev.filter(f => f.name !== fileName));
-    setImagePreviews(prev => {
-      const newMap = new Map(prev);
-      const urlToRevoke = newMap.get(fileName);
-      if (urlToRevoke) URL.revokeObjectURL(urlToRevoke); 
-      newMap.delete(fileName);
-      return newMap;
-    });
-  };
-
-  useEffect(() => {
-    return () => {
-      imagePreviews.forEach(url => URL.revokeObjectURL(url));
-    };
-  }, [imagePreviews]);
-
-
   const onSubmit = async (data: CarFormValues) => {
     setIsSubmittingForm(true);
-    setIsUploadingFiles(filesToUpload.length > 0);
 
-    const finalImageUrls: string[] = [...data.images.filter(url => url && url.trim() !== "")]; // Start with existing/manual URLs
-    
-    if (filesToUpload.length > 0) {
-      const uploadPromises = filesToUpload.map(file => {
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        setUploadProgresses(prev => new Map(prev).set(file.name, 0)); 
-
-        return fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-          // In a real app with progress from server:
-          // onUploadProgress: (event) => { 
-          //   const percent = Math.round((event.loaded * 100) / event.total);
-          //   setUploadProgresses(prev => new Map(prev).set(file.name, percent));
-          // }
-        })
-        .then(async response => {
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: "Unknown upload error" }));
-            throw new Error(errorData.error || `Failed to upload ${file.name}`);
-          }
-          return response.json();
-        })
-        .then(result => {
-          setUploadProgresses(prev => new Map(prev).set(file.name, 100));
-          return result.imageUrl as string;
-        })
-        .catch(error => {
-          console.error(`Error uploading ${file.name}:`, error);
-          setUploadProgresses(prev => { // Keep showing failed file, maybe mark as failed
-             const map = new Map(prev);
-             map.set(file.name, -1); // -1 to indicate failure
-             return map;
-          });
-          toast({ variant: "destructive", title: `Upload Failed: ${file.name}`, description: error.message });
-          return null; 
-        });
-      });
-
-      const results = await Promise.all(uploadPromises);
-      const successfulUploads = results.filter((url): url is string => url !== null);
-      finalImageUrls.push(...successfulUploads);
-
-      if (results.some(r => r === null)) { 
-        setIsSubmittingForm(false);
-        setIsUploadingFiles(false);
-        // Do not clear filesToUpload, user might want to retry or remove them.
-        // Failed files have progress -1.
-        toast({ variant: "destructive", title: "Some Uploads Failed", description: "Please remove failed uploads or try again." });
-        return; 
-      }
-    }
-    setIsUploadingFiles(false);
+    // Direct image upload is disabled. We use the URLs directly from the form.
+    const finalImageUrls: string[] = data.images.filter(url => url && url.trim() !== "");
 
     if (finalImageUrls.length === 0) {
-      form.setError("images", { type: "manual", message: "At least one image (uploaded or URL) is required." });
-      toast({ variant: "destructive", title: "No Images", description: "Please upload or provide at least one image URL." });
+      form.setError("images", { type: "manual", message: "At least one image URL is required." });
+      toast({ variant: "destructive", title: "No Image URLs", description: "Please provide at least one image URL." });
       setIsSubmittingForm(false);
       return;
     }
     if (finalImageUrls.length > MAX_IMAGE_UPLOADS) {
-      form.setError("images", { type: "manual", message: `Maximum ${MAX_IMAGE_UPLOADS} images allowed in total.` });
-      toast({ variant: "destructive", title: "Too Many Images", description: `Maximum ${MAX_IMAGE_UPLOADS} images allowed.` });
+      form.setError("images", { type: "manual", message: `Maximum ${MAX_IMAGE_UPLOADS} image URLs allowed.` });
+      toast({ variant: "destructive", title: "Too Many Image URLs", description: `Maximum ${MAX_IMAGE_UPLOADS} image URLs allowed.` });
       setIsSubmittingForm(false);
       return;
     }
@@ -243,7 +128,7 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
     const actualMake = data.make === ADD_NEW_MAKE_VALUE ? data.customMakeName! : data.make;
     
     const carDataToSave = {
-      ...(isEditMode && initialData ? { id: initialData.id, createdAt: initialData.createdAt } : {}), // Keep id and createdAt if editing
+      ...(isEditMode && initialData ? { id: initialData.id, createdAt: initialData.createdAt } : {}),
       make: actualMake,
       model: data.model,
       year: data.year,
@@ -253,22 +138,19 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
       features: data.features?.map(f => f.value).filter(Boolean) || [],
       images: finalImageUrls, 
       description: data.description,
-      // `updatedAt` will be set by the backend API for both create and update.
-      // `createdAt` is set by backend on create, preserved on update.
     };
     
     let success = false;
     let resultCar: CarType | null = null;
 
     if (isEditMode && initialData) {
-      resultCar = await updateCar(carDataToSave as CarType); // Cast as CarType, backend handles timestamps
+      resultCar = await updateCar(carDataToSave as CarType);
       if (resultCar) {
         success = true;
         toast({ title: "Success", description: "Car listing updated successfully." });
       }
     } else {
-      // For addCar, Omit 'id', 'createdAt', 'updatedAt'
-      const { id, createdAt, ...carDataForAdd } = carDataToSave as any; // Cast to remove id and createdAt
+      const { id, createdAt, ...carDataForAdd } = carDataToSave as any;
       resultCar = await addCar(carDataForAdd as Omit<CarType, 'id' | 'createdAt' | 'updatedAt'>);
       if (resultCar) {
         success = true;
@@ -277,16 +159,18 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
     }
     
     if (success) {
-      setFilesToUpload([]); 
-      setImagePreviews(new Map());
-      setUploadProgresses(new Map());
-      form.reset(isEditMode && resultCar ? { // If editing and successful, reset with updated data
+      form.reset(isEditMode && resultCar ? {
          ...resultCar,
           make: CAR_MAKES.includes(resultCar.make) ? resultCar.make : ADD_NEW_MAKE_VALUE,
           customMakeName: CAR_MAKES.includes(resultCar.make) ? "" : resultCar.make,
           features: resultCar.features?.map(f => ({ value: f })) || [{ value: "" }],
-        } : undefined); // Otherwise, reset to default empty values
-      if (!isEditMode) { // Only redirect on new car creation
+          images: resultCar.images || [],
+        } : { // Reset to almost empty for new car form, keeping images array for RHF
+          make: "", customMakeName: "", model: "", year: new Date().getFullYear(), 
+          price: 0, mileage: 0, condition: undefined, features: [{ value: "" }],
+          images: [], description: "",
+        }); 
+      if (!isEditMode) {
           router.push("/admin/dashboard");
       }
       router.refresh(); 
@@ -344,7 +228,7 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
                         field.onChange(value);
                       }} 
                       value={field.value}
-                      disabled={isSubmittingForm || isUploadingFiles}
+                      disabled={isSubmittingForm}
                     >
                       <FormControl><SelectTrigger><SelectValue placeholder="Select make" /></SelectTrigger></FormControl>
                       <SelectContent>
@@ -362,7 +246,7 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
                             <FormItem>
                               <FormLabel>New Brand Name</FormLabel>
                               <FormControl>
-                                <Input placeholder="Type the new brand name" {...customMakeField} disabled={isSubmittingForm || isUploadingFiles} />
+                                <Input placeholder="Type the new brand name" {...customMakeField} disabled={isSubmittingForm} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -374,21 +258,21 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
                 )} 
               />
               <FormField control={form.control} name="model" render={({ field }) => (
-                <FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., Camry, F-150" {...field} disabled={isSubmittingForm || isUploadingFiles} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Model</FormLabel><FormControl><Input placeholder="e.g., Camry, F-150" {...field} disabled={isSubmittingForm} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="year" render={({ field }) => (
-                <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" placeholder="e.g., 2023" {...field} disabled={isSubmittingForm || isUploadingFiles} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" placeholder="e.g., 2023" {...field} disabled={isSubmittingForm} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="price" render={({ field }) => (
-                <FormItem><FormLabel>Price ($)</FormLabel><FormControl><Input type="number" placeholder="e.g., 25000" {...field} disabled={isSubmittingForm || isUploadingFiles} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Price ($)</FormLabel><FormControl><Input type="number" placeholder="e.g., 25000" {...field} disabled={isSubmittingForm} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="mileage" render={({ field }) => (
-                <FormItem><FormLabel>Mileage</FormLabel><FormControl><Input type="number" placeholder="e.g., 15000" {...field} disabled={isSubmittingForm || isUploadingFiles} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Mileage</FormLabel><FormControl><Input type="number" placeholder="e.g., 15000" {...field} disabled={isSubmittingForm} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="condition" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Condition</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isSubmittingForm || isUploadingFiles}>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isSubmittingForm}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select condition" /></SelectTrigger></FormControl>
                     <SelectContent>{CAR_CONDITIONS.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
                   </Select>
@@ -399,135 +283,92 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
             
             <div className="space-y-4">
               <FormLabel className="flex items-center text-lg font-semibold">
-                <FileImage className="mr-2 h-5 w-5" /> Car Images (up to {MAX_IMAGE_UPLOADS} total)
+                <FileImage className="mr-2 h-5 w-5" /> Car Image URLs (up to {MAX_IMAGE_UPLOADS} total)
               </FormLabel>
-              <FormDescription>Upload new images or manually enter direct image URLs. Existing images are shown as URLs.</FormDescription>
+              <FormDescription>
+                Direct image upload is currently disabled. Please provide externally hosted image URLs.
+                Ensure these URLs are publicly accessible.
+              </FormDescription>
               
+              {/* Error message for the 'images' array field itself (e.g., min/max items) */}
               <FormField
                 control={form.control}
-                name="images" 
-                render={() => ( // No field directly needed here, errors are handled by form.setError
+                name="images"
+                render={() => (
                   <FormItem>
-                    <FormLabel htmlFor="file-upload" className="sr-only">Upload Images</FormLabel>
-                    <Input 
-                      id="file-upload"
-                      type="file" 
-                      multiple 
-                      accept="image/*" 
-                      onChange={handleFileSelection}
-                      className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                      disabled={isSubmittingForm || isUploadingFiles || (form.getValues("images").length + filesToUpload.length >= MAX_IMAGE_UPLOADS)}
-                    />
+                     {/* General errors for the images array like "at least one image is required" */}
                      <FormMessage>{form.formState.errors.images?.root?.message || form.formState.errors.images?.message}</FormMessage>
                   </FormItem>
                 )}
               />
-
-              {filesToUpload.length > 0 && (
-                <div className="space-y-3 mt-4">
-                  <h3 className="text-md font-medium">New Files to Upload:</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {filesToUpload.map((file) => (
-                      <div key={file.name} className="relative group border p-2 rounded-md shadow-sm">
-                        <Image
-                          src={imagePreviews.get(file.name) || "https://placehold.co/150x100.png"}
-                          alt={`Preview ${file.name}`}
-                          width={150}
-                          height={100}
-                          className="w-full h-24 object-cover rounded-md"
-                        />
-                        <p className="text-xs truncate mt-1">{file.name}</p>
-                        {uploadProgresses.get(file.name) === -1 && <p className="text-xs text-destructive">Upload failed</p>}
-                        {typeof uploadProgresses.get(file.name) === 'number' && uploadProgresses.get(file.name)! >= 0 && (
-                          <Progress value={uploadProgresses.get(file.name)} className="h-2 mt-1" />
-                        )}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-1 right-1 h-6 w-6 bg-background/70 hover:bg-destructive/20 rounded-full"
-                          onClick={() => removeSelectedFile(file.name)}
-                          disabled={isUploadingFiles || isSubmittingForm}
-                          title="Remove file from selection"
-                        >
-                          <XCircle className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
               
-              {imageUrlFields.length > 0 && (
-                <div className="space-y-3 mt-4">
-                  <h3 className="text-md font-medium">Current/Manual Image URLs:</h3>
-                  {imageUrlFields.map((field, index) => (
-                    <FormField
-                      key={field.id}
-                      control={form.control}
-                      name={`images.${index}`}
-                      render={({ field: itemField }) => (
-                        <FormItem className="flex items-center gap-2">
-                          <FormLabel htmlFor={`image-url-${index}`} className="sr-only">Image URL {index +1}</FormLabel>
-                          <FormControl>
-                            <Input
-                              id={`image-url-${index}`}
-                              placeholder="https://example.com/image.png"
-                              {...itemField}
-                              value={itemField.value || ""} 
-                              onChange={(e) => updateImageUrl(index, e.target.value)} // Using RHF's update
-                              disabled={isSubmittingForm || isUploadingFiles}
-                            />
-                          </FormControl>
-                          <Button type="button" variant="ghost" size="icon" onClick={() => removeImageUrl(index)} title="Remove URL" disabled={isSubmittingForm || isUploadingFiles}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ))}
-                </div>
-              )}
-              {(form.getValues("images").length + filesToUpload.length) < MAX_IMAGE_UPLOADS && (
-                 <Button type="button" variant="outline" size="sm" onClick={() => appendImageUrl("")} className="mt-2" disabled={isSubmittingForm || isUploadingFiles}>
-                  <PlusCircle className="mr-2 h-4 w-4" />Add Image URL Manually
+              {imageUrlFields.map((field, index) => (
+                <FormField
+                  key={field.id}
+                  control={form.control}
+                  name={`images.${index}`}
+                  render={({ field: itemField }) => ( // Renamed to itemField to avoid conflict with outer field
+                    <FormItem className="flex items-center gap-2">
+                      <FormLabel htmlFor={`image-url-${index}`} className="sr-only">Image URL {index +1}</FormLabel>
+                      <FormControl>
+                        <Input
+                          id={`image-url-${index}`}
+                          placeholder="https://example.com/image.png"
+                          {...itemField}
+                          value={itemField.value || ""} // Ensure controlled component
+                          onChange={(e) => updateImageUrl(index, e.target.value)}
+                          disabled={isSubmittingForm}
+                        />
+                      </FormControl>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeImageUrl(index)} title="Remove URL" disabled={isSubmittingForm}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ))}
+              {imageUrlFields.length < MAX_IMAGE_UPLOADS && (
+                 <Button type="button" variant="outline" size="sm" onClick={() => appendImageUrl("")} className="mt-2" disabled={isSubmittingForm}>
+                  <PlusCircle className="mr-2 h-4 w-4" />Add Image URL
                 </Button>
               )}
+               {!imageUrlFields.length && form.formState.isSubmitted && form.formState.errors.images && (
+                <p className="text-sm font-medium text-destructive">{form.formState.errors.images.message}</p>
+              )}
             </div>
-
 
             <div className="space-y-2">
               <FormLabel>Features</FormLabel>
               {featureFields.map((field, index) => (
                 <FormField key={field.id} control={form.control} name={`features.${index}.value`} render={({ field: itemField }) => (
                   <FormItem className="flex items-center gap-2">
-                    <FormControl><Input placeholder="e.g., Sunroof, Leather Seats" {...itemField} disabled={isSubmittingForm || isUploadingFiles} /></FormControl>
-                    {featureFields.length > 1 && <Button type="button" variant="ghost" size="icon" onClick={() => removeFeature(index)} disabled={isSubmittingForm || isUploadingFiles}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
+                    <FormControl><Input placeholder="e.g., Sunroof, Leather Seats" {...itemField} disabled={isSubmittingForm} /></FormControl>
+                    {featureFields.length > 1 && <Button type="button" variant="ghost" size="icon" onClick={() => removeFeature(index)} disabled={isSubmittingForm}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
                      <FormMessage/>
                   </FormItem>
                 )} />
               ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => appendFeature({ value: "" })} disabled={isSubmittingForm || isUploadingFiles}><PlusCircle className="mr-2 h-4 w-4" />Add Feature</Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => appendFeature({ value: "" })} disabled={isSubmittingForm}><PlusCircle className="mr-2 h-4 w-4" />Add Feature</Button>
             </div>
 
             <FormField control={form.control} name="description" render={({ field }) => (
               <FormItem>
                 <div className="flex justify-between items-center">
                   <FormLabel>Description / Ad Copy</FormLabel>
-                  <Button type="button" variant="outline" size="sm" onClick={handleGenerateAdCopy} disabled={isGeneratingCopy || isSubmittingForm || isUploadingFiles}>
+                  <Button type="button" variant="outline" size="sm" onClick={handleGenerateAdCopy} disabled={isGeneratingCopy || isSubmittingForm}>
                     {isGeneratingCopy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                     Generate with AI
                   </Button>
                 </div>
-                <FormControl><Textarea placeholder="Detailed description of the car..." {...field} rows={6} disabled={isSubmittingForm || isUploadingFiles} /></FormControl>
+                <FormControl><Textarea placeholder="Detailed description of the car..." {...field} rows={6} disabled={isSubmittingForm} /></FormControl>
                 <FormDescription>This will be shown on the car's detail page. You can use AI to help generate it.</FormDescription>
                 <FormMessage />
               </FormItem>
             )} />
 
-            <Button type="submit" disabled={isSubmittingForm || isUploadingFiles || isGeneratingCopy} className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
-              {(isSubmittingForm || isUploadingFiles) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={isSubmittingForm || isGeneratingCopy} className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
+              {isSubmittingForm && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isEditMode ? "Save Changes" : "Add Car Listing"}
             </Button>
           </form>
