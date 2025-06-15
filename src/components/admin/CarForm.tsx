@@ -111,7 +111,6 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
       title: "File Upload Not Available",
       description: "Direct file upload is temporarily disabled. Please use the 'Add Image URL' fields to provide links to externally hosted images.",
     });
-    // Reset the file input
     if (event.target) {
       event.target.value = "";
     }
@@ -137,8 +136,7 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
 
     const actualMake = data.make === ADD_NEW_MAKE_VALUE ? data.customMakeName! : data.make;
     
-    const carDataToSave = {
-      ...(isEditMode && initialData ? { id: initialData.id, createdAt: initialData.createdAt } : {}),
+    const carDataPayload = {
       make: actualMake,
       model: data.model,
       year: data.year,
@@ -148,32 +146,23 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
       features: data.features?.map(f => f.value).filter(Boolean) || [],
       images: finalImageUrls, 
       description: data.description,
-      ...(isEditMode && initialData && {updatedAt: Date.now()}), // Ensure updatedAt is set for edits
-      ...(!isEditMode && {createdAt: Date.now(), updatedAt: Date.now()}) // Ensure timestamps for new
     };
     
     let success = false;
     let resultCar: CarType | null = null;
 
     if (isEditMode && initialData) {
-      resultCar = await updateCar(carDataToSave as CarType);
-      if (resultCar) {
-        success = true;
-        toast({ title: "Success", description: "Car listing updated successfully." });
-      }
+      resultCar = await updateCar({ ...carDataPayload, id: initialData.id });
+      // Toast for update is now handled in CarContext
     } else {
-      // For addCar, ensure 'id' is not part of the payload sent to the context/API
-      const { id, ...carDataForAdd } = carDataToSave as any; 
-      resultCar = await addCar(carDataForAdd as Omit<CarType, 'id'>);
-      if (resultCar) {
-        success = true;
-        toast({ title: "Success", description: "Car listing added successfully." });
-      }
+      resultCar = await addCar(carDataPayload);
+      // Toast for add is now handled in CarContext
     }
     
-    if (success) {
+    if (resultCar) { // CarContext now returns the car or null
+      success = true;
       form.reset(isEditMode && resultCar ? {
-         ...resultCar,
+         ...resultCar, // Use the car data returned from context, it might have updated timestamps
           make: CAR_MAKES.includes(resultCar.make) ? resultCar.make : ADD_NEW_MAKE_VALUE,
           customMakeName: CAR_MAKES.includes(resultCar.make) ? "" : resultCar.make,
           features: resultCar.features?.map(f => ({ value: f })) || [{ value: "" }],
@@ -186,7 +175,6 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
       if (!isEditMode) {
           router.push("/admin/dashboard");
       }
-      // router.refresh(); // Can cause issues if called too soon or if form state is not fully reset
     }
     setIsSubmittingForm(false);
   };
@@ -327,7 +315,7 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
               <div className="space-y-3">
                 <FormLabel className="text-sm font-medium">Image URLs (up to {MAX_IMAGE_UPLOADS} total)</FormLabel>
                 <FormDescription>
-                  Provide publicly accessible URLs for your car images.
+                  Provide publicly accessible URLs for your car images. Ensure these URLs are correct and the images are hosted.
                 </FormDescription>
                 
                 <FormField
@@ -416,6 +404,3 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
     </Card>
   );
 }
-
-
-    
