@@ -2,121 +2,100 @@
 "use client";
 
 import type { ReactNode } from 'react';
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import type { Car } from '@/types';
-// Removed Firebase imports
-
-// Example initial mock car data (can be empty)
-const initialMockCars: Car[] = [
-  // {
-  //   id: '1',
-  //   make: 'Toyota',
-  //   model: 'Camry',
-  //   year: 2022,
-  //   price: 25000,
-  //   mileage: 15000,
-  //   condition: CarCondition.USED_EXCELLENT,
-  //   features: ['Sunroof', 'Leather Seats', 'Navigation'],
-  //   images: ['https://placehold.co/600x400.png?text=Toyota+Camry+1', 'https://placehold.co/600x400.png?text=Toyota+Camry+2'],
-  //   description: 'A reliable and stylish sedan, perfect for families or commuting.',
-  //   createdAt: Date.now() - 1000 * 60 * 60 * 24 * 5, // 5 days ago
-  //   updatedAt: Date.now() - 1000 * 60 * 60 * 24 * 2, // 2 days ago
-  // },
-  // {
-  //   id: '2',
-  //   make: 'Honda',
-  //   model: 'CR-V',
-  //   year: 2021,
-  //   price: 28000,
-  //   mileage: 22000,
-  //   condition: CarCondition.USED_GOOD,
-  //   features: ['All-Wheel Drive', 'Apple CarPlay', 'Backup Camera'],
-  //   images: ['https://placehold.co/600x400.png?text=Honda+CRV+1'],
-  //   description: 'Spacious and versatile SUV, great for adventures.',
-  //   createdAt: Date.now() - 1000 * 60 * 60 * 24 * 10, // 10 days ago
-  //   updatedAt: Date.now() - 1000 * 60 * 60 * 24 * 3, // 3 days ago
-  // },
-];
-
+import { useToast } from '@/hooks/use-toast';
 
 interface CarContextType {
   cars: Car[];
   loading: boolean;
   addCar: (carData: Omit<Car, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Car | null>;
-  updateCar: (carData: Car) => Promise<Car | null>;
-  deleteCar: (carId: string) => Promise<void>;
+  updateCar: (carData: Car) => Promise<Car | null>; // Placeholder for now
+  deleteCar: (carId: string) => Promise<void>; // Placeholder for now
   getCarById: (carId: string) => Car | undefined;
+  refreshCars: () => Promise<void>;
 }
 
 const CarContext = createContext<CarContextType | undefined>(undefined);
 
 export const CarProvider = ({ children }: { children: ReactNode }) => {
-  const [cars, setCars] = useState<Car[]>(initialMockCars);
+  const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchCars = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/cars');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch cars');
+      }
+      const data: Car[] = await response.json();
+      setCars(data);
+    } catch (error) {
+      console.error("Error fetching cars:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      toast({ variant: "destructive", title: "Error", description: `Could not load cars: ${errorMessage}` });
+      setCars([]); // Set to empty array on error
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
-    // Simulate loading delay for mock data
-    const timer = setTimeout(() => {
-      // Sort initial cars by createdAt descending if needed, though initialMockCars can be pre-sorted
-      setCars(prevCars => [...prevCars].sort((a, b) => b.createdAt - a.createdAt));
-      setLoading(false);
-    }, 500); // 0.5 second delay to simulate loading
-    return () => clearTimeout(timer);
-  }, []);
+    fetchCars();
+  }, [fetchCars]);
 
   const addCar = async (carData: Omit<Car, 'id' | 'createdAt' | 'updatedAt'>): Promise<Car | null> => {
     setLoading(true);
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 300));
     try {
-      const now = Date.now();
-      const newCar: Car = {
-        ...carData,
-        id: Math.random().toString(36).substr(2, 9), // Generate a simple unique ID
-        createdAt: now,
-        updatedAt: now,
-      };
-      setCars(prevCars => [newCar, ...prevCars].sort((a, b) => b.createdAt - a.createdAt));
-      setLoading(false);
+      const response = await fetch('/api/cars', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(carData),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add car');
+      }
+      const newCar: Car = await response.json();
+      // setCars(prevCars => [newCar, ...prevCars].sort((a,b) => b.createdAt - a.createdAt)); // Optimistic update, or refetch
+      await fetchCars(); // Refetch to ensure data consistency
       return newCar;
     } catch (error) {
-      console.error("Error adding car (mock):", error);
-      setLoading(false);
+      console.error("Error adding car:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      toast({ variant: "destructive", title: "Error", description: `Could not add car: ${errorMessage}` });
       return null;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const updateCar = async (updatedCarData: Car): Promise<Car | null> => {
+  // Placeholder implementations for updateCar and deleteCar
+  // These would also call their respective API endpoints
+  const updateCar = async (carData: Car): Promise<Car | null> => {
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 300));
-    try {
-      const carWithTimestamp: Car = {
-        ...updatedCarData,
-        updatedAt: Date.now(),
-      };
-      setCars(prevCars =>
-        prevCars.map(car => (car.id === carWithTimestamp.id ? carWithTimestamp : car))
-        .sort((a,b) => b.createdAt - a.createdAt)
-      );
-      setLoading(false);
-      return carWithTimestamp;
-    } catch (error) {
-      console.error("Error updating car (mock):", error);
-      setLoading(false);
-      return null;
-    }
+    console.log("Updating car (API call to be implemented):", carData.id);
+    // Example:
+    // const response = await fetch(`/api/cars/${carData.id}`, { method: 'PUT', ... });
+    // await fetchCars(); // Refetch
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
+    setLoading(false);
+    toast({ title: "Info", description: "Update car functionality via API is pending." });
+    return carData; // Return original for now
   };
 
   const deleteCar = async (carId: string): Promise<void> => {
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 300));
-    try {
-      setCars(prevCars => prevCars.filter(car => car.id !== carId));
-    } catch (error) {
-      console.error("Error deleting car (mock):", error);
-    } finally {
-      setLoading(false);
-    }
+    console.log("Deleting car (API call to be implemented):", carId);
+    // Example:
+    // const response = await fetch(`/api/cars/${carId}`, { method: 'DELETE', ... });
+    // await fetchCars(); // Refetch
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
+    setLoading(false);
+    toast({ title: "Info", description: "Delete car functionality via API is pending." });
   };
 
   const getCarById = (carId: string): Car | undefined => {
@@ -124,7 +103,7 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <CarContext.Provider value={{ cars, loading, addCar, updateCar, deleteCar, getCarById }}>
+    <CarContext.Provider value={{ cars, loading, addCar, updateCar, deleteCar, getCarById, refreshCars: fetchCars }}>
       {children}
     </CarContext.Provider>
   );

@@ -18,10 +18,10 @@ import { useToast } from "@/hooks/use-toast";
 import { generateAdCopy } from "@/ai/flows/generate-ad-copy";
 import type { GenerateAdCopyInput } from "@/ai/flows/generate-ad-copy";
 import { useState, useEffect } from "react";
-import { PlusCircle, Trash2, Sparkles, Loader2, FileImage } from "lucide-react"; // Removed Upload, XCircle
+import { PlusCircle, Trash2, Sparkles, Loader2, FileImage, Upload, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-// Removed Firebase Storage imports (storage, storageRef, uploadBytesResumable, getDownloadURL, deleteObject)
-// Removed Image and Progress components as they were mainly for file uploads
+import Image from 'next/image';
+import { Progress } from '@/components/ui/progress';
 
 const ADD_NEW_MAKE_VALUE = "__ADD_NEW_MAKE__";
 
@@ -34,7 +34,7 @@ const carFormSchema = z.object({
   mileage: z.coerce.number().min(0, "Mileage must be positive"),
   condition: z.nativeEnum(CarCondition, { errorMap: () => ({ message: "Condition is required" }) }),
   features: z.array(z.object({ value: z.string().min(1, "Feature cannot be empty") })).optional(),
-  images: z.array(z.string().url("Must be a valid URL string.").min(1, "URL cannot be empty.")).min(1, "At least one image URL is required.").max(MAX_IMAGE_UPLOADS, `Maximum ${MAX_IMAGE_UPLOADS} image URLs allowed.`),
+  images: z.array(z.string().url("Must be a valid URL.").min(1, "URL cannot be empty.")), // Will store final URLs
   description: z.string().min(10, "Description must be at least 10 characters").max(2000, "Description too long"),
 }).superRefine((data, ctx) => {
   if (data.make === ADD_NEW_MAKE_VALUE) {
@@ -45,6 +45,20 @@ const carFormSchema = z.object({
         path: ["customMakeName"],
       });
     }
+  }
+  if (data.images.length === 0) {
+     ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "At least one image is required.",
+      path: ["images"], // This path might need adjustment if directly validating after file uploads
+    });
+  }
+  if (data.images.length > MAX_IMAGE_UPLOADS) {
+     ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Maximum ${MAX_IMAGE_UPLOADS} images allowed.`,
+      path: ["images"],
+    });
   }
 });
 
@@ -62,7 +76,11 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingCopy, setIsGeneratingCopy] = useState(false);
   
-  // Removed state related to file uploads: filesToUpload, uploadProgresses, isUploadingFiles, imagePreviews
+  const [filesToUpload, setFilesToUpload] = useState<File[]>([]);
+  const [uploadProgresses, setUploadProgresses] = useState<Map<string, number>>(new Map());
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const [imagePreviews, setImagePreviews] = useState<Map<string, string>>(new Map());
+
 
   const form = useForm<CarFormValues>({
     resolver: zodResolver(carFormSchema),
@@ -83,7 +101,7 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
           mileage: 0,
           condition: undefined,
           features: [{ value: "" }],
-          images: [""], // Start with one empty URL field
+          images: [], // Start with empty array, files/URLs will populate this
           description: "",
         },
   });
@@ -93,7 +111,8 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
     name: "features",
   });
 
-  const { fields: imageUrlFields, append: appendImageUrl, remove: removeImageUrl } = useFieldArray({
+  // For manual URL inputs
+  const { fields: imageUrlFields, append: appendImageUrl, remove: removeImageUrl, update: updateImageUrl } = useFieldArray({
     control: form.control,
     name: "images",
   });
@@ -106,46 +125,148 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
     }
   }, [watchedMake, form]);
 
-  // Removed handleFileSelection and removeSelectedFile functions
+  const handleFileSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(event.target.files || []);
+    const currentTotalImages = form.getValues("images").length + filesToUpload.length;
+    
+    if (selectedFiles.length + currentTotalImages > MAX_IMAGE_UPLOADS) {
+      toast({
+        variant: "destructive",
+        title: "Too Many Images",
+        description: `You can upload a maximum of ${MAX_IMAGE_UPLOADS} images in total.`,
+      });
+      event.target.value = ""; // Clear file input
+      return;
+    }
+
+    setFilesToUpload(prev => [...prev, ...selectedFiles]);
+
+    selectedFiles.forEach(file => {
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreviews(prev => new Map(prev).set(file.name, previewUrl));
+    });
+    event.target.value = ""; // Clear file input to allow re-selecting same file
+  };
+  
+  const removeSelectedFile = (fileName: string) => {
+    setFilesToUpload(prev => prev.filter(f => f.name !== fileName));
+    setImagePreviews(prev => {
+      const newMap = new Map(prev);
+      URL.revokeObjectURL(newMap.get(fileName)!); // Clean up object URL
+      newMap.delete(fileName);
+      return newMap;
+    });
+  };
+
+  // Clean up object URLs on unmount
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [imagePreviews]);
+
 
   const onSubmit = async (data: CarFormValues) => {
     setIsSubmitting(true);
+    setIsUploadingFiles(true);
 
-    // Filter out empty strings from image URLs
-    const validImageUrls = data.images.filter(url => url && url.trim() !== "");
-
-    if (validImageUrls.length === 0) {
-        toast({ variant: "destructive", title: "No Image URLs", description: "Please provide at least one image URL." });
-        setIsSubmitting(false);
-        return;
-    }
-    if (validImageUrls.length > MAX_IMAGE_UPLOADS) {
-        toast({ variant: "destructive", title: "Too Many Image URLs", description: `Please ensure total image URLs do not exceed ${MAX_IMAGE_UPLOADS}.` });
-        setIsSubmitting(false);
-        return;
-    }
+    const uploadedImageUrls: string[] = [];
     
-    data.images = validImageUrls; // Update form data with validated URLs
+    // Process existing URLs (from manual inputs)
+    const existingUrls = data.images.filter(url => url && url.trim() !== "").map(url => url.trim());
+    uploadedImageUrls.push(...existingUrls);
+
+    // Upload new files
+    if (filesToUpload.length > 0) {
+      const uploadPromises = filesToUpload.map(file => {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        setUploadProgresses(prev => new Map(prev).set(file.name, 0)); // Initialize progress
+
+        // Simulate progress for API upload, actual progress needs server events or polling
+        // For now, just set to 100 on success
+        return fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
+        .then(async response => {
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: "Unknown upload error" }));
+            throw new Error(errorData.error || `Failed to upload ${file.name}`);
+          }
+          return response.json();
+        })
+        .then(result => {
+          setUploadProgresses(prev => new Map(prev).set(file.name, 100));
+          return result.imageUrl;
+        })
+        .catch(error => {
+          console.error(`Error uploading ${file.name}:`, error);
+          setUploadProgresses(prev => new Map(prev).delete(file.name)); // Remove progress on error
+          toast({ variant: "destructive", title: `Upload Failed: ${file.name}`, description: error.message });
+          return null; // Indicate failure
+        });
+      });
+
+      const results = await Promise.all(uploadPromises);
+      const successfulUploads = results.filter((url): url is string => url !== null);
+      uploadedImageUrls.push(...successfulUploads);
+
+      if (results.some(r => r === null)) { // If any upload failed
+        setIsSubmitting(false);
+        setIsUploadingFiles(false);
+        // Keep files that failed so user can retry or remove them
+        const failedFileNames = filesToUpload.filter((_, i) => results[i] === null).map(f => f.name);
+        setFilesToUpload(filesToUpload.filter(f => failedFileNames.includes(f.name)));
+        return; 
+      }
+    }
+    setIsUploadingFiles(false);
+
+    // Validate total images
+    if (uploadedImageUrls.length === 0) {
+      toast({ variant: "destructive", title: "No Images", description: "Please upload or provide at least one image URL." });
+      form.setError("images", { type: "manual", message: "At least one image is required." });
+      setIsSubmitting(false);
+      return;
+    }
+    if (uploadedImageUrls.length > MAX_IMAGE_UPLOADS) {
+      toast({ variant: "destructive", title: "Too Many Images", description: `Maximum ${MAX_IMAGE_UPLOADS} images allowed.` });
+      form.setError("images", { type: "manual", message: `Maximum ${MAX_IMAGE_UPLOADS} images allowed.` });
+      setIsSubmitting(false);
+      return;
+    }
 
     const actualMake = data.make === ADD_NEW_MAKE_VALUE ? data.customMakeName! : data.make;
     const carDataToSave = {
       ...data,
       make: actualMake,
       features: data.features?.map(f => f.value).filter(Boolean) || [],
+      images: uploadedImageUrls, // Use the final list of URLs
     };
     // @ts-expect-error customMakeName is not part of CarType
     delete carDataToSave.customMakeName;
 
+    let success = false;
     if (isEditMode && initialData) {
-      await updateCar({ ...initialData, ...carDataToSave });
+      const result = await updateCar({ ...initialData, ...carDataToSave });
+      if (result) success = true;
       toast({ title: "Success", description: "Car listing updated successfully." });
     } else {
-      await addCar(carDataToSave as Omit<CarType, 'id' | 'createdAt' | 'updatedAt'>);
+      const result = await addCar(carDataToSave as Omit<CarType, 'id' | 'createdAt' | 'updatedAt'>);
+      if (result) success = true;
       toast({ title: "Success", description: "Car listing added successfully." });
     }
     
-    router.push("/admin/dashboard");
-    router.refresh();
+    if (success) {
+      setFilesToUpload([]); // Clear successfully uploaded files
+      setImagePreviews(new Map());
+      setUploadProgresses(new Map());
+      form.reset(); // Reset form to default or clear values
+      router.push("/admin/dashboard");
+      router.refresh(); // Consider if this is needed with context updates
+    }
     setIsSubmitting(false);
   };
 
@@ -179,8 +300,6 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
     }
   };
   
-  // Removed useEffect for cleaning up Object URLs
-
   return (
     <Card>
       <CardHeader>
@@ -253,13 +372,70 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
               )} />
             </div>
             
-            {/* Image URL Section - Reverted to URL inputs only */}
+            {/* Image Upload and URL Section */}
             <div className="space-y-4">
               <FormLabel className="flex items-center text-lg font-semibold">
-                <FileImage className="mr-2 h-5 w-5" /> Car Image URLs (up to {MAX_IMAGE_UPLOADS} total)
+                <FileImage className="mr-2 h-5 w-5" /> Car Images (up to {MAX_IMAGE_UPLOADS} total)
               </FormLabel>
-              <FormDescription>Enter direct URLs for your car images.</FormDescription>
+              <FormDescription>Upload new images or manually enter direct image URLs.</FormDescription>
               
+              {/* File Upload Input */}
+              <FormField
+                control={form.control} // Not directly tied to RHF data, but for layout
+                name="images" // Associate with images for error display
+                render={() => (
+                  <FormItem>
+                    <FormLabel htmlFor="file-upload" className="sr-only">Upload Images</FormLabel>
+                    <Input 
+                      id="file-upload"
+                      type="file" 
+                      multiple 
+                      accept="image/*" 
+                      onChange={handleFileSelection}
+                      className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                      disabled={isSubmitting || (form.getValues("images").length + filesToUpload.length >= MAX_IMAGE_UPLOADS)}
+                    />
+                     <FormMessage>{form.formState.errors.images?.root?.message || form.formState.errors.images?.message}</FormMessage>
+                  </FormItem>
+                )}
+              />
+
+              {/* Previews for selected files */}
+              {filesToUpload.length > 0 && (
+                <div className="space-y-3 mt-4">
+                  <h3 className="text-md font-medium">Selected Files for Upload:</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {filesToUpload.map((file) => (
+                      <div key={file.name} className="relative group border p-2 rounded-md shadow-sm">
+                        <Image
+                          src={imagePreviews.get(file.name) || "https://placehold.co/150x100.png"}
+                          alt={`Preview ${file.name}`}
+                          width={150}
+                          height={100}
+                          className="w-full h-24 object-cover rounded-md"
+                        />
+                        <p className="text-xs truncate mt-1">{file.name}</p>
+                        {uploadProgresses.has(file.name) && (
+                          <Progress value={uploadProgresses.get(file.name)} className="h-2 mt-1" />
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-1 right-1 h-6 w-6 bg-background/70 hover:bg-destructive/20 rounded-full"
+                          onClick={() => removeSelectedFile(file.name)}
+                          disabled={isUploadingFiles || isSubmitting}
+                          title="Remove file"
+                        >
+                          <XCircle className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Manual URL Inputs */}
               {imageUrlFields.map((field, index) => (
                 <FormField
                   key={field.id}
@@ -267,30 +443,31 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
                   name={`images.${index}`}
                   render={({ field: itemField }) => (
                     <FormItem className="flex items-center gap-2">
+                       <FormLabel htmlFor={`image-url-${index}`} className="sr-only">Image URL {index +1}</FormLabel>
                       <FormControl>
                         <Input
+                          id={`image-url-${index}`}
                           placeholder="https://example.com/image.png"
                           {...itemField}
                           value={itemField.value || ""} 
+                          onChange={(e) => updateImageUrl(index, e.target.value)}
                         />
                       </FormControl>
-                      {imageUrlFields.length > 1 && (
-                        <Button type="button" variant="ghost" size="icon" onClick={() => removeImageUrl(index)} title="Remove URL">
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      )}
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeImageUrl(index)} title="Remove URL">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
                        <FormMessage />
                     </FormItem>
                   )}
                 />
               ))}
-              {imageUrlFields.length < MAX_IMAGE_UPLOADS && (
-                <Button type="button" variant="outline" size="sm" onClick={() => appendImageUrl("")} className="mt-2">
-                  <PlusCircle className="mr-2 h-4 w-4" />Add Image URL
+              {(form.getValues("images").length + filesToUpload.length) < MAX_IMAGE_UPLOADS && (
+                 <Button type="button" variant="outline" size="sm" onClick={() => appendImageUrl("")} className="mt-2">
+                  <PlusCircle className="mr-2 h-4 w-4" />Add Image URL Manually
                 </Button>
               )}
-              <FormMessage>{form.formState.errors.images?.root?.message || form.formState.errors.images?.message}</FormMessage>
             </div>
+
 
             <div className="space-y-2">
               <FormLabel>Features</FormLabel>
@@ -321,8 +498,8 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
               </FormItem>
             )} />
 
-            <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={isSubmitting || isUploadingFiles} className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
+              {(isSubmitting || isUploadingFiles) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isEditMode ? "Save Changes" : "Add Car Listing"}
             </Button>
           </form>
