@@ -9,11 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { Save, Info } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { db } from '@/lib/firebaseConfig';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+// Removed Firebase imports
 
-const SETTINGS_COLLECTION = 'adminSettings';
-const CONTACT_INFO_DOC_ID = 'contactDetails';
+const LOCAL_STORAGE_WHATSAPP_KEY = 'yourCarAdminWhatsApp';
+const LOCAL_STORAGE_MESSENGER_KEY = 'yourCarAdminMessenger';
 
 export default function AdminSettingsPage() {
   const [whatsappNumber, setWhatsappNumber] = useState('');
@@ -22,34 +21,26 @@ export default function AdminSettingsPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const loadSettings = async () => {
-      setIsLoading(true);
-      try {
-        const settingsDocRef = doc(db, SETTINGS_COLLECTION, CONTACT_INFO_DOC_ID);
-        const docSnap = await getDoc(settingsDocRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setWhatsappNumber(data.whatsappNumber || '');
-          setMessengerId(data.messengerId || '');
-        } else {
-          // Document doesn't exist, perhaps initialize with empty strings
-          // or let the user save for the first time.
-        }
-      } catch (error) {
-        console.error("Error reading settings from Firestore:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Could not load saved settings from the database.",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadSettings();
+    setIsLoading(true);
+    try {
+      const savedWhatsApp = localStorage.getItem(LOCAL_STORAGE_WHATSAPP_KEY);
+      const savedMessenger = localStorage.getItem(LOCAL_STORAGE_MESSENGER_KEY);
+      if (savedWhatsApp) setWhatsappNumber(savedWhatsApp);
+      if (savedMessenger) setMessengerId(savedMessenger);
+    } catch (error) {
+      console.error("Error reading settings from localStorage:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not load saved settings.",
+      });
+    } finally {
+      // Simulate a short delay for loading perception if needed
+      setTimeout(() => setIsLoading(false), 300);
+    }
   }, [toast]);
 
-  const handleSaveSettings = async () => {
+  const handleSaveSettings = () => {
     if (!whatsappNumber.match(/^\+?[1-9]\d{1,14}$/)) {
         toast({
             variant: "destructive",
@@ -67,23 +58,23 @@ export default function AdminSettingsPage() {
         return;
     }
 
-    setIsLoading(true);
+    setIsLoading(true); // Show loading while saving
     try {
-      const settingsDocRef = doc(db, SETTINGS_COLLECTION, CONTACT_INFO_DOC_ID);
-      await setDoc(settingsDocRef, { whatsappNumber, messengerId }, { merge: true }); // Use merge to avoid overwriting other fields if any
+      localStorage.setItem(LOCAL_STORAGE_WHATSAPP_KEY, whatsappNumber);
+      localStorage.setItem(LOCAL_STORAGE_MESSENGER_KEY, messengerId);
       toast({
         title: "Settings Saved",
-        description: "Your contact information has been updated in the database.",
+        description: "Your contact information has been updated locally.",
       });
     } catch (error) {
-      console.error("Error saving settings to Firestore:", error);
+      console.error("Error saving settings to localStorage:", error);
       toast({
         variant: "destructive",
-        title: "Database Error",
-        description: "Could not save settings to the database.",
+        title: "Storage Error",
+        description: "Could not save settings.",
       });
     } finally {
-      setIsLoading(false);
+      setTimeout(() => setIsLoading(false), 300); // Simulate save delay
     }
   };
 
@@ -123,7 +114,7 @@ export default function AdminSettingsPage() {
           <CardTitle>Customer Contact Information</CardTitle>
           <CardDescription>
             Enter the WhatsApp number and Facebook Page ID/Messenger Username
-            that customers will use to contact you. This information will be stored securely.
+            that customers will use to contact you. This information will be stored locally in your browser.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

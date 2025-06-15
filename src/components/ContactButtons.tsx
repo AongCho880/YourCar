@@ -5,11 +5,10 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import type { Car } from '@/types';
 import { MessageCircle, Send } from 'lucide-react';
-import { db } from '@/lib/firebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
+// Removed Firebase imports
 
-const SETTINGS_COLLECTION = 'adminSettings';
-const CONTACT_INFO_DOC_ID = 'contactDetails';
+const LOCAL_STORAGE_WHATSAPP_KEY = 'yourCarAdminWhatsApp';
+const LOCAL_STORAGE_MESSENGER_KEY = 'yourCarAdminMessenger';
 
 interface ContactButtonsProps {
   car: Car;
@@ -24,19 +23,15 @@ export default function ContactButtons({ car }: ContactButtonsProps) {
   useEffect(() => {
     setIsClient(true); // Ensure this runs client-side
 
-    const fetchContactDetails = async () => {
+    const fetchContactDetails = () => {
       setIsLoading(true);
       try {
-        const settingsDocRef = doc(db, SETTINGS_COLLECTION, CONTACT_INFO_DOC_ID);
-        const docSnap = await getDoc(settingsDocRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setContactPhoneNumber(data.whatsappNumber || '');
-          setContactMessengerId(data.messengerId || '');
-        }
+        const savedWhatsApp = localStorage.getItem(LOCAL_STORAGE_WHATSAPP_KEY);
+        const savedMessenger = localStorage.getItem(LOCAL_STORAGE_MESSENGER_KEY);
+        if (savedWhatsApp) setContactPhoneNumber(savedWhatsApp);
+        if (savedMessenger) setContactMessengerId(savedMessenger);
       } catch (error) {
-        console.error("Error fetching contact details from Firestore:", error);
-        // Optionally show a toast or error message to the user
+        console.error("Error fetching contact details from localStorage:", error);
       } finally {
         setIsLoading(false);
       }
@@ -60,8 +55,6 @@ export default function ContactButtons({ car }: ContactButtonsProps) {
   };
 
   if (!isClient || isLoading) {
-    // Render a loading state or null to avoid hydration mismatch & show loading
-    // For example, simple placeholder buttons:
     return (
       <div className="flex flex-col sm:flex-row gap-4 mt-6">
         <Button className="flex-1 bg-primary text-primary-foreground" disabled>

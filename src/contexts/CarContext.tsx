@@ -4,19 +4,40 @@
 import type { ReactNode } from 'react';
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import type { Car } from '@/types';
-import { db } from '@/lib/firebaseConfig';
-import {
-  collection,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  getDocs,
-  query,
-  orderBy,
-  Timestamp,
-  serverTimestamp,
-} from 'firebase/firestore';
+// Removed Firebase imports
+
+// Example initial mock car data (can be empty)
+const initialMockCars: Car[] = [
+  // {
+  //   id: '1',
+  //   make: 'Toyota',
+  //   model: 'Camry',
+  //   year: 2022,
+  //   price: 25000,
+  //   mileage: 15000,
+  //   condition: CarCondition.USED_EXCELLENT,
+  //   features: ['Sunroof', 'Leather Seats', 'Navigation'],
+  //   images: ['https://placehold.co/600x400.png?text=Toyota+Camry+1', 'https://placehold.co/600x400.png?text=Toyota+Camry+2'],
+  //   description: 'A reliable and stylish sedan, perfect for families or commuting.',
+  //   createdAt: Date.now() - 1000 * 60 * 60 * 24 * 5, // 5 days ago
+  //   updatedAt: Date.now() - 1000 * 60 * 60 * 24 * 2, // 2 days ago
+  // },
+  // {
+  //   id: '2',
+  //   make: 'Honda',
+  //   model: 'CR-V',
+  //   year: 2021,
+  //   price: 28000,
+  //   mileage: 22000,
+  //   condition: CarCondition.USED_GOOD,
+  //   features: ['All-Wheel Drive', 'Apple CarPlay', 'Backup Camera'],
+  //   images: ['https://placehold.co/600x400.png?text=Honda+CRV+1'],
+  //   description: 'Spacious and versatile SUV, great for adventures.',
+  //   createdAt: Date.now() - 1000 * 60 * 60 * 24 * 10, // 10 days ago
+  //   updatedAt: Date.now() - 1000 * 60 * 60 * 24 * 3, // 3 days ago
+  // },
+];
+
 
 interface CarContextType {
   cars: Car[];
@@ -30,64 +51,36 @@ interface CarContextType {
 const CarContext = createContext<CarContextType | undefined>(undefined);
 
 export const CarProvider = ({ children }: { children: ReactNode }) => {
-  const [cars, setCars] = useState<Car[]>([]);
+  const [cars, setCars] = useState<Car[]>(initialMockCars);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCars = async () => {
-      setLoading(true);
-      try {
-        const carsCollection = collection(db, 'cars');
-        const q = query(carsCollection, orderBy('createdAt', 'desc'));
-        const querySnapshot = await getDocs(q);
-        const fetchedCars = querySnapshot.docs.map(docSnapshot => {
-          const data = docSnapshot.data();
-          return {
-            id: docSnapshot.id,
-            ...data,
-            // Convert Firestore Timestamps to numbers (milliseconds)
-            createdAt: (data.createdAt as Timestamp)?.toMillis() || Date.now(),
-            updatedAt: (data.updatedAt as Timestamp)?.toMillis() || Date.now(),
-          } as Car;
-        });
-        setCars(fetchedCars);
-      } catch (error) {
-        console.error("Error fetching cars from Firestore:", error);
-        // Optionally set an error state or show a toast
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCars();
+    // Simulate loading delay for mock data
+    const timer = setTimeout(() => {
+      // Sort initial cars by createdAt descending if needed, though initialMockCars can be pre-sorted
+      setCars(prevCars => [...prevCars].sort((a, b) => b.createdAt - a.createdAt));
+      setLoading(false);
+    }, 500); // 0.5 second delay to simulate loading
+    return () => clearTimeout(timer);
   }, []);
 
   const addCar = async (carData: Omit<Car, 'id' | 'createdAt' | 'updatedAt'>): Promise<Car | null> => {
     setLoading(true);
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 300));
     try {
-      const carDataWithTimestamps = {
-        ...carData,
-        createdAt: serverTimestamp(), // Use server timestamp for creation
-        updatedAt: serverTimestamp(), // Use server timestamp for initial update
-      };
-      const docRef = await addDoc(collection(db, 'cars'), carDataWithTimestamps);
-      
-      // For immediate UI update, we create a client-side version.
-      // Note: serverTimestamp() will be null until server processes it.
-      // A more robust solution might re-fetch or listen for snapshot changes.
-      // For simplicity, we'll use client-side timestamps for the immediate UI update.
       const now = Date.now();
       const newCar: Car = {
         ...carData,
-        id: docRef.id,
-        createdAt: now, 
+        id: Math.random().toString(36).substr(2, 9), // Generate a simple unique ID
+        createdAt: now,
         updatedAt: now,
       };
       setCars(prevCars => [newCar, ...prevCars].sort((a, b) => b.createdAt - a.createdAt));
       setLoading(false);
       return newCar;
     } catch (error) {
-      console.error("Error adding car to Firestore:", error);
+      console.error("Error adding car (mock):", error);
       setLoading(false);
       return null;
     }
@@ -95,32 +88,20 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
 
   const updateCar = async (updatedCarData: Car): Promise<Car | null> => {
     setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 300));
     try {
-      const carRef = doc(db, 'cars', updatedCarData.id);
-      // Exclude id, createdAt from the update payload. createdAt should not change.
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id, createdAt, ...dataToUpdate } = updatedCarData;
-      
-      const updatePayload = {
-        ...dataToUpdate,
-        updatedAt: serverTimestamp(), // Use server timestamp for updates
-      };
-      await updateDoc(carRef, updatePayload);
-
-      // For immediate UI update with client-side timestamp
-      const carForStateUpdate: Car = {
+      const carWithTimestamp: Car = {
         ...updatedCarData,
-        updatedAt: Date.now(), // Client-side timestamp for UI
+        updatedAt: Date.now(),
       };
-
       setCars(prevCars =>
-        prevCars.map(car => (car.id === carForStateUpdate.id ? carForStateUpdate : car))
+        prevCars.map(car => (car.id === carWithTimestamp.id ? carWithTimestamp : car))
         .sort((a,b) => b.createdAt - a.createdAt)
       );
       setLoading(false);
-      return carForStateUpdate;
+      return carWithTimestamp;
     } catch (error) {
-      console.error("Error updating car in Firestore:", error);
+      console.error("Error updating car (mock):", error);
       setLoading(false);
       return null;
     }
@@ -128,12 +109,11 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteCar = async (carId: string): Promise<void> => {
     setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 300));
     try {
-      await deleteDoc(doc(db, 'cars', carId));
       setCars(prevCars => prevCars.filter(car => car.id !== carId));
     } catch (error) {
-      console.error("Error deleting car from Firestore:", error);
-      // Optionally set an error state or show a toast
+      console.error("Error deleting car (mock):", error);
     } finally {
       setLoading(false);
     }

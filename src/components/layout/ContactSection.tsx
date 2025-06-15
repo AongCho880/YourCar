@@ -5,12 +5,11 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone, MessageSquareText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { db } from '@/lib/firebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+// Removed Firebase imports
 
-const SETTINGS_COLLECTION = 'adminSettings';
-const CONTACT_INFO_DOC_ID = 'contactDetails';
+const LOCAL_STORAGE_WHATSAPP_KEY = 'yourCarAdminWhatsApp';
+const LOCAL_STORAGE_MESSENGER_KEY = 'yourCarAdminMessenger';
 const DEFAULT_WHATSAPP_MESSAGE = "Hello! I'm interested in learning more about your cars.";
 
 export default function ContactSection() {
@@ -22,18 +21,15 @@ export default function ContactSection() {
   useEffect(() => {
     setIsClient(true); // Ensure this runs client-side
 
-    const fetchContactDetails = async () => {
+    const fetchContactDetails = () => {
       setIsLoading(true);
       try {
-        const settingsDocRef = doc(db, SETTINGS_COLLECTION, CONTACT_INFO_DOC_ID);
-        const docSnap = await getDoc(settingsDocRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setWhatsappNumber(data.whatsappNumber || '');
-          setMessengerId(data.messengerId || '');
-        }
+        const savedWhatsApp = localStorage.getItem(LOCAL_STORAGE_WHATSAPP_KEY);
+        const savedMessenger = localStorage.getItem(LOCAL_STORAGE_MESSENGER_KEY);
+        if (savedWhatsApp) setWhatsappNumber(savedWhatsApp);
+        if (savedMessenger) setMessengerId(savedMessenger);
       } catch (error) {
-        console.error("Error fetching contact details from Firestore:", error);
+        console.error("Error fetching contact details from localStorage:", error);
       } finally {
         setIsLoading(false);
       }
@@ -55,8 +51,6 @@ export default function ContactSection() {
   };
 
   if (!isClient) {
-    // Don't render the section on SSR to avoid hydration issues.
-    // A skeleton could be rendered here if desired, but null is simpler.
     return null;
   }
   
@@ -90,7 +84,6 @@ export default function ContactSection() {
       </CardContent>
     </Card>
   );
-
 
   return (
     <section className="py-12 bg-card border-t border-border/20 mt-12">
