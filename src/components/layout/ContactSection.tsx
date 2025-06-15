@@ -3,29 +3,43 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Phone, MessageSquareText } from 'lucide-react'; // Using MessageSquareText for Messenger
+import { Phone, MessageSquareText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { db } from '@/lib/firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const WHATSAPP_NUMBER_KEY = 'adminWhatsappNumber';
-const MESSENGER_ID_KEY = 'adminMessengerId';
+const SETTINGS_COLLECTION = 'adminSettings';
+const CONTACT_INFO_DOC_ID = 'contactDetails';
 const DEFAULT_WHATSAPP_MESSAGE = "Hello! I'm interested in learning more about your cars.";
 
 export default function ContactSection() {
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [messengerId, setMessengerId] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
-    const storedWhatsapp = localStorage.getItem(WHATSAPP_NUMBER_KEY);
-    const storedMessenger = localStorage.getItem(MESSENGER_ID_KEY);
+    setIsClient(true); // Ensure this runs client-side
 
-    if (storedWhatsapp) {
-      setWhatsappNumber(storedWhatsapp);
-    }
-    if (storedMessenger) {
-      setMessengerId(storedMessenger);
-    }
+    const fetchContactDetails = async () => {
+      setIsLoading(true);
+      try {
+        const settingsDocRef = doc(db, SETTINGS_COLLECTION, CONTACT_INFO_DOC_ID);
+        const docSnap = await getDoc(settingsDocRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setWhatsappNumber(data.whatsappNumber || '');
+          setMessengerId(data.messengerId || '');
+        }
+      } catch (error) {
+        console.error("Error fetching contact details from Firestore:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchContactDetails();
   }, []);
 
   const handleWhatsAppClick = () => {
@@ -41,58 +55,93 @@ export default function ContactSection() {
   };
 
   if (!isClient) {
-    // Don't render the section on SSR to avoid hydration issues with localStorage
+    // Don't render the section on SSR to avoid hydration issues.
+    // A skeleton could be rendered here if desired, but null is simpler.
     return null;
   }
+  
+  const LoadingSkeleton = () => (
+    <Card className="max-w-3xl mx-auto shadow-xl">
+      <CardHeader className="text-center">
+        <Skeleton className="h-8 w-1/2 mx-auto" /> {/* CardTitle */}
+        <Skeleton className="h-4 w-3/4 mx-auto mt-2" /> {/* Description */}
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-muted/50 rounded-lg">
+          <div className="flex items-center mb-2 sm:mb-0">
+            <Skeleton className="w-6 h-6 mr-3 rounded-full" />
+            <div>
+              <Skeleton className="h-5 w-20 mb-1" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
+          <Skeleton className="h-9 w-36 rounded-md" />
+        </div>
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-muted/50 rounded-lg">
+          <div className="flex items-center mb-2 sm:mb-0">
+            <Skeleton className="w-6 h-6 mr-3 rounded-full" />
+            <div>
+              <Skeleton className="h-5 w-20 mb-1" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
+          <Skeleton className="h-9 w-40 rounded-md" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+
 
   return (
     <section className="py-12 bg-card border-t border-border/20 mt-12">
       <div className="container mx-auto px-4">
-        <Card className="max-w-3xl mx-auto shadow-xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl md:text-3xl font-bold font-headline text-primary">
-              Get in Touch
-            </CardTitle>
-            <p className="text-muted-foreground">
-              Have questions or need assistance? Contact us directly!
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {whatsappNumber && (
-              <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-muted/50 rounded-lg">
-                <div className="flex items-center mb-2 sm:mb-0">
-                  <Phone className="w-6 h-6 mr-3 text-primary" />
-                  <div>
-                    <p className="font-semibold text-foreground">WhatsApp</p>
-                    <p className="text-sm text-muted-foreground">{whatsappNumber}</p>
-                  </div>
+        {isLoading ? <LoadingSkeleton /> : (
+            <Card className="max-w-3xl mx-auto shadow-xl">
+            <CardHeader className="text-center">
+                <CardTitle className="text-2xl md:text-3xl font-bold font-headline text-primary">
+                Get in Touch
+                </CardTitle>
+                <p className="text-muted-foreground">
+                Have questions or need assistance? Contact us directly!
+                </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                {whatsappNumber && (
+                <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center mb-2 sm:mb-0">
+                    <Phone className="w-6 h-6 mr-3 text-primary" />
+                    <div>
+                        <p className="font-semibold text-foreground">WhatsApp</p>
+                        <p className="text-sm text-muted-foreground">{whatsappNumber}</p>
+                    </div>
+                    </div>
+                    <Button onClick={handleWhatsAppClick} variant="outline" size="sm">
+                    Chat on WhatsApp
+                    </Button>
                 </div>
-                <Button onClick={handleWhatsAppClick} variant="outline" size="sm">
-                  Chat on WhatsApp
-                </Button>
-              </div>
-            )}
+                )}
 
-            {messengerId && (
-              <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-muted/50 rounded-lg">
-                <div className="flex items-center mb-2 sm:mb-0">
-                  <MessageSquareText className="w-6 h-6 mr-3 text-primary" />
-                  <div>
-                    <p className="font-semibold text-foreground">Messenger</p>
-                    <p className="text-sm text-muted-foreground">{messengerId}</p>
-                  </div>
+                {messengerId && (
+                <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center mb-2 sm:mb-0">
+                    <MessageSquareText className="w-6 h-6 mr-3 text-primary" />
+                    <div>
+                        <p className="font-semibold text-foreground">Messenger</p>
+                        <p className="text-sm text-muted-foreground">{messengerId}</p>
+                    </div>
+                    </div>
+                    <Button onClick={handleMessengerClick} variant="outline" size="sm">
+                    Message on Facebook
+                    </Button>
                 </div>
-                <Button onClick={handleMessengerClick} variant="outline" size="sm">
-                  Message on Facebook
-                </Button>
-              </div>
-            )}
+                )}
 
-            {!whatsappNumber && !messengerId && (
-                 <p className="text-center text-muted-foreground">Contact details will be available soon. Please check back later or contact support if this persists after admin configuration.</p>
-            )}
-          </CardContent>
-        </Card>
+                {!isLoading && !whatsappNumber && !messengerId && (
+                    <p className="text-center text-muted-foreground">Contact details are not yet configured by the admin. Please check back later.</p>
+                )}
+            </CardContent>
+            </Card>
+        )}
       </div>
     </section>
   );

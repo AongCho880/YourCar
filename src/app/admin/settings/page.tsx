@@ -9,40 +9,47 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { Save, Info } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { db } from '@/lib/firebaseConfig';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-const WHATSAPP_NUMBER_KEY = 'adminWhatsappNumber';
-const MESSENGER_ID_KEY = 'adminMessengerId';
+const SETTINGS_COLLECTION = 'adminSettings';
+const CONTACT_INFO_DOC_ID = 'contactDetails';
 
 export default function AdminSettingsPage() {
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [messengerId, setMessengerId] = useState('');
-  const [isLoading, setIsLoading] = useState(true); // For initial localStorage load
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    setIsLoading(true);
-    try {
-      const storedWhatsapp = localStorage.getItem(WHATSAPP_NUMBER_KEY);
-      const storedMessenger = localStorage.getItem(MESSENGER_ID_KEY);
-      if (storedWhatsapp) {
-        setWhatsappNumber(storedWhatsapp);
+    const loadSettings = async () => {
+      setIsLoading(true);
+      try {
+        const settingsDocRef = doc(db, SETTINGS_COLLECTION, CONTACT_INFO_DOC_ID);
+        const docSnap = await getDoc(settingsDocRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setWhatsappNumber(data.whatsappNumber || '');
+          setMessengerId(data.messengerId || '');
+        } else {
+          // Document doesn't exist, perhaps initialize with empty strings
+          // or let the user save for the first time.
+        }
+      } catch (error) {
+        console.error("Error reading settings from Firestore:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not load saved settings from the database.",
+        });
+      } finally {
+        setIsLoading(false);
       }
-      if (storedMessenger) {
-        setMessengerId(storedMessenger);
-      }
-    } catch (error) {
-      console.error("Error reading from localStorage", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not load saved settings.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    };
+    loadSettings();
   }, [toast]);
 
-  const handleSaveSettings = () => {
+  const handleSaveSettings = async () => {
     if (!whatsappNumber.match(/^\+?[1-9]\d{1,14}$/)) {
         toast({
             variant: "destructive",
@@ -60,20 +67,23 @@ export default function AdminSettingsPage() {
         return;
     }
 
+    setIsLoading(true);
     try {
-      localStorage.setItem(WHATSAPP_NUMBER_KEY, whatsappNumber);
-      localStorage.setItem(MESSENGER_ID_KEY, messengerId);
+      const settingsDocRef = doc(db, SETTINGS_COLLECTION, CONTACT_INFO_DOC_ID);
+      await setDoc(settingsDocRef, { whatsappNumber, messengerId }, { merge: true }); // Use merge to avoid overwriting other fields if any
       toast({
         title: "Settings Saved",
-        description: "Your contact information has been updated.",
+        description: "Your contact information has been updated in the database.",
       });
     } catch (error) {
-      console.error("Error saving to localStorage", error);
+      console.error("Error saving settings to Firestore:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Could not save settings. LocalStorage might be full or disabled.",
+        title: "Database Error",
+        description: "Could not save settings to the database.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -113,7 +123,7 @@ export default function AdminSettingsPage() {
           <CardTitle>Customer Contact Information</CardTitle>
           <CardDescription>
             Enter the WhatsApp number and Facebook Page ID/Messenger Username
-            that customers will use to contact you.
+            that customers will use to contact you. This information will be stored securely.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -145,7 +155,7 @@ export default function AdminSettingsPage() {
               This is used for `m.me/your_id_here` links.
             </p>
           </div>
-          <Button onClick={handleSaveSettings} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Button onClick={handleSaveSettings} className="bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isLoading}>
             <Save className="mr-2 h-4 w-4" /> Save Settings
           </Button>
         </CardContent>
@@ -153,4 +163,3 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
-
