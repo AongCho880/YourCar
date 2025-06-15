@@ -3,70 +3,156 @@
 
 import type { ReactNode } from 'react';
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  signOut as firebaseSignOut,
+  sendEmailVerification,
+  verifyBeforeUpdateEmail,
+  updatePassword as firebaseUpdatePassword,
+  type User 
+} from 'firebase/auth';
+import { auth } from '@/lib/firebaseConfig'; // Ensure auth is exported from firebaseConfig
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
-  isAdmin: boolean;
+  user: User | null;
   loading: boolean;
-  login: (user: string, pass: string) => Promise<boolean>;
-  logout: () => void;
+  login: (email: string, pass: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  updateAdminEmail: (newEmail: string) => Promise<boolean>;
+  updateAdminPassword: (newPassword: string) => Promise<boolean>;
+  sendAdminEmailVerification: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "password"; // In a real app, this would be handled securely on a backend
-const LOCAL_STORAGE_KEY = "yourCarAdminLoggedIn";
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
+  const { toast } = useToast();
 
   useEffect(() => {
-    try {
-      const storedIsAdmin = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedIsAdmin === 'true') {
-        setIsAdmin(true);
-      }
-    } catch (error) {
-      console.error("Could not access localStorage:", error);
-      // Handle cases where localStorage is not available or access is denied
-    }
-    setLoading(false);
-  }, []);
-
-  const login = async (user: string, pass: string): Promise<boolean> => {
-    setLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500)); 
-    if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
-      setIsAdmin(true);
-      try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
-      } catch (error) {
-        console.error("Could not set localStorage item:", error);
-      }
+    if (!auth) {
+      console.error("Firebase Auth is not initialized. Check your Firebase configuration.");
       setLoading(false);
-      return true;
+      // Potentially redirect to an error page or show a global error message
+      if (!pathname.startsWith('/admin')) { // Avoid redirect loops if already on admin page
+        // router.push('/config-error'); // Example error route
+      }
+      return;
     }
-    setIsAdmin(false);
-    setLoading(false);
-    return false;
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [router, pathname]);
+
+  const login = async (email: string, pass: string): Promise<boolean> => {
+    if (!auth) {
+      toast({ variant: "destructive", title: "Login Failed", description: "Authentication service not available." });
+      return false;
+    }
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      // onAuthStateChanged will handle setting the user and redirecting
+      // No need to setLoading(false) here, onAuthStateChanged does it.
+      // No need to router.push here if admin layout handles it based on user state
+      return true;
+    } catch (error: any) {
+      console.error("Firebase login error:", error);
+      const errorMessage = error.message || "Invalid credentials or network error.";
+      toast({ variant: "destructive", title: "Login Failed", description: errorMessage });
+      setUser(null);
+      setLoading(false);
+      return false;
+    }
   };
 
-  const logout = () => {
-    setIsAdmin(false);
-    try {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-    } catch (error) {
-      console.error("Could not remove localStorage item:", error);
+  const logout = async () => {
+    if (!auth) {
+      toast({ variant: "destructive", title: "Logout Failed", description: "Authentication service not available." });
+      return;
     }
-    router.push('/admin'); // Redirect to login page on logout
+    setLoading(true);
+    try {
+      await firebaseSignOut(auth);
+      setUser(null);
+      // onAuthStateChanged will set user to null.
+      // Redirecting from here ensures a clean state.
+      router.push('/admin'); 
+    } catch (error: any) {
+      console.error("Firebase logout error:", error);
+      toast({ variant: "destructive", title: "Logout Failed", description: error.message });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const updateAdminEmail = async (newEmail: string): Promise<boolean> => {
+    if (!auth || !auth.currentUser) {
+      toast({ variant: "destructive", title: "Error", description: "No user logged in or auth service unavailable." });
+      return false;
+    }
+    try {
+      await verifyBeforeUpdateEmail(auth.currentUser, newEmail);
+      toast({ title: "Verification Email Sent", description: `A verification email has been sent to ${newEmail}. Please verify to update your email address.` });
+      // Note: auth.currentUser.email won't update immediately. It updates after verification.
+      // You might want to trigger a re-fetch of user or rely on onAuthStateChanged if it fires post-verification.
+      return true;
+    } catch (error: any) {
+      console.error("Update email error:", error);
+      toast({ variant: "destructive", title: "Update Email Failed", description: error.message });
+      return false;
+    }
+  };
+  
+  const updateAdminPassword = async (newPassword: string): Promise<boolean> => {
+    if (!auth || !auth.currentUser) {
+      toast({ variant: "destructive", title: "Error", description: "No user logged in or auth service unavailable." });
+      return false;
+    }
+    try {
+      await firebaseUpdatePassword(auth.currentUser, newPassword);
+      toast({ title: "Password Updated", description: "Your password has been successfully updated." });
+      return true;
+    } catch (error: any) {
+      console.error("Update password error:", error);
+      toast({ variant: "destructive", title: "Update Password Failed", description: error.message });
+      return false;
+    }
+  };
+
+  const sendAdminEmailVerification = async (): Promise<boolean> => {
+    if (!auth || !auth.currentUser) {
+      toast({ variant: "destructive", title: "Error", description: "No user logged in or auth service unavailable." });
+      return false;
+    }
+    if (auth.currentUser.emailVerified) {
+       toast({ title: "Email Already Verified", description: "Your email address is already verified." });
+       return true;
+    }
+    try {
+      await sendEmailVerification(auth.currentUser);
+      toast({ title: "Verification Email Sent", description: `A new verification email has been sent to ${auth.currentUser.email}.` });
+      return true;
+    } catch (error: any) {
+      console.error("Send verification email error:", error);
+      toast({ variant: "destructive", title: "Verification Failed", description: error.message });
+      return false;
+    }
+  };
+
 
   return (
-    <AuthContext.Provider value={{ isAdmin, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateAdminEmail, updateAdminPassword, sendAdminEmailVerification }}>
       {children}
     </AuthContext.Provider>
   );

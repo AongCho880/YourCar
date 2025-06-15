@@ -3,6 +3,7 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
+import { getAuth, type Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -16,20 +17,21 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let db: Firestore;
 let storage: FirebaseStorage;
+let auth: Auth;
 
 const requiredConfigKeys: (keyof typeof firebaseConfig)[] = [
   'apiKey',
   'authDomain',
   'projectId',
-  'storageBucket', // Now required for storage
+  'storageBucket',
+  'messagingSenderId',
+  'appId',
 ];
 
 const missingKeys = requiredConfigKeys.filter(key => !firebaseConfig[key]);
 
 if (missingKeys.length > 0) {
   console.error(`Firebase configuration is missing the following keys: ${missingKeys.join(', ')}. Firebase app NOT fully initialized.`);
-  // App might still initialize for some services if only a few keys are missing,
-  // but dependent services like Firestore/Storage will fail.
 }
 
 if (getApps().length === 0) {
@@ -37,17 +39,21 @@ if (getApps().length === 0) {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     storage = getStorage(app);
-    console.log("Firebase app, Firestore, and Storage initialized.");
+    auth = getAuth(app);
+    console.log("Firebase app, Firestore, Storage, and Auth initialized.");
   } else {
-    // Fallback for app if essential keys are missing, but db/storage will be undefined
-    // This state should ideally not be reached if checks are done before using db/storage
-    app = initializeApp({}); // Minimal init to avoid crashes if 'app' is expected
-    console.warn("Firebase app initialized with partial/missing config. Firestore/Storage will not be available.");
+    app = initializeApp({}); // Minimal init
+    console.warn("Firebase app initialized with partial/missing config. Dependent services will not be available.");
+    // Explicitly set db, storage, auth to avoid undefined errors if accessed, though they won't work
+    // @ts-ignore
+    db = undefined;
+    // @ts-ignore
+    storage = undefined;
+    // @ts-ignore
+    auth = undefined;
   }
 } else {
   app = getApps()[0];
-  // Ensure db and storage are initialized if app was already initialized
-  // This can happen with HMR in development
   try {
     db = getFirestore(app);
   } catch (e) {
@@ -58,6 +64,11 @@ if (getApps().length === 0) {
   } catch (e) {
     console.error("Failed to initialize Storage on HMR, missing config?", e);
   }
+  try {
+    auth = getAuth(app);
+  } catch (e) {
+    console.error("Failed to initialize Auth on HMR, missing config?", e);
+  }
 }
 
-export { app, db, storage };
+export { app, db, storage, auth };

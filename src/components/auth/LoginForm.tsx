@@ -8,29 +8,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
+// useToast is now part of AuthContext for login failures
 import { LogIn, Loader2 } from 'lucide-react';
 
 export default function LoginForm() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  // Error state can be removed if AuthContext handles all toast notifications
+  // const [error, setError] = useState(''); 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    // setError(''); // Not needed if toast is used in context
     setIsLoggingIn(true);
-    const success = await login(username, password);
+    const success = await login(email, password);
     if (success) {
-      toast({ title: "Login Successful", description: "Redirecting to dashboard..." });
-      router.push('/admin/dashboard');
+      // AuthContext will show success toast and onAuthStateChanged in AuthProvider/AdminLayout will handle redirect
+      // No need to router.push or toast here for success.
     } else {
-      setError('Invalid username or password.');
-      toast({ variant: "destructive", title: "Login Failed", description: "Invalid username or password." });
+      // AuthContext's login function handles the error toast.
+      // setError('Invalid email or password.'); // Can be removed
     }
     setIsLoggingIn(false);
   };
@@ -45,15 +45,15 @@ export default function LoginForm() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@example.com"
                 required
-                autoComplete="username"
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
@@ -68,7 +68,7 @@ export default function LoginForm() {
                 autoComplete="current-password"
               />
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {/* {error && <p className="text-sm text-destructive">{error}</p>} Removed in favor of context toasts */}
             <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isLoggingIn}>
               {isLoggingIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
               Login

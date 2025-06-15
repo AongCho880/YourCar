@@ -5,20 +5,20 @@ import LoginForm from '@/components/auth/LoginForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
 
 export default function AdminLoginPage() {
-  const { isAdmin, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth(); // Changed from isAdmin to user
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && isAdmin) {
-      router.replace('/admin/dashboard');
+    if (!authLoading && user) {
+      router.replace('/admin/dashboard'); // If logged in, redirect to dashboard
     }
-  }, [isAdmin, loading, router]);
+  }, [user, authLoading, router]);
 
-  if (loading || (!loading && isAdmin)) {
+  // Show loading spinner if auth state is loading OR if user is already logged in (and redirecting)
+  if (authLoading || (!authLoading && user)) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
          <div className="flex flex-col items-center">
@@ -29,5 +29,6 @@ export default function AdminLoginPage() {
     );
   }
 
+  // If not loading and no user, show the login form
   return <LoginForm />;
 }

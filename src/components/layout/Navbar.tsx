@@ -48,16 +48,13 @@ const NavbarLoadingSkeleton = () => (
         <YourCarLogo />
         <span className="font-headline">YourCar</span>
       </Link>
-      {/* Ensure this structure matches the real nav for desktop */}
-      <nav className="hidden md:flex items-center gap-1"> {/* Changed div to nav, and gap-4 to gap-1 */}
-        {/* Placeholder for a single nav item like "Home" */}
-        <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 hover:bg-transparent hover:text-foreground"> {/* Mimic Button classes & hover style */}
-          <div className="h-5 w-16 bg-muted rounded animate-pulse"></div> {/* Mimic text content for "Home" */}
+      <nav className="hidden md:flex items-center gap-1">
+        <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
+          <div className="h-5 w-16 bg-muted rounded animate-pulse"></div>
         </div>
       </nav>
-      {/* Mobile menu icon placeholder */}
       <div className="md:hidden">
-        <div className="h-8 w-8 bg-muted rounded animate-pulse"></div> {/* Mimic Menu icon */}
+        <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
       </div>
     </div>
   </header>
@@ -66,7 +63,7 @@ const NavbarLoadingSkeleton = () => (
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAdmin, logout, loading: authContextIsLoading } = useAuth();
+  const { user, logout, loading: authContextIsLoading } = useAuth(); // Changed from isAdmin to user
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -74,7 +71,6 @@ export default function Navbar() {
     setMounted(true);
   }, []);
 
-  // Render skeleton if not mounted on client yet, or if auth context is still loading.
   if (!mounted || authContextIsLoading) {
     return <NavbarLoadingSkeleton />;
   }
@@ -84,7 +80,8 @@ export default function Navbar() {
   const adminNavLinks = [
     { href: '/admin/dashboard', label: 'Dashboard' },
     { href: '/admin/cars/new', label: 'Add Car' },
-    { href: '/admin/settings', label: 'Settings' },
+    { href: '/admin/settings', label: 'Site Settings' }, // Renamed for clarity
+    { href: '/admin/account', label: 'My Account' }, // Added Account link
   ];
 
   const NavLinkItem = ({ href, label, onClick }: { href: string; label: string, onClick?: () => void }) => {
@@ -130,7 +127,6 @@ export default function Navbar() {
           <span className="font-headline">YourCar</span>
         </Link>
 
-        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map(link => {
             const isActive = pathname === link.href;
@@ -146,7 +142,7 @@ export default function Navbar() {
               </Button>
             );
           })}
-          {isAdmin && adminNavLinks.map(link => {
+          {!!user && adminNavLinks.map(link => { // Check for user object
              const isActive = pathname === link.href;
             return (
               <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
@@ -160,14 +156,13 @@ export default function Navbar() {
               </Button>
             );
           })}
-          {isAdmin && (
-            <Button variant="outline" size="sm" onClick={logout} className="ml-2 hover:bg-transparent hover:text-foreground">
+          {!!user && ( // Check for user object
+            <Button variant="outline" size="sm" onClick={logout} className="ml-2 hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
               <LogOut className="mr-2 h-4 w-4" />Logout
             </Button>
           )}
         </nav>
 
-        {/* Mobile Navigation */}
         <div className="md:hidden">
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
@@ -181,8 +176,8 @@ export default function Navbar() {
               </SheetHeader>
               <div className="flex flex-col gap-1 p-2">
                 {navLinks.map(link => <NavLinkItem key={`mobile-${link.href}`} {...link} />)}
-                {isAdmin && adminNavLinks.map(link => <NavLinkItem key={`mobile-admin-${link.href}`} {...link} />)}
-                {isAdmin && (
+                {!!user && adminNavLinks.map(link => <NavLinkItem key={`mobile-admin-${link.href}`} {...link} />)}
+                {!!user && (
                   <NavLinkItem href="#" label="Logout" onClick={logout} />
                 )}
               </div>
