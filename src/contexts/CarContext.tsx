@@ -10,8 +10,8 @@ interface CarContextType {
   cars: Car[];
   loading: boolean;
   addCar: (carData: Omit<Car, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Car | null>;
-  updateCar: (carData: Car) => Promise<Car | null>; // Placeholder for now
-  deleteCar: (carId: string) => Promise<void>; // Placeholder for now
+  updateCar: (carData: Car) => Promise<Car | null>;
+  deleteCar: (carId: string) => Promise<boolean>; // Returns true on success, false on failure
   getCarById: (carId: string) => Car | undefined;
   refreshCars: () => Promise<void>;
 }
@@ -28,7 +28,7 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
     try {
       const response = await fetch('/api/cars');
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || 'Failed to fetch cars');
       }
       const data: Car[] = await response.json();
@@ -36,8 +36,8 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error("Error fetching cars:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      toast({ variant: "destructive", title: "Error", description: `Could not load cars: ${errorMessage}` });
-      setCars([]); // Set to empty array on error
+      toast({ variant: "destructive", title: "Error Loading Cars", description: `${errorMessage}` });
+      setCars([]); 
     } finally {
       setLoading(false);
     }
@@ -48,7 +48,7 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
   }, [fetchCars]);
 
   const addCar = async (carData: Omit<Car, 'id' | 'createdAt' | 'updatedAt'>): Promise<Car | null> => {
-    setLoading(true);
+    // setLoading(true); // Handled by individual components using the form, or global loading state for context actions
     try {
       const response = await fetch('/api/cars', {
         method: 'POST',
@@ -56,46 +56,70 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
         body: JSON.stringify(carData),
       });
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || 'Failed to add car');
       }
       const newCar: Car = await response.json();
-      // setCars(prevCars => [newCar, ...prevCars].sort((a,b) => b.createdAt - a.createdAt)); // Optimistic update, or refetch
-      await fetchCars(); // Refetch to ensure data consistency
+      await fetchCars(); // Refetch to ensure data consistency and sorting
+      // toast({ title: "Success", description: "Car listing added successfully." }); // Moved to CarForm
       return newCar;
     } catch (error) {
       console.error("Error adding car:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      toast({ variant: "destructive", title: "Error", description: `Could not add car: ${errorMessage}` });
+      toast({ variant: "destructive", title: "Error Adding Car", description: `${errorMessage}` });
       return null;
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
-  // Placeholder implementations for updateCar and deleteCar
-  // These would also call their respective API endpoints
   const updateCar = async (carData: Car): Promise<Car | null> => {
-    setLoading(true);
-    console.log("Updating car (API call to be implemented):", carData.id);
-    // Example:
-    // const response = await fetch(`/api/cars/${carData.id}`, { method: 'PUT', ... });
-    // await fetchCars(); // Refetch
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
-    setLoading(false);
-    toast({ title: "Info", description: "Update car functionality via API is pending." });
-    return carData; // Return original for now
+    // setLoading(true);
+    try {
+      const response = await fetch(`/api/cars/${carData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(carData), // Send the whole car object, API will pick fields
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update car');
+      }
+      const updatedCar: Car = await response.json();
+      await fetchCars(); // Refetch for consistency
+      // toast({ title: "Success", description: "Car listing updated successfully." }); // Moved to CarForm
+      return updatedCar;
+    } catch (error) {
+      console.error("Error updating car:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      toast({ variant: "destructive", title: "Error Updating Car", description: `${errorMessage}` });
+      return null;
+    } finally {
+      // setLoading(false);
+    }
   };
 
-  const deleteCar = async (carId: string): Promise<void> => {
-    setLoading(true);
-    console.log("Deleting car (API call to be implemented):", carId);
-    // Example:
-    // const response = await fetch(`/api/cars/${carId}`, { method: 'DELETE', ... });
-    // await fetchCars(); // Refetch
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
-    setLoading(false);
-    toast({ title: "Info", description: "Delete car functionality via API is pending." });
+  const deleteCar = async (carId: string): Promise<boolean> => {
+    // setLoading(true); // Handled by component triggering delete
+    try {
+      const response = await fetch(`/api/cars/${carId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to delete car');
+      }
+      await fetchCars(); // Refetch
+      toast({ title: "Car Deleted", description: "The car listing has been removed." });
+      return true;
+    } catch (error) {
+      console.error("Error deleting car:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      toast({ variant: "destructive", title: "Error Deleting Car", description: `${errorMessage}` });
+      return false;
+    } finally {
+      // setLoading(false);
+    }
   };
 
   const getCarById = (carId: string): Car | undefined => {

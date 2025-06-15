@@ -7,74 +7,80 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Info } from 'lucide-react';
+import { Save, Info, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-// Removed Firebase imports
-
-const LOCAL_STORAGE_WHATSAPP_KEY = 'yourCarAdminWhatsApp';
-const LOCAL_STORAGE_MESSENGER_KEY = 'yourCarAdminMessenger';
+import type { AdminContactSettings } from '@/types';
 
 export default function AdminSettingsPage() {
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [messengerId, setMessengerId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    setIsLoading(true);
-    try {
-      const savedWhatsApp = localStorage.getItem(LOCAL_STORAGE_WHATSAPP_KEY);
-      const savedMessenger = localStorage.getItem(LOCAL_STORAGE_MESSENGER_KEY);
-      if (savedWhatsApp) setWhatsappNumber(savedWhatsApp);
-      if (savedMessenger) setMessengerId(savedMessenger);
-    } catch (error) {
-      console.error("Error reading settings from localStorage:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not load saved settings.",
-      });
-    } finally {
-      // Simulate a short delay for loading perception if needed
-      setTimeout(() => setIsLoading(false), 300);
-    }
+    const fetchSettings = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/admin-settings');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch settings');
+        }
+        const data: AdminContactSettings = await response.json();
+        setWhatsappNumber(data.whatsappNumber || '');
+        setMessengerId(data.messengerId || '');
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+        toast({
+          variant: "destructive",
+          title: "Error Loading Settings",
+          description: `Could not load saved settings: ${errorMessage}`,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSettings();
   }, [toast]);
 
-  const handleSaveSettings = () => {
-    if (!whatsappNumber.match(/^\+?[1-9]\d{1,14}$/)) {
+  const handleSaveSettings = async () => {
+    if (!whatsappNumber.match(/^\+?[1-9]\d{1,14}$/) && whatsappNumber !== "") { // Allow empty string to clear
         toast({
             variant: "destructive",
             title: "Invalid WhatsApp Number",
-            description: "Please enter a valid WhatsApp number (e.g., +1234567890 or 1234567890).",
+            description: "Please enter a valid WhatsApp number (e.g., +1234567890) or leave it empty to clear.",
         });
         return;
     }
-    if (!messengerId.trim()) {
-        toast({
-            variant: "destructive",
-            title: "Messenger ID Required",
-            description: "Please enter your Facebook Page ID or Messenger Username.",
-        });
-        return;
-    }
-
-    setIsLoading(true); // Show loading while saving
+    // No strict validation for messengerId, can be username or page ID, or empty
+    
+    setIsSaving(true);
     try {
-      localStorage.setItem(LOCAL_STORAGE_WHATSAPP_KEY, whatsappNumber);
-      localStorage.setItem(LOCAL_STORAGE_MESSENGER_KEY, messengerId);
+      const response = await fetch('/api/admin-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ whatsappNumber, messengerId }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save settings');
+      }
       toast({
         title: "Settings Saved",
-        description: "Your contact information has been updated locally.",
+        description: "Your contact information has been updated.",
       });
     } catch (error) {
-      console.error("Error saving settings to localStorage:", error);
+      console.error("Error saving settings:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       toast({
         variant: "destructive",
-        title: "Storage Error",
-        description: "Could not save settings.",
+        title: "Save Error",
+        description: `Could not save settings: ${errorMessage}`,
       });
     } finally {
-      setTimeout(() => setIsLoading(false), 300); // Simulate save delay
+      setIsSaving(false);
     }
   };
 
@@ -114,7 +120,7 @@ export default function AdminSettingsPage() {
           <CardTitle>Customer Contact Information</CardTitle>
           <CardDescription>
             Enter the WhatsApp number and Facebook Page ID/Messenger Username
-            that customers will use to contact you. This information will be stored locally in your browser.
+            that customers will use to contact you. This information will be stored in the database.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -123,13 +129,14 @@ export default function AdminSettingsPage() {
             <Input
               id="whatsappNumber"
               type="tel"
-              placeholder="e.g., +1234567890"
+              placeholder="e.g., +1234567890 (leave empty to clear)"
               value={whatsappNumber}
               onChange={(e) => setWhatsappNumber(e.target.value)}
+              disabled={isSaving}
             />
             <p className="text-xs text-muted-foreground flex items-center pt-1">
               <Info className="w-3 h-3 mr-1" />
-              Include country code if applicable.
+              Include country code if applicable. Can be left empty.
             </p>
           </div>
           <div className="space-y-2">
@@ -137,17 +144,19 @@ export default function AdminSettingsPage() {
             <Input
               id="messengerId"
               type="text"
-              placeholder="e.g., yourpagename or 10001234567890"
+              placeholder="e.g., yourpagename or 10001234567890 (leave empty to clear)"
               value={messengerId}
               onChange={(e) => setMessengerId(e.target.value)}
+              disabled={isSaving}
             />
              <p className="text-xs text-muted-foreground flex items-center pt-1">
               <Info className="w-3 h-3 mr-1" />
-              This is used for `m.me/your_id_here` links.
+              Used for `m.me/your_id_here` links. Can be left empty.
             </p>
           </div>
-          <Button onClick={handleSaveSettings} className="bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isLoading}>
-            <Save className="mr-2 h-4 w-4" /> Save Settings
+          <Button onClick={handleSaveSettings} className="bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isSaving || isLoading}>
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+             Save Settings
           </Button>
         </CardContent>
       </Card>

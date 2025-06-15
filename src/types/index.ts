@@ -1,3 +1,4 @@
+
 export enum CarCondition {
   NEW = "New",
   USED_EXCELLENT = "Used - Excellent",
@@ -26,3 +27,9 @@ export type CarFilters = {
   condition?: CarCondition;
   searchTerm?: string;
 };
+
+export interface AdminContactSettings {
+  whatsappNumber?: string;
+  messengerId?: string;
+  updatedAt?: number; // Timestamp
+}
