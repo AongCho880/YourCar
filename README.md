@@ -1,18 +1,35 @@
 
-# YourCar - Premier Car Marketplace
+# YourCar - Premier Car Marketplace with AI Ad Generation
 
-YourCar is a Next.js application designed as a premier marketplace for buying and selling cars. It features an admin panel for managing listings and utilizes AI (via Genkit) for tasks like generating ad copy. The frontend is built with React, ShadCN UI components, and Tailwind CSS.
+YourCar is a modern, full-stack Next.js application designed as a feature-rich marketplace for buying and selling cars. It boasts a secure admin panel for managing listings and leverages AI (via Genkit with Google's Gemini model) to automatically generate compelling ad descriptions for car listings. The frontend is built with React, ShadCN UI components, and Tailwind CSS, offering a responsive and aesthetically pleasing user experience.
 
-## Features
+## Key Features
 
-*   **Car Listings:** Browse, filter, and view detailed car listings.
-*   **Admin Dashboard:** Securely manage car listings (add, edit, delete).
-*   **Mock Admin Authentication:** Simple client-side authentication for the admin panel.
-*   **AI-Powered Ad Copy:** Automatically generate compelling ad descriptions for car listings using Genkit.
-*   **Responsive Design:** User interface optimized for various screen sizes.
-*   **Modern Tech Stack:** Built with Next.js 15 (App Router), React, TypeScript, ShadCN UI, Tailwind CSS, and Genkit.
-*   **Client-Side Filtering & Pagination:** Efficiently browse through numerous car listings.
-*   **Configurable Contact Information:** Admin can set WhatsApp and Messenger details for customer contact.
+*   **Comprehensive Car Listings:** Browse, filter (by make, price, condition, search term), and view detailed car listings.
+*   **Secure Admin Dashboard:**
+    *   Firebase Authentication for admin access.
+    *   Manage car listings (add, edit, delete).
+    *   Update site-wide contact settings (WhatsApp, Messenger).
+    *   Manage admin account (email/password updates, email verification).
+    *   "Add Random Dev Car" feature for easy testing.
+*   **AI-Powered Ad Copy:** Automatically generate engaging ad descriptions for car listings using Genkit and Google's Gemini model.
+*   **Direct Contact Options:** Integrated WhatsApp and Messenger contact buttons on car detail pages.
+*   **Responsive Design:** User interface optimized for various screen sizes, from mobile to desktop.
+*   **Modern Tech Stack:**
+    *   Next.js 15 (App Router, Server Components, Server Actions where appropriate)
+    *   React 18 (Functional Components, Hooks)
+    *   TypeScript
+    *   ShadCN UI Components & Tailwind CSS for styling
+    *   Genkit (with Google AI Plugin for Gemini) for AI features
+    *   Firebase (Authentication, Firestore Database, Storage for images)
+    *   React Hook Form with Zod for robust form validation.
+*   **Client-Side Filtering & Pagination:** Efficiently browse through car listings on the homepage.
+*   **Image Handling:** Supports manual URL input for car images. (Direct upload functionality UI is present but currently shows a notification due to optional Storage setup).
+
+## Live Demo & Repository
+
+*   **Live Demo:** [Link to your deployed application (e.g., on Vercel, Firebase Hosting)]() (Coming Soon!)
+*   **GitHub Repository:** [Link to your GitHub repository]() (You are here or link will be here!)
 
 ## Tech Stack
 
@@ -20,128 +37,175 @@ YourCar is a Next.js application designed as a premier marketplace for buying an
 *   **Language:** TypeScript
 *   **UI Components:** ShadCN UI
 *   **Styling:** Tailwind CSS
-*   **AI Integration:** Genkit (with Google AI)
-*   **State Management (Cars & Mock Auth):** React Context API
+*   **AI Integration:** Genkit (with Google AI - Gemini)
+*   **Database:** Firebase Firestore
+*   **Authentication:** Firebase Authentication
+*   **Image Storage:** Firebase Storage (optional, relies on manual URLs if not fully configured)
+*   **State Management (Cars & Auth):** React Context API
 *   **Form Handling:** React Hook Form with Zod for validation
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed on your local machine:
+Before you begin, ensure you have the following installed:
 
 *   [Node.js](https://nodejs.org/) (v18.x or v20.x recommended)
-*   [npm](https://www.npmjs.com/) (comes with Node.js) or [yarn](https://yarnpkg.com/)
+*   [npm](https://www.npmjs.com/) (comes with Node.js)
 
 ## Getting Started
 
 Follow these steps to set up and run the project locally:
 
-### 1. Clone the Repository (or Get Project Files)
-
-If you're working with a Git repository, clone it:
+### 1. Clone the Repository
 
 ```bash
-git clone <your-repository-url>
-cd <project-directory-name>
+git clone <your-github-repository-url>
+cd YourCar-Project-Directory # Or your chosen directory name
 ```
 
-If you downloaded the project files, navigate to the root directory of the project (where `package.json` is located).
-
 ### 2. Install Dependencies
-
-Install the project dependencies using npm:
 
 ```bash
 npm install
 ```
 
-Or, if you prefer yarn:
+### 3. Set Up Firebase Project
+
+*   Go to the [Firebase Console](https://console.firebase.google.com/) and create a new project.
+*   **Register a Web App:**
+    *   In your Firebase project, add a new Web App.
+    *   Give it a nickname (e.g., "YourCar Web").
+    *   **Do NOT** select "Also set up Firebase Hosting for this app" during this step.
+    *   Copy the `firebaseConfig` object provided.
+*   **Enable Authentication:**
+    *   Go to Authentication -> Sign-in method.
+    *   Enable "Email/Password" provider.
+    *   Go to the "Users" tab and "Add user" to create your initial admin account (e.g., admin@example.com / yourpassword).
+*   **Enable Firestore Database:**
+    *   Go to Firestore Database -> Create database.
+    *   Start in **test mode** for initial setup (you can secure rules later).
+    *   Choose a location.
+*   **Enable Firebase Storage (Optional but Recommended for full functionality):**
+    *   Go to Storage -> Get started.
+    *   Follow the prompts. Default security rules are fine initially.
+    *   *Note: If you skip full Storage setup, image uploads will rely on manual URLs only.*
+
+### 4. Set Up Environment Variables
+
+Create a `.env.local` file in the root of your project by copying the `.env` template:
 
 ```bash
-yarn install
+cp .env .env.local
 ```
 
-### 3. Set Up Environment Variables
+Open `.env.local` and fill in the following values:
 
-You may need to configure an API key for Google AI if you plan to use the AI features.
+```env
+# Firebase Client SDK Configuration (from Firebase Console Web App setup)
+NEXT_PUBLIC_FIREBASE_API_KEY="YOUR_FIREBASE_API_KEY"
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="YOUR_FIREBASE_AUTH_DOMAIN"
+NEXT_PUBLIC_FIREBASE_PROJECT_ID="YOUR_FIREBASE_PROJECT_ID"
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="YOUR_FIREBASE_STORAGE_BUCKET" # Required even if not using direct uploads fully
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="YOUR_FIREBASE_MESSAGING_SENDER_ID"
+NEXT_PUBLIC_FIREBASE_APP_ID="YOUR_FIREBASE_APP_ID"
 
-1.  **Create `.env.local` file:**
-    Copy the existing `.env` file to `.env.local` (this file should be in the root of your project):
-    ```bash
-    cp .env .env.local
-    ```
-    *Note: `.env.local` is gitignored by default and should not be committed to version control.*
+# Google AI API Key (for Genkit - Ad Copy Generation)
+# Get from Google AI Studio: https://aistudio.google.com/app/apikey
+GOOGLE_AI_KEY="YOUR_GOOGLE_AI_API_KEY"
 
-2.  **Add Google AI API Key to `.env.local` (Optional):**
-    If you plan to use the AI features (like ad copy generation), open `.env.local` and add your Google AI API Key:
-    ```env
-    GOOGLE_AI_KEY=YOUR_GOOGLE_AI_API_KEY
-    ```
-    You can obtain a Google AI API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+# Firebase Admin SDK Service Account (for secure backend operations like car deletion)
+# 1. Go to Firebase Console > Project Settings > Service accounts.
+# 2. Generate a new private key (JSON file).
+# 3. Open the JSON file, copy its ENTIRE content.
+# 4. Encode this JSON content to a Base64 string (e.g., using an online tool or local command).
+# 5. Paste the Base64 string here.
+FIREBASE_SERVICE_ACCOUNT_BASE64="YOUR_BASE64_ENCODED_FIREBASE_SERVICE_ACCOUNT_JSON"
+```
 
-### 4. Run the Application
+**VERY IMPORTANT:** The `.env.local` file should **NOT** be committed to Git. Ensure it's listed in your `.gitignore` file.
 
-You'll need to run two separate processes: the Next.js development server for the frontend and the Genkit development server for the AI flows.
+### 5. Update Firebase Security Rules
 
-**A. Start the Next.js Development Server:**
+It's crucial to set up proper security rules for Firestore and Storage.
 
-Open a terminal and run:
+**Firestore Rules (Firebase Console -> Firestore Database -> Rules):**
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /cars/{carId} {
+      allow read: if true; // Anyone can read car listings
+      allow write: if request.auth != null; // Only authenticated users (your admin) can write
+    }
+    match /adminSettings/contactDetails {
+      allow read: if true; // Anyone can read contact settings
+      allow write: if request.auth != null; // Only authenticated users (your admin) can write
+    }
+  }
+}
+```
+Publish these rules.
 
+**Storage Rules (Firebase Console -> Storage -> Rules):**
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /car_images/{allPaths=**} {
+      allow read: if true; // Anyone can read car images
+      allow write: if request.auth != null; // Only authenticated admins can upload/delete
+    }
+  }
+}
+```
+Publish these rules.
+
+### 6. Run the Application
+
+You'll need to run **two separate processes** in two different terminals:
+
+**Terminal 1: Start the Next.js Development Server (Frontend)**
 ```bash
 npm run dev
 ```
+This will typically start the Next.js application at `http://localhost:9003`. If you've just modified `.env.local`, **stop and restart** this server.
 
-This will start the Next.js application, typically available at `http://localhost:9003` (or as specified by the `-p` flag in your `dev` script).
-
-**VERY IMPORTANT:** If you have just created or modified your `.env.local` file, you **MUST stop and restart** your Next.js development server for the changes to take effect. Next.js only loads these variables on startup.
-
-**B. Start the Genkit Development Server:**
-
-Open a *new, separate* terminal window/tab, navigate to the project root, and run:
-
+**Terminal 2: Start the Genkit Development Server (AI Flows)**
 ```bash
 npm run genkit:dev
 ```
-
 Or, for automatic reloading on changes to AI flow files:
-
 ```bash
 npm run genkit:watch
 ```
+This starts the Genkit server, usually with a UI at `http://localhost:4000` for inspecting flows. It makes the AI features (like ad copy generation) available to your Next.js app.
 
-This starts the Genkit development server, which makes the AI flows available to your Next.js application. It usually runs a UI on port 4000 for inspecting flows.
-
-Once both servers are running, you can access the application in your browser at the URL provided by the Next.js server.
+Once both servers are running, access the application at the URL provided by the Next.js server (e.g., `http://localhost:9003`).
 
 ## Admin Access
 
 *   Navigate to `/admin` on your local site (e.g., `http://localhost:9003/admin`).
-*   Use the following credentials for the mock login:
-    *   **Username:** `admin`
-    *   **Password:** `password`
+*   Log in using the email and password you created in Firebase Authentication (Step 3).
 *   After successful login, you will be redirected to the admin dashboard (`/admin/dashboard`).
-*   The admin session is maintained using client-side `localStorage`. Logging out clears this.
 
 ## Available Scripts
 
-In the project directory, you can run the following scripts:
+In the project directory, you can run:
 
-*   `npm run dev`: Starts the Next.js development server (frontend).
-*   `npm run genkit:dev`: Starts the Genkit development server (AI flows).
+*   `npm run dev`: Starts the Next.js development server.
+*   `npm run genkit:dev`: Starts the Genkit development server.
 *   `npm run genkit:watch`: Starts the Genkit development server with file watching.
 *   `npm run build`: Builds the Next.js application for production.
 *   `npm run start`: Starts the Next.js production server (after building).
-*   `npm run lint`: Lints the codebase using Next.js's built-in ESLint configuration.
+*   `npm run lint`: Lints the codebase.
 *   `npm run typecheck`: Runs TypeScript to check for type errors.
 
 ## Contributing
 
-Contributions are welcome! Please follow the standard fork-and-pull-request workflow. Ensure your code adheres to the project's linting and formatting standards.
-
-(Placeholder for more detailed contribution guidelines if needed)
+(Placeholder for contribution guidelines if you plan to accept them)
 
 ## License
 
-(Placeholder - Specify your project's license here, e.g., MIT License)
+(Placeholder - Specify your project's license, e.g., MIT License)
 
 ---
 
