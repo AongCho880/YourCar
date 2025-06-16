@@ -32,3 +32,4 @@ export default function AdminLoginPage() {
   // If not loading and no user, show the login form
   return <LoginForm />;
 }
+
