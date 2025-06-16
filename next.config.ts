@@ -30,6 +30,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.17vin.com', // Added this new hostname
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   experimental: {
