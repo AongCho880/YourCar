@@ -15,6 +15,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/lib/firebaseConfig'; // Ensure auth is exported from firebaseConfig
 import { useToast } from '@/hooks/use-toast';
+import { sendLoginNotification } from '@/ai/flows/send-login-notification-flow';
 
 interface AuthContextType {
   user: User | null;
@@ -61,17 +62,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, pass);
+      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+      
+      if (userCredential.user && userCredential.user.email) {
+        try {
+          const loginTimestamp = new Date().toISOString();
+          // Intentionally not awaiting this for faster login response to user.
+          // Notification generation can happen in the background.
+          sendLoginNotification({
+            adminEmail: userCredential.user.email,
+            loginTimestamp: loginTimestamp,
+          }).then(notificationContent => {
+            console.log('Login Notification Email Content Generated:');
+            console.log(`Intended Recipient: ${userCredential.user.email}`);
+            console.log(`Subject: ${notificationContent.emailSubject}`);
+            console.log(`Body: ${notificationContent.emailBody}`);
+            console.warn(
+              `[Action Required] An email notification for this login should be sent. ` +
+              `Integrate an email sending service (e.g., SendGrid, Mailgun, Resend, or Firebase Trigger Email extension) ` +
+              `to dispatch this email using the content above.`
+            );
+          }).catch(notificationError => {
+            console.error('Failed to generate login notification content in background:', notificationError);
+          });
+        } catch (e) {
+          // Catch any immediate synchronous error from calling sendLoginNotification if it's not truly async
+          console.error('Error initiating login notification generation:', e);
+        }
+      }
       // onAuthStateChanged will handle setting the user and redirecting
-      // No need to setLoading(false) here, onAuthStateChanged does it.
-      // No need to router.push here if admin layout handles it based on user state
       return true;
     } catch (error: any) {
       console.error("Firebase login error:", error);
       const errorMessage = error.message || "Invalid credentials or network error.";
       toast({ variant: "destructive", title: "Login Failed", description: errorMessage });
-      setUser(null);
-      setLoading(false);
+      setUser(null); // Ensure user state is cleared on failed login
+      setLoading(false); // Ensure loading is set to false on error
       return false;
     }
   };
@@ -85,8 +111,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await firebaseSignOut(auth);
       setUser(null);
-      // onAuthStateChanged will set user to null.
-      // Redirecting from here ensures a clean state.
       router.push('/admin'); 
     } catch (error: any) {
       console.error("Firebase logout error:", error);
@@ -104,7 +128,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await verifyBeforeUpdateEmail(auth.currentUser, newEmail);
       toast({ title: "Verification Email Sent", description: `A verification email has been sent to ${newEmail}. Please verify to update your email address.` });
-      // Note: auth.currentUser.email won't update immediately. It updates after verification.
       return true;
     } catch (error: any) {
       console.error("Update email error:", error);
@@ -112,8 +135,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         toast({
           variant: "destructive",
           title: "Action Requires Recent Login",
-          description: "This action is sensitive and requires a recent login. Please log out and log back in to continue.",
-          duration: 6000, // Give user a bit more time to read
+          description: "Updating your email is a sensitive action and requires a recent login. Please log out and log back in to continue.",
+          duration: 7000,
         });
       } else {
         toast({ variant: "destructive", title: "Update Email Failed", description: error.message });
@@ -138,7 +161,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           variant: "destructive",
           title: "Action Requires Recent Login",
           description: "Changing your password requires a recent login. Please log out and log back in to continue.",
-          duration: 6000,
+          duration: 7000,
         });
       } else {
         toast({ variant: "destructive", title: "Update Password Failed", description: error.message });
@@ -166,7 +189,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
-
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, updateAdminEmail, updateAdminPassword, sendAdminEmailVerification }}>

@@ -7,3 +7,4 @@ config({ path: '.env.local', override: true });
 config(); // Load .env if .env.local not found or for other variables
 
 import '@/ai/flows/generate-ad-copy.ts';
+import '@/ai/flows/send-login-notification-flow.ts';
