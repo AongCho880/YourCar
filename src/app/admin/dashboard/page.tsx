@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Edit, Trash2, PlusCircle, Eye, Car, Loader2 } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, Eye, Car, Loader2, Sparkles } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,34 +19,77 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-// useToast is now part of CarContext for delete operations
 import { Skeleton } from '@/components/ui/skeleton';
-import { useState } from 'react'; // For managing delete loading state
+import { useState } from 'react';
+import type { Car as CarType } from '@/types';
+import { CarCondition } from '@/types';
+import { CAR_MAKES, CAR_CONDITIONS } from '@/lib/constants';
+
+// Function to generate random car data
+function generateRandomCarData(): Omit<CarType, 'id' | 'createdAt' | 'updatedAt'> {
+  const randomMake = CAR_MAKES[Math.floor(Math.random() * CAR_MAKES.length)];
+  const randomConditionObj = CAR_CONDITIONS[Math.floor(Math.random() * CAR_CONDITIONS.length)];
+
+  const commonFeaturesPool = ["Air Conditioning", "Power Steering", "Power Windows", "Bluetooth", "Backup Camera", "Sunroof", "Navigation System", "Heated Seats", "Leather Interior", "Alloy Wheels", "Cruise Control", "Keyless Entry"];
+  const numFeatures = Math.floor(Math.random() * 4) + 2; // 2 to 5 features
+  const randomFeatures: string[] = [];
+  const usedIndexes = new Set<number>();
+  while (randomFeatures.length < numFeatures && randomFeatures.length < commonFeaturesPool.length) {
+    const randomIndex = Math.floor(Math.random() * commonFeaturesPool.length);
+    if (!usedIndexes.has(randomIndex)) {
+      randomFeatures.push(commonFeaturesPool[randomIndex]);
+      usedIndexes.add(randomIndex);
+    }
+  }
+
+  const currentYear = new Date().getFullYear();
+  const randomYear = Math.floor(Math.random() * (currentYear - 2005 + 2)) + 2005; // Year between 2005 and currentYear+1
+
+  return {
+    make: randomMake,
+    model: `${randomMake.split(' ')[0]} Series ${String.fromCharCode(65 + Math.floor(Math.random() * 3))}${Math.floor(Math.random() * 500)}`, // e.g. Toyota Series A350
+    year: randomYear,
+    price: Math.floor(Math.random() * (65000 - 7000 + 1)) + 7000, // 7000 to 65000
+    mileage: Math.floor(Math.random() * (120000 - 5000 + 1)) + 5000, // 5000 to 120000
+    condition: randomConditionObj.value,
+    features: randomFeatures,
+    images: [
+      `https://placehold.co/600x400.png`,
+      `https://placehold.co/600x400.png`,
+      `https://placehold.co/600x400.png`,
+    ],
+    description: `Explore this reliable ${randomYear} ${randomMake}. It's in ${randomConditionObj.label.toLowerCase()} condition with reasonable mileage. Key features include: ${randomFeatures.join(', ')}. Contact us for a test drive!`,
+  };
+}
+
 
 export default function AdminDashboardPage() {
-  const { cars, deleteCar, loading: carsLoadingFromContext } = useCars();
-  const [isDeleting, setIsDeleting] = useState<string | null>(null); // Store ID of car being deleted
+  const { cars, deleteCar, loading: carsLoadingFromContext, addCar } = useCars();
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isAddingRandomCar, setIsAddingRandomCar] = useState(false);
 
   const handleDelete = async (carId: string, carName: string) => {
     setIsDeleting(carId);
-    const success = await deleteCar(carId);
+    await deleteCar(carId);
     // Toast is handled by CarContext
-    // if (success) {
-    //   toast({ title: "Car Deleted", description: `"${carName}" has been removed.` });
-    // } else {
-    //   toast({ variant:"destructive", title: "Deletion Failed", description: `Could not delete "${carName}".` });
-    // }
     setIsDeleting(null);
   };
 
-  if (carsLoadingFromContext && !isDeleting) { // Show main loading only if not in middle of a delete operation
+  const handleAddRandomCar = async () => {
+    setIsAddingRandomCar(true);
+    const randomCarData = generateRandomCarData();
+    await addCar(randomCarData); // addCar in context handles toasts
+    setIsAddingRandomCar(false);
+  };
+
+  if (carsLoadingFromContext && !isDeleting && !isAddingRandomCar) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>
-        <Skeleton className="h-96 w-full" /> {/* Table skeleton */}
+        <Skeleton className="h-96 w-full" />
       </div>
     );
   }
@@ -55,18 +98,28 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold font-headline">Car Listings Management</h1>
-        <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">
-          <Link href="/admin/cars/new" className="text-white">
-            <PlusCircle className="mr-2 h-4 w-4 text-white" /> Add New Car
-          </Link>
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button 
+            onClick={handleAddRandomCar} 
+            variant="outline"
+            disabled={isAddingRandomCar || carsLoadingFromContext}
+          >
+            {isAddingRandomCar ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+            Add Random Dev Car
+          </Button>
+          <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Link href="/admin/cars/new" className="text-white">
+              <PlusCircle className="mr-2 h-4 w-4 text-white" /> Add New Car
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {cars.length === 0 && !carsLoadingFromContext ? (
         <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
           <Car className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
           <h2 className="text-xl font-semibold mb-2">No Cars Listed Yet</h2>
-          <p className="text-muted-foreground mb-4">Start by adding your first car listing.</p>
+          <p className="text-muted-foreground mb-4">Start by adding your first car listing or a random dev car.</p>
           <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">
             <Link href="/admin/cars/new">
               <PlusCircle className="mr-2 h-4 w-4" /> Add New Car
@@ -117,15 +170,15 @@ export default function AdminDashboardPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1 sm:gap-2">
-                        <Button variant="ghost" size="icon" asChild title="View Car" disabled={isDeleting === car.id}>
+                        <Button variant="ghost" size="icon" asChild title="View Car" disabled={isDeleting === car.id || isAddingRandomCar}>
                           <Link href={`/cars/${car.id}`} target="_blank"><Eye className="h-4 w-4" /></Link>
                         </Button>
-                        <Button variant="ghost" size="icon" asChild title="Edit Car" disabled={isDeleting === car.id}>
+                        <Button variant="ghost" size="icon" asChild title="Edit Car" disabled={isDeleting === car.id || isAddingRandomCar}>
                           <Link href={`/admin/cars/edit/${car.id}`}><Edit className="h-4 w-4" /></Link>
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" title="Delete Car" className="hover:bg-destructive/10" disabled={isDeleting === car.id}>
+                            <Button variant="ghost" size="icon" title="Delete Car" className="hover:bg-destructive/10" disabled={isDeleting === car.id || isAddingRandomCar}>
                               {isDeleting === car.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
                             </Button>
                           </AlertDialogTrigger>
@@ -161,3 +214,5 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    
