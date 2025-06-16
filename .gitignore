@@ -1,46 +1,62 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+.pnp.js
+yarn.lock
+pnpm-lock.yaml
 
-# testing
+# Testing
 /coverage
 
-# next.js
+# Next.js build output
 /.next/
 /out/
 
-# production
-/build
+# Next.js local development files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# misc
+# Production
 .DS_Store
 *.pem
 
-# debug
+# TrueNAS
+.ipynb_checkpoints
+
+# Mac
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in your root directory
+# Comment out and remove from comments if you need to commit any of these files.
+# .vscode/*
+# !.vscode/settings.json
+# !.vscode/tasks.json
+# !.vscode/launch.json
+# !.vscode/extensions.json
+# *.sublime-workspace
+
+# Firebase
+.firebase
+firebase-debug.log
+# If you have service account keys not handled by .env.local and not in a dedicated secured location
+# For example, if you were to put a service account JSON directly in the project (not recommended for security)
+# serviceAccountKey.json
+
+# Genkit
+.genkit/traces/
+
+# IDX specific
+.idx
+
+# Log files
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-.genkit/*
-.env*
-.env.local
-
-# firebase
-firebase-debug.log
-firestore-debug.log
