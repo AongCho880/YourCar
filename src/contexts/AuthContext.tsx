@@ -105,11 +105,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await verifyBeforeUpdateEmail(auth.currentUser, newEmail);
       toast({ title: "Verification Email Sent", description: `A verification email has been sent to ${newEmail}. Please verify to update your email address.` });
       // Note: auth.currentUser.email won't update immediately. It updates after verification.
-      // You might want to trigger a re-fetch of user or rely on onAuthStateChanged if it fires post-verification.
       return true;
     } catch (error: any) {
       console.error("Update email error:", error);
-      toast({ variant: "destructive", title: "Update Email Failed", description: error.message });
+      if (error.code === 'auth/requires-recent-login') {
+        toast({
+          variant: "destructive",
+          title: "Action Requires Recent Login",
+          description: "This action is sensitive and requires a recent login. Please log out and log back in to continue.",
+          duration: 6000, // Give user a bit more time to read
+        });
+      } else {
+        toast({ variant: "destructive", title: "Update Email Failed", description: error.message });
+      }
       return false;
     }
   };
@@ -125,7 +133,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return true;
     } catch (error: any) {
       console.error("Update password error:", error);
-      toast({ variant: "destructive", title: "Update Password Failed", description: error.message });
+      if (error.code === 'auth/requires-recent-login') {
+         toast({
+          variant: "destructive",
+          title: "Action Requires Recent Login",
+          description: "Changing your password requires a recent login. Please log out and log back in to continue.",
+          duration: 6000,
+        });
+      } else {
+        toast({ variant: "destructive", title: "Update Password Failed", description: error.message });
+      }
       return false;
     }
   };

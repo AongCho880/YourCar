@@ -58,7 +58,7 @@ Follow these steps to set up and run the project locally:
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-github-repository-url>
+git clone https://github.com/AongCho880/YourCar.git
 cd YourCar-Project-Directory # Or your chosen directory name
 ```
 
