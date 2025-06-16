@@ -5,6 +5,17 @@ import Link from 'next/link';
 import { Menu, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePathname } from 'next/navigation';
@@ -63,7 +74,7 @@ const NavbarLoadingSkeleton = () => (
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, logout, loading: authContextIsLoading } = useAuth(); // Changed from isAdmin to user
+  const { user, logout, loading: authContextIsLoading } = useAuth();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -80,12 +91,57 @@ export default function Navbar() {
   const adminNavLinks = [
     { href: '/admin/dashboard', label: 'Dashboard' },
     { href: '/admin/cars/new', label: 'Add Car' },
-    { href: '/admin/settings', label: 'Site Settings' }, // Renamed for clarity
-    { href: '/admin/account', label: 'My Account' }, // Added Account link
+    { href: '/admin/settings', label: 'Site Settings' },
+    { href: '/admin/account', label: 'My Account' },
   ];
 
-  const NavLinkItem = ({ href, label, onClick }: { href: string; label: string, onClick?: () => void }) => {
+  const NavLinkItem = ({ href, label, onClick, isLogoutButton = false }: { href: string; label: string, onClick?: () => void, isLogoutButton?: boolean }) => {
     const isActive = pathname === href;
+    
+    const buttonContent = (
+      <>
+        {label}
+        {!isLogoutButton && (
+          <span className={cn(
+            "absolute bottom-1.5 left-4 right-4 block h-[1px] bg-primary transform transition-transform duration-300 ease-out origin-left",
+            isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+          )}></span>
+        )}
+      </>
+    );
+
+    if (isLogoutButton) {
+      return (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-start relative group text-left hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground"
+            >
+              {buttonContent}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to log out?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                if (onClick) onClick();
+                setIsMobileMenuOpen(false);
+              }} className="bg-destructive hover:bg-destructive/90">
+                Logout
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      );
+    }
+
     return (
       <SheetClose asChild>
         <Button
@@ -98,20 +154,10 @@ export default function Navbar() {
           }}
         >
           {onClick ? (
-            <>
-              {label}
-              <span className={cn(
-                "absolute bottom-1.5 left-4 right-4 block h-[1px] bg-primary transform transition-transform duration-300 ease-out origin-left",
-                isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-              )}></span>
-            </>
+            buttonContent
           ) : (
             <Link href={href} className="block w-full">
-              {label}
-              <span className={cn(
-                "absolute bottom-1.5 left-4 right-4 block h-[1px] bg-primary transform transition-transform duration-300 ease-out origin-left",
-                isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-              )}></span>
+              {buttonContent}
             </Link>
           )}
         </Button>
@@ -142,7 +188,7 @@ export default function Navbar() {
               </Button>
             );
           })}
-          {!!user && adminNavLinks.map(link => { // Check for user object
+          {!!user && adminNavLinks.map(link => {
              const isActive = pathname === link.href;
             return (
               <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
@@ -156,10 +202,28 @@ export default function Navbar() {
               </Button>
             );
           })}
-          {!!user && ( // Check for user object
-            <Button variant="outline" size="sm" onClick={logout} className="ml-2 hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
-              <LogOut className="mr-2 h-4 w-4" />Logout
-            </Button>
+          {!!user && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" className="ml-2 hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
+                  <LogOut className="mr-2 h-4 w-4" />Logout
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to log out?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={logout} className="bg-destructive hover:bg-destructive/90">
+                    Logout
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </nav>
 
@@ -178,7 +242,7 @@ export default function Navbar() {
                 {navLinks.map(link => <NavLinkItem key={`mobile-${link.href}`} {...link} />)}
                 {!!user && adminNavLinks.map(link => <NavLinkItem key={`mobile-admin-${link.href}`} {...link} />)}
                 {!!user && (
-                  <NavLinkItem href="#" label="Logout" onClick={logout} />
+                  <NavLinkItem href="#" label="Logout" onClick={logout} isLogoutButton={true} />
                 )}
               </div>
             </SheetContent>
