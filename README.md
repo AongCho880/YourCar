@@ -59,7 +59,7 @@ Follow these steps to set up and run the project locally:
 
 ```bash
 git clone https://github.com/AongCho880/YourCar.git
-cd YourCar-Project-Directory # Or your chosen directory name
+cd YourCar # Or your chosen directory name
 ```
 
 ### 2. Install Dependencies
