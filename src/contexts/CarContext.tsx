@@ -73,25 +73,27 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
     try {
       const carWithTimestamps = {
         ...carData,
-        features: carData.features || [], // Ensure features is an array
-        images: carData.images || [],     // Ensure images is an array
+        features: carData.features || [], 
+        images: carData.images || [],     
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
       const docRef = await addDoc(collection(db, 'cars'), carWithTimestamps);
       
+      // Optimistically create the car object for UI update, timestamps will be approximate until refresh
       const newCar: Car = { 
         id: docRef.id, 
         ...carData, 
-        createdAt: Date.now(), 
-        updatedAt: Date.now()
+        features: carData.features || [],
+        images: carData.images || [],
+        createdAt: Date.now(), // Approximate
+        updatedAt: Date.now()  // Approximate
       }; 
       
-      // Re-fetch cars to get the accurate server-generated timestamps and update the list
-      await fetchCars(); 
+      await fetchCars(); // Refresh to get accurate data including server timestamps
       
       toast({ title: "Success", description: "Car listing added successfully." });
-      return newCar; // Return the optimistic new car data for immediate UI update if needed
+      return newCar; 
     } catch (error) {
       console.error("Error adding car directly to Firestore:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
@@ -116,19 +118,21 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
       
       const updatePayload = {
         ...dataToUpdate,
-        features: dataToUpdate.features || [], // Ensure features is an array
-        images: dataToUpdate.images || [],     // Ensure images is an array
+        features: dataToUpdate.features || [], 
+        images: dataToUpdate.images || [],     
         updatedAt: serverTimestamp(), 
       };
 
       await updateDoc(carDocRef, updatePayload);
       
-      // Re-fetch cars to get the accurate server-generated timestamps and update the list
-      await fetchCars();
-
+      await fetchCars(); // Refresh to get accurate data
+      
+      // Optimistic update for UI
       const updatedCarData: Car = {
         ...carData,
-        updatedAt: Date.now(), 
+        features: carData.features || [],
+        images: carData.images || [],
+        updatedAt: Date.now(), // Approximate
       };
       toast({ title: "Success", description: "Car listing updated successfully." });
       return updatedCarData;
@@ -145,15 +149,25 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
       toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to delete a car." });
       return false;
     }
+    if (!auth?.currentUser) {
+      toast({ variant: "destructive", title: "Authentication Error", description: "User not found for token generation." });
+      return false;
+    }
+
     try {
+      const token = await auth.currentUser.getIdToken();
       const response = await fetch(`/api/cars/${carId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response from server.' }));
         throw new Error(errorData.error || `Server responded with ${response.status}`);
       }
-      await fetchCars();
+      await fetchCars(); // Refresh list
       toast({ title: "Car Deleted", description: "The car listing has been removed." });
       return true;
     } catch (error) {
