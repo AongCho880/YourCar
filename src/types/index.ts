@@ -33,3 +33,25 @@ export interface AdminContactSettings {
   messengerId?: string;
   updatedAt?: number; // Timestamp
 }
+
+export interface Complaint {
+  id: string;
+  name?: string;
+  email?: string;
+  details: string;
+  submittedAt: number; // Timestamp
+  isResolved?: boolean;
+}
+
+export interface Review {
+  id: string;
+  name: string;
+  rating: number; // 1-5
+  comment: string;
+  submittedAt: number; // Timestamp
+  isTestimonial: boolean;
+  carId?: string; // Optional: if the review is about a specific car
+  carMake?: string; // Optional: denormalized for easier display with testimonials
+  carModel?: string; // Optional: denormalized
+}
+

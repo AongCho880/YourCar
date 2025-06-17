@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu, LogOut } from 'lucide-react';
+import { Menu, LogOut, MessageCircleQuestion, MessageSquareText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
@@ -86,11 +86,17 @@ export default function Navbar() {
     return <NavbarLoadingSkeleton />;
   }
 
-  const navLinks = [{ href: '/', label: 'Home' }];
+  const navLinks = [
+    { href: '/', label: 'Home' },
+    { href: '/contact/review', label: 'Write a Review' },
+    { href: '/contact/complaint', label: 'Submit Complaint' },
+  ];
 
   const adminNavLinks = [
     { href: '/admin/dashboard', label: 'Dashboard' },
     { href: '/admin/cars/new', label: 'Add Car' },
+    { href: '/admin/reviews', label: 'Manage Reviews' },
+    { href: '/admin/complaints', label: 'View Complaints' },
     { href: '/admin/settings', label: 'Site Settings' },
     { href: '/admin/account', label: 'My Account' },
   ];

@@ -1,7 +1,7 @@
 
 # YourCar - Premier Car Marketplace with AI Ad Generation
 
-YourCar is a modern, full-stack Next.js application designed as a feature-rich marketplace for buying and selling cars. It boasts a secure admin panel for managing listings and leverages AI (via Genkit with Google's Gemini model) to automatically generate compelling ad descriptions for car listings. The frontend is built with React, ShadCN UI components, and Tailwind CSS, offering a responsive and aesthetically pleasing user experience.
+YourCar is a modern, full-stack Next.js application designed as a feature-rich marketplace for buying and selling cars. It boasts a secure admin panel for managing listings and leverages AI (via Genkit with Google's Gemini model) to automatically generate compelling ad descriptions for car listings. The frontend is built with React, ShadCN UI components, and Tailwind CSS, offering a responsive and aesthetically pleasing user experience. It also includes features for customers to submit reviews and complaints.
 
 ## Key Features
 
@@ -12,7 +12,13 @@ YourCar is a modern, full-stack Next.js application designed as a feature-rich m
     *   Update site-wide contact settings (WhatsApp, Messenger).
     *   Manage admin account (email/password updates, email verification).
     *   "Add Random Dev Car" feature for easy testing.
+    *   View and manage customer reviews (mark as testimonials).
+    *   View and manage customer complaints.
 *   **AI-Powered Ad Copy:** Automatically generate engaging ad descriptions for car listings using Genkit and Google's Gemini model.
+*   **Customer Interaction:**
+    *   Submit reviews with star ratings and comments.
+    *   Submit complaints via a dedicated form.
+    *   View customer testimonials on the homepage.
 *   **Direct Contact Options:** Integrated WhatsApp and Messenger contact buttons on car detail pages.
 *   **Responsive Design:** User interface optimized for various screen sizes, from mobile to desktop.
 *   **Modern Tech Stack:**
@@ -58,7 +64,7 @@ Follow these steps to set up and run the project locally:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/AongCho880/YourCar.git
+git clone https://github.com/AongCho880/YourCar.git # Or your chosen repository URL
 cd YourCar # Or your chosen directory name
 ```
 
@@ -139,6 +145,17 @@ service cloud.firestore {
     match /adminSettings/contactDetails {
       allow read: if true; // Anyone can read contact settings
       allow write: if request.auth != null; // Only authenticated users (your admin) can write
+    }
+    match /complaints/{complaintId} {
+      allow read: if request.auth != null; // Only admins can read complaints
+      allow create: if true; // Anyone can submit a complaint
+      allow update, delete: if request.auth != null; // Admins can manage
+    }
+    match /reviews/{reviewId} {
+      allow read: if true; // Anyone can read reviews (e.g., for testimonials)
+      allow create: if true; // Anyone can submit a review
+      allow update: if request.auth != null; // Admins can update (e.g., to mark as testimonial or hide)
+      allow delete: if request.auth != null; // Admins can delete reviews
     }
   }
 }
