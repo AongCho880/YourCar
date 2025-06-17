@@ -35,7 +35,7 @@ YourCar is a modern, full-stack Next.js application designed as a feature-rich m
 ## Live Demo & Repository
 
 *   **Live Demo:** [Link to your deployed application (e.g., on Vercel, Firebase Hosting)]() (Coming Soon!)
-*   **GitHub Repository:** [Link to your GitHub repository]() (You are here or link will be here!)
+*   **GitHub Repository:** [https://github.com/AongCho880/YourCar](https://github.com/AongCho880/YourCar) (Or your chosen repository URL)
 
 ## Tech Stack
 
@@ -136,26 +136,39 @@ It's crucial to set up proper security rules for Firestore and Storage.
 **Firestore Rules (Firebase Console -> Firestore Database -> Rules):**
 ```javascript
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Car listings: Publicly readable, only admins can write (create, update, delete)
     match /cars/{carId} {
-      allow read: if true; // Anyone can read car listings
-      allow write: if request.auth != null; // Only authenticated users (your admin) can write
+      allow read: if true;
+      allow write: if request.auth != null;
     }
+
+    // Admin contact settings: Publicly readable, only admins can write
     match /adminSettings/contactDetails {
-      allow read: if true; // Anyone can read contact settings
-      allow write: if request.auth != null; // Only authenticated users (your admin) can write
+      allow read: if true;
+      allow write: if request.auth != null;
     }
+
+    // Complaints:
+    // - Admins can read, update, and delete.
+    // - Anyone can create (submit) a new complaint.
     match /complaints/{complaintId} {
-      allow read: if request.auth != null; // Only admins can read complaints
-      allow create: if true; // Anyone can submit a complaint
-      allow update, delete: if request.auth != null; // Admins can manage
+      allow read: if request.auth != null;
+      allow create: if true;
+      allow update, delete: if request.auth != null;
     }
+
+    // Reviews:
+    // - Anyone can read reviews (for testimonials and general viewing).
+    // - Anyone can create (submit) a new review.
+    // - Admins can update (e.g., to mark as testimonial) and delete reviews.
     match /reviews/{reviewId} {
-      allow read: if true; // Anyone can read reviews (e.g., for testimonials)
-      allow create: if true; // Anyone can submit a review
-      allow update: if request.auth != null; // Admins can update (e.g., to mark as testimonial or hide)
-      allow delete: if request.auth != null; // Admins can delete reviews
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if request.auth != null;
     }
   }
 }
@@ -227,3 +240,4 @@ In the project directory, you can run:
 ---
 
 Happy Coding!
+
