@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu, LogOut, CarIcon as SiteLogoIcon, LayoutDashboard, MessageSquareText, ShieldAlert, Settings, User } from 'lucide-react';
+import { Menu, LogOut, CarIcon as SiteLogoIcon, LayoutDashboard, MessageSquareText, ShieldAlert, Settings, User, FilePlus2, HomeIcon } from 'lucide-react'; // Added HomeIcon
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
@@ -21,7 +21,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
-// Simple SVG Logo - Grayscale
 const YourCarLogo = () => (
   <svg
     width="32"
@@ -86,18 +85,21 @@ export default function Navbar() {
     return <NavbarLoadingSkeleton />;
   }
 
-  const homeLink = { href: '/', label: 'Home', icon: SiteLogoIcon };
+  const homeLink = { href: '/', label: 'Home', icon: HomeIcon }; // Changed SiteLogoIcon to HomeIcon for clarity
 
   const customerInteractiveLinks = [
     { href: '/contact/review', label: 'Write a Review', icon: MessageSquareText },
     { href: '/contact/complaint', label: 'Submit Complaint', icon: ShieldAlert },
   ];
 
+  // "Manage Reviews" and "View Complaints" are now in AdminLayout header
+  // "Add New Car" functionality is primarily on the dashboard
   const adminDashboardLinks = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/reviews', label: 'Manage Reviews', icon: MessageSquareText },
-    { href: '/admin/complaints', label: 'View Complaints', icon: ShieldAlert },
-    { href: '/admin/settings', label: 'Contact Settings', icon: Settings },
+    // { href: '/admin/cars/new', label: 'Add Car', icon: FilePlus2 }, // Removed "Add New Car"
+    // { href: '/admin/reviews', label: 'Reviews', icon: MessageSquareText }, // Moved
+    // { href: '/admin/complaints', label: 'Complaints', icon: ShieldAlert }, // Moved
+    { href: '/admin/settings', label: 'Site Settings', icon: Settings },
     { href: '/admin/account', label: 'My Account', icon: User },
   ];
 
@@ -174,12 +176,16 @@ export default function Navbar() {
   };
 
   const DesktopNavLink = ({ href, label, icon: Icon }: { href: string; label: string, icon?: React.ElementType }) => {
-    const isActive = pathname === href;
+    const isActive = pathname === href || (href !== "/" && pathname.startsWith(href)); // More robust active check
     return (
       <Button
         variant="ghost"
+        size="default" // Reverted to default size for desktop navlinks
         asChild
-        className="hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground relative group px-3 py-2 h-auto"
+        className={cn(
+          "hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground relative group px-3 py-2 h-auto",
+           isActive && "text-primary" // Style active link text
+        )}
       >
         <Link href={href} className="flex items-center">
           {label}
