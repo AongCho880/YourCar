@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Complaint } from '@/types';
 import { db } from '@/lib/firebaseConfig';
-import { collection, getDocs, query, orderBy, doc, updateDoc, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, updateDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
