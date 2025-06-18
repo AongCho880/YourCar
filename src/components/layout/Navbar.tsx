@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu, LogOut, CarIcon as SiteLogoIcon, LayoutDashboard, MessageSquareText, ShieldAlert, Settings, User } from 'lucide-react'; // Updated icons
+import { Menu, LogOut, CarIcon as SiteLogoIcon, LayoutDashboard, MessageSquareText, ShieldAlert, Settings, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
@@ -93,12 +93,10 @@ export default function Navbar() {
     { href: '/contact/complaint', label: 'Submit Complaint', icon: ShieldAlert },
   ];
 
-  // "Add New Car", "Manage Reviews", "View Complaints" removed from here
   const adminDashboardLinks = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    // { href: '/admin/cars/new', label: 'Add New Car', icon: PlusCircle }, // Removed
-    // { href: '/admin/reviews', label: 'Reviews', icon: MessageSquareText }, // Removed
-    // { href: '/admin/complaints', label: 'Complaints', icon: ShieldAlert }, // Removed
+    { href: '/admin/reviews', label: 'Manage Reviews', icon: MessageSquareText },
+    { href: '/admin/complaints', label: 'View Complaints', icon: ShieldAlert },
     { href: '/admin/settings', label: 'Contact Settings', icon: Settings },
     { href: '/admin/account', label: 'My Account', icon: User },
   ];
@@ -181,14 +179,12 @@ export default function Navbar() {
       <Button
         variant="ghost"
         asChild
-        className="hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground relative group px-3 py-2 h-auto" // Reduced padding
+        className="hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground relative group px-3 py-2 h-auto"
       >
         <Link href={href} className="flex items-center">
-          {/* Icon can be optional for desktop to save space if needed */}
-          {/* {Icon && <Icon className="mr-1.5 h-4 w-4 shrink-0" />}  */}
           {label}
           <span className={cn(
-            "absolute bottom-1 left-0 right-0 mx-auto block h-[1.5px] w-[80%] origin-center transform bg-primary transition-transform duration-300 ease-out", // Adjusted bottom positioning
+            "absolute bottom-1 left-0 right-0 mx-auto block h-[1.5px] w-[80%] origin-center transform bg-primary transition-transform duration-300 ease-out",
             isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
           )}></span>
         </Link>
@@ -204,7 +200,7 @@ export default function Navbar() {
           <span className="font-headline">YourCar</span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-0.5"> {/* Reduced gap */}
+        <nav className="hidden md:flex items-center gap-0.5">
           <DesktopNavLink href={homeLink.href} label={homeLink.label} icon={homeLink.icon} />
           
           {user ? (
@@ -269,4 +265,3 @@ export default function Navbar() {
     </header>
   );
 }
-
