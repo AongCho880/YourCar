@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu, LogOut, MessageCircleQuestion, MessageSquareText } from 'lucide-react';
+import { Menu, LogOut } from 'lucide-react'; // Removed unused MessageCircleQuestion, MessageSquareText
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
@@ -86,13 +86,14 @@ export default function Navbar() {
     return <NavbarLoadingSkeleton />;
   }
 
-  const navLinks = [
-    { href: '/', label: 'Home' },
+  const homeLink = { href: '/', label: 'Home' };
+
+  const customerInteractiveLinks = [
     { href: '/contact/review', label: 'Write a Review' },
     { href: '/contact/complaint', label: 'Submit Complaint' },
   ];
 
-  const adminNavLinks = [
+  const adminDashboardLinks = [
     { href: '/admin/dashboard', label: 'Dashboard' },
     { href: '/admin/cars/new', label: 'Add Car' },
     { href: '/admin/reviews', label: 'Manage Reviews' },
@@ -100,6 +101,7 @@ export default function Navbar() {
     { href: '/admin/settings', label: 'Site Settings' },
     { href: '/admin/account', label: 'My Account' },
   ];
+
 
   const NavLinkItem = ({ href, label, onClick, isLogoutButton = false }: { href: string; label: string, onClick?: () => void, isLogoutButton?: boolean }) => {
     const isActive = pathname === href;
@@ -124,7 +126,7 @@ export default function Navbar() {
               variant="ghost"
               className="w-full justify-start relative group text-left hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground"
             >
-              {buttonContent}
+               <LogOut className="mr-2 h-4 w-4" />{buttonContent}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
@@ -138,7 +140,7 @@ export default function Navbar() {
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={() => {
                 if (onClick) onClick();
-                setIsMobileMenuOpen(false);
+                setIsMobileMenuOpen(false); // Ensure menu closes after action
               }} className="bg-destructive hover:bg-destructive/90">
                 Logout
               </AlertDialogAction>
@@ -156,7 +158,7 @@ export default function Navbar() {
           className="w-full justify-start relative group text-left hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground"
           onClick={() => {
             if (onClick) onClick();
-            setIsMobileMenuOpen(false);
+            setIsMobileMenuOpen(false); // Ensure menu closes on click
           }}
         >
           {onClick ? (
@@ -171,6 +173,21 @@ export default function Navbar() {
     );
   };
 
+  const DesktopNavLink = ({ href, label }: { href: string; label: string }) => {
+    const isActive = pathname === href;
+    return (
+      <Button variant="ghost" asChild key={href} className="hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
+        <Link href={href} className="relative group">
+          {label}
+          <span className={cn(
+            "absolute bottom-2 left-0 block h-[2px] w-full origin-left transform bg-primary transition-transform duration-300 ease-out",
+            isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+          )}></span>
+        </Link>
+      </Button>
+    );
+  };
+
   return (
     <header className="bg-card/70 text-card-foreground shadow-xl backdrop-blur-lg sticky top-0 z-50 border-b border-border/30">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -180,35 +197,15 @@ export default function Navbar() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map(link => {
-            const isActive = pathname === link.href;
-            return (
-              <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
-                <Link href={link.href} className="relative group">
-                  {link.label}
-                  <span className={cn(
-                    "absolute bottom-2 left-0 block h-[2px] w-full origin-left transform bg-primary transition-transform duration-300 ease-out",
-                    isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                  )}></span>
-                </Link>
-              </Button>
-            );
-          })}
-          {!!user && adminNavLinks.map(link => {
-             const isActive = pathname === link.href;
-            return (
-              <Button variant="ghost" asChild key={link.href} className="hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
-                <Link href={link.href} className="relative group">
-                  {link.label}
-                  <span className={cn(
-                    "absolute bottom-2 left-0 block h-[2px] w-full origin-left transform bg-primary transition-transform duration-300 ease-out",
-                    isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                  )}></span>
-                </Link>
-              </Button>
-            );
-          })}
-          {!!user && (
+          <DesktopNavLink href={homeLink.href} label={homeLink.label} />
+          
+          {user ? (
+            adminDashboardLinks.map(link => <DesktopNavLink key={link.href} href={link.href} label={link.label} />)
+          ) : (
+            customerInteractiveLinks.map(link => <DesktopNavLink key={link.href} href={link.href} label={link.label} />)
+          )}
+
+          {user && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" size="sm" className="ml-2 hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
@@ -245,9 +242,15 @@ export default function Navbar() {
                 <SheetTitle>Navigation</SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-1 p-2">
-                {navLinks.map(link => <NavLinkItem key={`mobile-${link.href}`} {...link} />)}
-                {!!user && adminNavLinks.map(link => <NavLinkItem key={`mobile-admin-${link.href}`} {...link} />)}
-                {!!user && (
+                <NavLinkItem key={`mobile-${homeLink.href}`} {...homeLink} />
+
+                {user ? (
+                  adminDashboardLinks.map(link => <NavLinkItem key={`mobile-admin-${link.href}`} {...link} />)
+                ) : (
+                  customerInteractiveLinks.map(link => <NavLinkItem key={`mobile-customer-${link.href}`} {...link} />)
+                )}
+                
+                {user && (
                   <NavLinkItem href="#" label="Logout" onClick={logout} isLogoutButton={true} />
                 )}
               </div>
