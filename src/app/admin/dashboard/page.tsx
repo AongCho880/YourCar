@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Edit, Trash2, PlusCircle, Eye, Car, Loader2, Sparkles, MessageSquareText, ShieldAlert } from 'lucide-react'; // Added icons
+import { Edit, Trash2, PlusCircle, Eye, Car, Loader2, Sparkles, MessageSquareText, ShieldAlert } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -89,11 +89,12 @@ export default function AdminDashboardPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <Skeleton className="h-10 w-48" />
-          <Skeleton className="h-10 w-32" />
+          {/* Skeleton for buttons will be covered by the content below if loading */}
         </div>
-        <div className="flex gap-2 mt-4">
-            <Skeleton className="h-10 w-36" />
-            <Skeleton className="h-10 w-36" />
+        <h2 className="text-2xl font-bold font-headline pt-4">Car Listings Management</h2>
+        <div className="flex flex-col sm:flex-row gap-2 mt-4 mb-6">
+            <Skeleton className="h-10 w-40" /> {/* Add Random Dev Car skeleton */}
+            <Skeleton className="h-10 w-36" /> {/* Add New Car skeleton */}
         </div>
         <Skeleton className="h-96 w-full mt-6" />
       </div>
@@ -102,9 +103,10 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-3xl font-bold font-headline"></h1> {/* Admin Dashboard text removed */}
-        <div className="flex flex-col sm:flex-row gap-2">
+      <h1 className="text-3xl font-bold font-headline"></h1> {/* Admin Dashboard text removed */}
+      
+      <h2 className="text-2xl font-bold font-headline pt-4">Car Listings Management</h2>
+      <div className="flex flex-col sm:flex-row gap-2 mb-6"> {/* Buttons moved here */}
           <Button 
             onClick={handleAddRandomCar} 
             variant="outline"
@@ -119,20 +121,13 @@ export default function AdminDashboardPage() {
             </Link>
           </Button>
         </div>
-      </div>
 
-
-      <h2 className="text-2xl font-bold font-headline pt-4">Car Listings Management</h2>
       {cars.length === 0 && !carsLoadingFromContext ? (
         <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
           <Car className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
           <h2 className="text-xl font-semibold mb-2">No Cars Listed Yet</h2>
           <p className="text-muted-foreground mb-4">Start by adding your first car listing or a random dev car.</p>
-          <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">
-            <Link href="/admin/cars/new">
-              <PlusCircle className="mr-2 h-4 w-4" /> Add New Car
-            </Link>
-          </Button>
+          {/* Button to add new car is already available above */}
         </div>
       ) : (
         <div className="border rounded-lg shadow-sm overflow-hidden">
@@ -222,3 +217,4 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
