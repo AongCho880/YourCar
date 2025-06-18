@@ -95,11 +95,11 @@ export default function Navbar() {
 
   const adminDashboardLinks = [
     { href: '/admin/dashboard', label: 'Dashboard' },
-    { href: '/admin/cars/new', label: 'Add Car' },
-    { href: '/admin/reviews', label: 'Reviews' }, // Shortened
-    { href: '/admin/complaints', label: 'Complaints' }, // Shortened
-    { href: '/admin/settings', label: 'Settings' }, // Shortened
-    { href: '/admin/account', label: 'Account' }, // Shortened
+    { href: '/admin/cars/new', label: 'Add New Car' },
+    { href: '/admin/reviews', label: 'Manage Reviews' },
+    { href: '/admin/complaints', label: 'View Complaints' },
+    { href: '/admin/settings', label: 'Contact Settings' },
+    { href: '/admin/account', label: 'My Account' },
   ];
 
 
@@ -173,20 +173,18 @@ export default function Navbar() {
     );
   };
 
-  const DesktopNavLink = ({ href, label, size = "default" }: { href: string; label: string; size?: "default" | "sm" }) => {
+  const DesktopNavLink = ({ href, label }: { href: string; label: string }) => {
     const isActive = pathname === href;
     return (
       <Button
         variant="ghost"
-        size={size}
         asChild
         className="hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground relative group"
       >
         <Link href={href}>
           {label}
           <span className={cn(
-            "absolute left-0 right-0 mx-auto block h-[1.5px] w-[80%] origin-center transform bg-primary transition-transform duration-300 ease-out",
-            size === "sm" ? "bottom-1" : "bottom-1.5", 
+            "absolute bottom-1.5 left-0 right-0 mx-auto block h-[1.5px] w-[80%] origin-center transform bg-primary transition-transform duration-300 ease-out",
             isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
           )}></span>
         </Link>
@@ -203,12 +201,12 @@ export default function Navbar() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
-          <DesktopNavLink href={homeLink.href} label={homeLink.label} size="default"/>
+          <DesktopNavLink href={homeLink.href} label={homeLink.label} />
           
           {user ? (
-            adminDashboardLinks.map(link => <DesktopNavLink key={link.href} href={link.href} label={link.label} size="sm" />)
+            adminDashboardLinks.map(link => <DesktopNavLink key={link.href} href={link.href} label={link.label} />)
           ) : (
-            customerInteractiveLinks.map(link => <DesktopNavLink key={link.href} href={link.href} label={link.label} size="default" />)
+            customerInteractiveLinks.map(link => <DesktopNavLink key={link.href} href={link.href} label={link.label} />)
           )}
 
           {user && (
