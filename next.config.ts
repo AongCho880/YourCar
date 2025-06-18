@@ -38,7 +38,13 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'cdn3.focus.bg', // Added this new hostname
+        hostname: 'cdn3.focus.bg',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'encrypted-tbn0.gstatic.com', // Added this new hostname
         port: '',
         pathname: '/**',
       },
