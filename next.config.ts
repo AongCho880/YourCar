@@ -50,7 +50,13 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'vehicle-images.dealerinspire.com', // Added this new hostname
+        hostname: 'vehicle-images.dealerinspire.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'atcimages.kbb.com',
         port: '',
         pathname: '/**',
       },
