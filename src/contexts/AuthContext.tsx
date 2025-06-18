@@ -11,7 +11,7 @@ import {
   sendEmailVerification,
   verifyBeforeUpdateEmail,
   updatePassword as firebaseUpdatePassword,
-  sendPasswordResetEmail as firebaseSendPasswordResetEmail, // Import sendPasswordResetEmail
+  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
   type User 
 } from 'firebase/auth';
 import { auth } from '@/lib/firebaseConfig'; // Ensure auth is exported from firebaseConfig
@@ -26,7 +26,7 @@ interface AuthContextType {
   updateAdminEmail: (newEmail: string) => Promise<boolean>;
   updateAdminPassword: (newPassword: string) => Promise<boolean>;
   sendAdminEmailVerification: () => Promise<boolean>;
-  sendAdminPasswordResetEmail: (email: string) => Promise<boolean>; // Add new function
+  sendAdminPasswordResetEmail: (email: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,19 +42,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!auth) {
       console.error("Firebase Auth is not initialized. Check your Firebase configuration.");
       setLoading(false);
-      if (!pathname.startsWith('/admin')) {
-        // router.push('/config-error'); 
-      }
+      setUser(null);
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
+    let unsubscribe: (() => void) | undefined;
+    try {
+      unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+        setLoading(false);
+      }, (error) => {
+        // This error callback is for errors *during* the observation, not setup.
+        console.error("Error in onAuthStateChanged observation:", error);
+        setUser(null);
+        setLoading(false);
+      });
+    } catch (error) {
+      console.error("Error setting up Firebase onAuthStateChanged listener:", error);
+      setUser(null); 
+      setLoading(false); 
+    }
 
-    return () => unsubscribe();
-  }, [router, pathname]);
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [router, pathname]); // Dependencies remain to re-evaluate if router/pathname causes context re-instantiation issues, though ideally this effect runs once.
 
   const login = async (email: string, pass: string): Promise<boolean> => {
     if (!auth) {
@@ -87,15 +101,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           console.error('Error initiating login notification generation:', e);
         }
       }
+      // User will be set by onAuthStateChanged, setLoading(false) will also be handled there.
+      // router.push('/admin/dashboard'); // Let onAuthStateChanged and page logic handle redirects
       return true;
     } catch (error: any) {
       console.error("Firebase login error:", error);
       const errorMessage = error.message || "Invalid credentials or network error.";
       toast({ variant: "destructive", title: "Login Failed", description: errorMessage });
-      setUser(null);
-      setLoading(false);
+      setUser(null); // Ensure user is null on failed login
+      setLoading(false); // Set loading false on error
       return false;
     }
+    // No finally setLoading(false) here as onAuthStateChanged should handle it.
   };
 
   const logout = async () => {
@@ -106,13 +123,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     try {
       await firebaseSignOut(auth);
-      setUser(null);
+      // User will be set to null by onAuthStateChanged, setLoading(false) will also be handled there.
       router.push('/admin'); 
     } catch (error: any) {
       console.error("Firebase logout error:", error);
       toast({ variant: "destructive", title: "Logout Failed", description: error.message });
-    } finally {
-      setLoading(false);
+      setLoading(false); // Set loading false on error if signOut doesn't trigger onAuthStateChanged quickly
     }
   };
 
@@ -196,8 +212,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({ title: "Password Reset Email Sent", description: "If an account exists for this email, a password reset link has been sent. Please check your inbox (and spam folder)." });
       return true;
     } catch (error: any) {
-      console.error("Send password reset email error:", error);
       // Avoid detailed error messages that could confirm/deny email existence
+      console.error("Error sending password reset email:", error);
       toast({ variant: "destructive", title: "Request Failed", description: "Could not process the request. Please try again or contact support if the issue persists." });
       return false;
     }
@@ -212,7 +228,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         updateAdminEmail, 
         updateAdminPassword, 
         sendAdminEmailVerification,
-        sendAdminPasswordResetEmail // Expose the new function
+        sendAdminPasswordResetEmail
     }}>
       {children}
     </AuthContext.Provider>
@@ -226,3 +242,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
