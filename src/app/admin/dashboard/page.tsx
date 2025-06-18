@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Edit, Trash2, PlusCircle, Eye, Car, Loader2, Sparkles } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, Eye, Car, Loader2, Sparkles, MessageSquareText, ShieldAlert } from 'lucide-react'; // Added icons
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,8 +24,8 @@ import { useState } from 'react';
 import type { Car as CarType } from '@/types';
 import { CarCondition } from '@/types';
 import { CAR_MAKES, CAR_CONDITIONS } from '@/lib/constants';
-// Card components are no longer needed here for Quick Management
-// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 
 // Function to generate random car data
 function generateRandomCarData(): Omit<CarType, 'id' | 'createdAt' | 'updatedAt'> {
@@ -103,7 +103,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-3xl font-bold font-headline">Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold font-headline"></h1> {/* Admin Dashboard text removed */}
         <div className="flex flex-col sm:flex-row gap-2">
           <Button 
             onClick={handleAddRandomCar} 
@@ -120,8 +120,6 @@ export default function AdminDashboardPage() {
           </Button>
         </div>
       </div>
-
-      {/* Quick Management Links section removed from here */}
 
 
       <h2 className="text-2xl font-bold font-headline pt-4">Car Listings Management</h2>
