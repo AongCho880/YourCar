@@ -56,7 +56,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'atcimages.kbb.com', // Added this new hostname
+        hostname: 'atcimages.kbb.com', // Ensures this hostname is included
         port: '',
         pathname: '/**',
       },
