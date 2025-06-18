@@ -6,32 +6,21 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useRouter } from 'next/navigation';
-// useToast is now part of AuthContext for login failures
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import Link from 'next/link'; // Import Link
 import { LogIn, Loader2 } from 'lucide-react';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // Error state can be removed if AuthContext handles all toast notifications
-  // const [error, setError] = useState(''); 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { login } = useAuth();
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // setError(''); // Not needed if toast is used in context
     setIsLoggingIn(true);
-    const success = await login(email, password);
-    if (success) {
-      // AuthContext will show success toast and onAuthStateChanged in AuthProvider/AdminLayout will handle redirect
-      // No need to router.push or toast here for success.
-    } else {
-      // AuthContext's login function handles the error toast.
-      // setError('Invalid email or password.'); // Can be removed
-    }
+    await login(email, password);
+    // AuthContext's login function handles success/error toasts and redirects.
     setIsLoggingIn(false);
   };
 
@@ -54,6 +43,7 @@ export default function LoginForm() {
                 placeholder="admin@example.com"
                 required
                 autoComplete="email"
+                disabled={isLoggingIn}
               />
             </div>
             <div className="space-y-2">
@@ -66,15 +56,22 @@ export default function LoginForm() {
                 placeholder="password"
                 required
                 autoComplete="current-password"
+                disabled={isLoggingIn}
               />
             </div>
-            {/* {error && <p className="text-sm text-destructive">{error}</p>} Removed in favor of context toasts */}
             <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isLoggingIn}>
               {isLoggingIn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
               Login
             </Button>
           </form>
         </CardContent>
+        <CardFooter className="flex flex-col items-center space-y-2 pt-4">
+          <Link href="/admin/forgot-password" legacyBehavior>
+            <a className="text-sm text-primary hover:underline">
+              Forgot password?
+            </a>
+          </Link>
+        </CardFooter>
       </Card>
     </div>
   );

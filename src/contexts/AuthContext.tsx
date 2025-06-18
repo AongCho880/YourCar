@@ -11,6 +11,7 @@ import {
   sendEmailVerification,
   verifyBeforeUpdateEmail,
   updatePassword as firebaseUpdatePassword,
+  sendPasswordResetEmail as firebaseSendPasswordResetEmail, // Import sendPasswordResetEmail
   type User 
 } from 'firebase/auth';
 import { auth } from '@/lib/firebaseConfig'; // Ensure auth is exported from firebaseConfig
@@ -25,6 +26,7 @@ interface AuthContextType {
   updateAdminEmail: (newEmail: string) => Promise<boolean>;
   updateAdminPassword: (newPassword: string) => Promise<boolean>;
   sendAdminEmailVerification: () => Promise<boolean>;
+  sendAdminPasswordResetEmail: (email: string) => Promise<boolean>; // Add new function
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,9 +42,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!auth) {
       console.error("Firebase Auth is not initialized. Check your Firebase configuration.");
       setLoading(false);
-      // Potentially redirect to an error page or show a global error message
-      if (!pathname.startsWith('/admin')) { // Avoid redirect loops if already on admin page
-        // router.push('/config-error'); // Example error route
+      if (!pathname.startsWith('/admin')) {
+        // router.push('/config-error'); 
       }
       return;
     }
@@ -67,8 +68,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (userCredential.user && userCredential.user.email) {
         try {
           const loginTimestamp = new Date().toISOString();
-          // Intentionally not awaiting this for faster login response to user.
-          // Notification generation can happen in the background.
           sendLoginNotification({
             adminEmail: userCredential.user.email,
             loginTimestamp: loginTimestamp,
@@ -79,25 +78,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.log(`Body: ${notificationContent.emailBody}`);
             console.warn(
               `[Action Required] An email notification for this login should be sent. ` +
-              `Integrate an email sending service (e.g., SendGrid, Mailgun, Resend, or Firebase Trigger Email extension) ` +
-              `to dispatch this email using the content above.`
+              `Integrate an email sending service to dispatch this email using the content above.`
             );
           }).catch(notificationError => {
             console.error('Failed to generate login notification content in background:', notificationError);
           });
         } catch (e) {
-          // Catch any immediate synchronous error from calling sendLoginNotification if it's not truly async
           console.error('Error initiating login notification generation:', e);
         }
       }
-      // onAuthStateChanged will handle setting the user and redirecting
       return true;
     } catch (error: any) {
       console.error("Firebase login error:", error);
       const errorMessage = error.message || "Invalid credentials or network error.";
       toast({ variant: "destructive", title: "Login Failed", description: errorMessage });
-      setUser(null); // Ensure user state is cleared on failed login
-      setLoading(false); // Ensure loading is set to false on error
+      setUser(null);
+      setLoading(false);
       return false;
     }
   };
@@ -190,8 +186,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const sendAdminPasswordResetEmail = async (email: string): Promise<boolean> => {
+    if (!auth) {
+      toast({ variant: "destructive", title: "Error", description: "Authentication service not available." });
+      return false;
+    }
+    try {
+      await firebaseSendPasswordResetEmail(auth, email);
+      toast({ title: "Password Reset Email Sent", description: "If an account exists for this email, a password reset link has been sent. Please check your inbox (and spam folder)." });
+      return true;
+    } catch (error: any) {
+      console.error("Send password reset email error:", error);
+      // Avoid detailed error messages that could confirm/deny email existence
+      toast({ variant: "destructive", title: "Request Failed", description: "Could not process the request. Please try again or contact support if the issue persists." });
+      return false;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, updateAdminEmail, updateAdminPassword, sendAdminEmailVerification }}>
+    <AuthContext.Provider value={{ 
+        user, 
+        loading, 
+        login, 
+        logout, 
+        updateAdminEmail, 
+        updateAdminPassword, 
+        sendAdminEmailVerification,
+        sendAdminPasswordResetEmail // Expose the new function
+    }}>
       {children}
     </AuthContext.Provider>
   );
