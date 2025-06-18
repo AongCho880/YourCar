@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Edit, Trash2, PlusCircle, Eye, Car, Loader2, Sparkles } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, Eye, Car, Loader2, Sparkles, MessageSquareText, ShieldAlert } from 'lucide-react'; // Added MessageSquareText, ShieldAlert
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +24,7 @@ import { useState } from 'react';
 import type { Car as CarType } from '@/types';
 import { CarCondition } from '@/types';
 import { CAR_MAKES, CAR_CONDITIONS } from '@/lib/constants';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Function to generate random car data
 function generateRandomCarData(): Omit<CarType, 'id' | 'createdAt' | 'updatedAt'> {
@@ -89,7 +90,11 @@ export default function AdminDashboardPage() {
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>
-        <Skeleton className="h-96 w-full" />
+        <div className="flex gap-2 mt-4">
+            <Skeleton className="h-10 w-36" />
+            <Skeleton className="h-10 w-36" />
+        </div>
+        <Skeleton className="h-96 w-full mt-6" />
       </div>
     );
   }
@@ -97,7 +102,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-3xl font-bold font-headline">Car Listings Management</h1>
+        <h1 className="text-3xl font-bold font-headline">Admin Dashboard</h1>
         <div className="flex flex-col sm:flex-row gap-2">
           <Button 
             onClick={handleAddRandomCar} 
@@ -115,6 +120,27 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
+      {/* Quick Management Links */}
+       <Card>
+        <CardHeader>
+          <CardTitle className="font-headline text-xl">Quick Management</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col sm:flex-row gap-3">
+          <Button asChild variant="outline" className="flex-1">
+            <Link href="/admin/reviews">
+              <MessageSquareText className="mr-2 h-4 w-4" /> Manage Reviews
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="flex-1">
+            <Link href="/admin/complaints">
+              <ShieldAlert className="mr-2 h-4 w-4" /> View Complaints
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+
+      <h2 className="text-2xl font-bold font-headline pt-4">Car Listings Management</h2>
       {cars.length === 0 && !carsLoadingFromContext ? (
         <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
           <Car className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
