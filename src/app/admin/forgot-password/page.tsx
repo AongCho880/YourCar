@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, MailLock, LogIn } from 'lucide-react';
+import { Loader2, Mail, LogIn } from 'lucide-react'; // Changed MailLock to Mail
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -98,7 +98,7 @@ export default function ForgotPasswordPage() {
                 )}
               />
               <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MailLock className="mr-2 h-4 w-4" />}
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />} {/* Changed MailLock to Mail */}
                 Send Password Reset Link
               </Button>
             </form>
