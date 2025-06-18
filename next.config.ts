@@ -32,7 +32,13 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'images.17vin.com', // Added this new hostname
+        hostname: 'images.17vin.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn3.focus.bg', // Added this new hostname
         port: '',
         pathname: '/**',
       },
