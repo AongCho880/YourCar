@@ -224,12 +224,12 @@ export default function Navbar() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="ml-3 px-3 py-2 h-auto hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
                       <User className="mr-1.5 h-4 w-4" />
-                      {user.email ? user.email.split('@')[0] : 'Account'}
+                      My Account
                       <ChevronDown className="ml-1.5 h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuLabel>Account Actions</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link href="/admin/account" className="flex items-center">
