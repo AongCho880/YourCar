@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu, LogOut, LayoutDashboard, Settings as SettingsIcon, User, HomeIcon, ChevronDown, Mail, MessageSquareText, ShieldAlert } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Settings as SettingsIcon, User, HomeIcon, ChevronDown, Mail, MessageSquareText, ShieldAlert, Contact as ContactIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
@@ -104,7 +104,7 @@ export default function Navbar() {
   
   // Links for the mobile menu when admin is logged in
   const mobileAdminSpecificLinks = [
-    { href: '/admin/settings', label: 'Contact Settings', icon: SettingsIcon },
+    { href: '/admin/settings', label: 'Contact Settings', icon: ContactIcon },
     { href: '/admin/reviews', label: 'Manage Reviews', icon: MessageSquareText },
     { href: '/admin/complaints', label: 'View Complaints', icon: ShieldAlert },
     { href: '/admin/account', label: 'My Account', icon: User },
@@ -233,7 +233,7 @@ export default function Navbar() {
                 <DropdownMenuContent align="end" className="w-56">
                    <DropdownMenuItem asChild>
                       <Link href="/admin/settings" className="flex items-center">
-                        <SettingsIcon className="mr-2 h-4 w-4" /> Contact Settings
+                        <ContactIcon className="mr-2 h-4 w-4" /> Contact Settings
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
