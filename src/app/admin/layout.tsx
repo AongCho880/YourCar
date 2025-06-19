@@ -48,9 +48,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="bg-card text-card-foreground p-4 shadow-xl sticky top-0 z-40">
-        <div className="container mx-auto flex justify-between items-center">
+        <div className="container mx-auto flex justify-center items-center"> {/* Changed justify-between to justify-center */}
           <Link href="/admin/dashboard" className="text-xl font-bold font-headline text-primary hover:text-primary/80 transition-opacity">Admin Panel</Link>
-          {/* Links moved to main Navbar */}
+          {/* 
+            If other elements were to be on the right, we would need a different flex strategy,
+            e.g., making the Link grow or using spacer divs. But with only the title, justify-center works.
+            The empty nav below does not affect centering.
+          */}
           <nav className="flex items-center gap-2">
              {/* Placeholder for any future admin header specific nav items if needed */}
           </nav>
@@ -62,3 +66,4 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
