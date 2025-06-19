@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu, LogOut, LayoutDashboard, Settings as SettingsIcon, User, HomeIcon, ChevronDown, Mail, MessageSquareText, ShieldAlert, Contact as ContactIcon } from 'lucide-react';
+import { Menu, LogOut, LayoutDashboard, Settings as SettingsIcon, User, HomeIcon, ChevronDown, Mail, MessageSquareText, ShieldAlert, Contact as ContactIcon, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
@@ -107,6 +107,7 @@ export default function Navbar() {
     { href: '/admin/settings', label: 'Contact Settings', icon: ContactIcon },
     { href: '/admin/reviews', label: 'Manage Reviews', icon: MessageSquareText },
     { href: '/admin/complaints', label: 'View Complaints', icon: ShieldAlert },
+    { href: '/admin/statistics', label: 'Statistics', icon: BarChart3 },
     { href: '/admin/account', label: 'My Account', icon: User },
   ];
 
@@ -244,6 +245,11 @@ export default function Navbar() {
                     <DropdownMenuItem asChild>
                       <Link href="/admin/complaints" className="flex items-center">
                         <ShieldAlert className="mr-2 h-4 w-4" /> View Complaints
+                      </Link>
+                    </DropdownMenuItem>
+                     <DropdownMenuItem asChild>
+                      <Link href="/admin/statistics" className="flex items-center">
+                        <BarChart3 className="mr-2 h-4 w-4" /> Statistics
                       </Link>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
