@@ -12,10 +12,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
@@ -104,7 +100,6 @@ export default function Navbar() {
     { href: '/contact/complaint', label: 'Submit Complaint', icon: ShieldAlert },
   ];
 
-  // Simplified base links for admin, specific dropdowns built in JSX
   const adminDashboardLink = { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard };
   
   // Links for the mobile menu when admin is logged in
@@ -236,31 +231,21 @@ export default function Navbar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <Mail className="mr-2 h-4 w-4" />
-                      <span>Contact</span>
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                      <DropdownMenuSubContent>
-                        <DropdownMenuItem asChild>
-                          <Link href="/admin/settings" className="flex items-center">
-                            <SettingsIcon className="mr-2 h-4 w-4" /> Contact Settings
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href="/admin/reviews" className="flex items-center">
-                            <MessageSquareText className="mr-2 h-4 w-4" /> Manage Reviews
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href="/admin/complaints" className="flex items-center">
-                            <ShieldAlert className="mr-2 h-4 w-4" /> View Complaints
-                          </Link>
-                        </DropdownMenuItem>
-                      </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                  </DropdownMenuSub>
+                   <DropdownMenuItem asChild>
+                      <Link href="/admin/settings" className="flex items-center">
+                        <SettingsIcon className="mr-2 h-4 w-4" /> Contact Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/reviews" className="flex items-center">
+                        <MessageSquareText className="mr-2 h-4 w-4" /> Manage Reviews
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/complaints" className="flex items-center">
+                        <ShieldAlert className="mr-2 h-4 w-4" /> View Complaints
+                      </Link>
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -347,3 +332,5 @@ export default function Navbar() {
     </header>
   );
 }
+
+    
