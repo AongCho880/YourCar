@@ -23,6 +23,9 @@ export default function HomePage() {
 
   const filteredCars = useMemo(() => {
     return cars.filter(car => {
+      // Exclude sold cars first
+      if (car.isSold) return false;
+
       const { make, priceRange, condition, searchTerm } = filters;
       if (make && car.make !== make) return false;
       if (condition && car.condition !== condition) return false;
