@@ -5,15 +5,18 @@ YourCar is a modern, full-stack Next.js application designed as a feature-rich m
 
 ## Key Features
 
-*   **Comprehensive Car Listings:** Browse, filter (by make, price, condition, search term), and view detailed car listings.
+*   **Comprehensive Car Listings:**
+    *   Browse, filter (by make, price, condition, search term), and view detailed car listings.
+    *   Cars marked as "sold" are hidden from the public homepage.
 *   **Secure Admin Dashboard:**
-    *   Firebase Authentication for admin access.
-    *   Manage car listings (add, edit, delete).
+    *   Firebase Authentication for admin access, including **"Forgot Password" functionality**.
+    *   Manage car listings (add, edit, delete, **toggle sold status**). Listings are separated into **"Available Cars" and "Sold Cars" tables**.
     *   Update site-wide contact settings (WhatsApp, Messenger).
     *   Manage admin account (email/password updates, email verification).
     *   "Add Random Dev Car" feature for easy testing.
     *   View and manage customer reviews (mark as testimonials).
     *   View and manage customer complaints.
+    *   **View site and engagement statistics** (currently with mock data) including website visits, contact channel breakdown, and top car performance.
 *   **AI-Powered Ad Copy:** Automatically generate engaging ad descriptions for car listings using Genkit and Google's Gemini model.
 *   **Customer Interaction:**
     *   Submit reviews with star ratings and comments.
@@ -29,6 +32,7 @@ YourCar is a modern, full-stack Next.js application designed as a feature-rich m
     *   Genkit (with Google AI Plugin for Gemini) for AI features
     *   Firebase (Authentication, Firestore Database, Storage for images)
     *   React Hook Form with Zod for robust form validation.
+    *   Recharts for displaying statistics.
 *   **Client-Side Filtering & Pagination:** Efficiently browse through car listings on the homepage.
 *   **Image Handling:** Supports manual URL input for car images. (Direct upload functionality UI is present but currently shows a notification due to optional Storage setup).
 
@@ -49,6 +53,7 @@ YourCar is a modern, full-stack Next.js application designed as a feature-rich m
 *   **Image Storage:** Firebase Storage (optional, relies on manual URLs if not fully configured)
 *   **State Management (Cars & Auth):** React Context API
 *   **Form Handling:** React Hook Form with Zod for validation
+*   **Charts/Statistics:** Recharts
 
 ## Prerequisites
 
@@ -216,6 +221,7 @@ Once both servers are running, access the application at the URL provided by the
 *   Navigate to `/admin` on your local site (e.g., `http://localhost:9003/admin`).
 *   Log in using the email and password you created in Firebase Authentication (Step 3).
 *   After successful login, you will be redirected to the admin dashboard (`/admin/dashboard`).
+*   If you forget your password, use the "Forgot password?" link on the login page.
 
 ## Available Scripts
 
@@ -240,4 +246,3 @@ In the project directory, you can run:
 ---
 
 Happy Coding!
-
