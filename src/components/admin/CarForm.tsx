@@ -9,6 +9,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import type { Car as CarType } from "@/types";
 import { CarCondition } from "@/types";
 import { CAR_MAKES, CAR_CONDITIONS, MAX_IMAGE_UPLOADS } from "@/lib/constants";
@@ -18,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { generateAdCopy } from "@/ai/flows/generate-ad-copy";
 import type { GenerateAdCopyInput } from "@/ai/flows/generate-ad-copy";
 import { useState, useEffect, useRef } from "react";
-import { PlusCircle, Trash2, Sparkles, Loader2, FileImage, UploadCloud } from "lucide-react";
+import { PlusCircle, Trash2, Sparkles, Loader2, FileImage, UploadCloud, PackageCheck, PackageX } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 const ADD_NEW_MAKE_VALUE = "__ADD_NEW_MAKE__";
@@ -36,6 +38,7 @@ const carFormSchema = z.object({
              .min(1, "At least one image URL is required.")
              .max(MAX_IMAGE_UPLOADS, `Maximum ${MAX_IMAGE_UPLOADS} image URLs allowed.`),
   description: z.string().min(10, "Description must be at least 10 characters").max(2000, "Description too long"),
+  isSold: z.boolean().optional(),
 }).superRefine((data, ctx) => {
   if (data.make === ADD_NEW_MAKE_VALUE) {
     if (!data.customMakeName || data.customMakeName.trim() === "") {
@@ -72,6 +75,7 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
           customMakeName: CAR_MAKES.includes(initialData.make) ? "" : initialData.make,
           features: initialData.features?.map(f => ({ value: f })) || [{ value: "" }],
           images: initialData.images || [], 
+          isSold: initialData.isSold ?? false,
         }
       : {
           make: "",
@@ -84,6 +88,7 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
           features: [{ value: "" }],
           images: [], 
           description: "",
+          isSold: false,
         },
   });
 
@@ -146,6 +151,7 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
       features: data.features?.map(f => f.value).filter(Boolean) || [],
       images: finalImageUrls, 
       description: data.description,
+      isSold: data.isSold ?? false,
     };
     
     let success = false;
@@ -153,24 +159,23 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
 
     if (isEditMode && initialData) {
       resultCar = await updateCar({ ...carDataPayload, id: initialData.id });
-      // Toast for update is now handled in CarContext
     } else {
       resultCar = await addCar(carDataPayload);
-      // Toast for add is now handled in CarContext
     }
     
-    if (resultCar) { // CarContext now returns the car or null
+    if (resultCar) { 
       success = true;
       form.reset(isEditMode && resultCar ? {
-         ...resultCar, // Use the car data returned from context, it might have updated timestamps
+         ...resultCar, 
           make: CAR_MAKES.includes(resultCar.make) ? resultCar.make : ADD_NEW_MAKE_VALUE,
           customMakeName: CAR_MAKES.includes(resultCar.make) ? "" : resultCar.make,
           features: resultCar.features?.map(f => ({ value: f })) || [{ value: "" }],
           images: resultCar.images || [],
+          isSold: resultCar.isSold ?? false,
         } : { 
           make: "", customMakeName: "", model: "", year: new Date().getFullYear(), 
           price: 0, mileage: 0, condition: undefined, features: [{ value: "" }],
-          images: [], description: "",
+          images: [], description: "", isSold: false,
         }); 
       if (!isEditMode) {
           router.push("/admin/dashboard");
@@ -281,6 +286,32 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
                 </FormItem>
               )} />
             </div>
+            
+             <FormField
+                control={form.control}
+                name="isSold"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-muted/30">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base flex items-center">
+                        {field.value ? <PackageX className="mr-2 h-5 w-5 text-destructive" /> : <PackageCheck className="mr-2 h-5 w-5 text-green-600" />}
+                        Availability Status
+                      </FormLabel>
+                      <FormDescription>
+                        {field.value ? "This car is marked as SOLD." : "This car is currently AVAILABLE."}
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={isSubmittingForm}
+                        aria-label="Mark as sold"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             
             <div className="space-y-4">
               <FormLabel className="text-lg font-semibold flex items-center">
@@ -404,3 +435,4 @@ export default function CarForm({ initialData, isEditMode = false }: CarFormProp
     </Card>
   );
 }
+

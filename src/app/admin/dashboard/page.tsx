@@ -7,7 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Edit, Trash2, PlusCircle, Eye, Car, Loader2, Sparkles, MessageSquareText, ShieldAlert } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, Eye, Car, Loader2, Sparkles, CheckSquare, XSquare } from 'lucide-react';
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +27,7 @@ import type { Car as CarType } from '@/types';
 import { CarCondition } from '@/types';
 import { CAR_MAKES, CAR_CONDITIONS } from '@/lib/constants';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 
 
 // Function to generate random car data
@@ -61,56 +64,64 @@ function generateRandomCarData(): Omit<CarType, 'id' | 'createdAt' | 'updatedAt'
       `https://placehold.co/600x400.png`,
     ],
     description: `Explore this reliable ${randomYear} ${randomMake}. It's in ${randomConditionObj.label.toLowerCase()} condition with reasonable mileage. Key features include: ${randomFeatures.join(', ')}. Contact us for a test drive!`,
+    isSold: false, // Default to not sold
   };
 }
 
 
 export default function AdminDashboardPage() {
-  const { cars, deleteCar, loading: carsLoadingFromContext, addCar } = useCars();
+  const { cars, deleteCar, loading: carsLoadingFromContext, addCar, toggleCarSoldStatus } = useCars();
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isAddingRandomCar, setIsAddingRandomCar] = useState(false);
+  const [isTogglingStatus, setIsTogglingStatus] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleDelete = async (carId: string, carName: string) => {
     setIsDeleting(carId);
     await deleteCar(carId);
-    // Toast is handled by CarContext
     setIsDeleting(null);
   };
 
   const handleAddRandomCar = async () => {
     setIsAddingRandomCar(true);
     const randomCarData = generateRandomCarData();
-    await addCar(randomCarData); // addCar in context handles toasts
+    await addCar(randomCarData);
     setIsAddingRandomCar(false);
   };
 
-  if (carsLoadingFromContext && !isDeleting && !isAddingRandomCar) {
+  const handleToggleSoldStatus = async (carId: string, currentStatus: boolean) => {
+    setIsTogglingStatus(carId);
+    await toggleCarSoldStatus(carId, !currentStatus);
+    // Toast is handled by CarContext
+    setIsTogglingStatus(null);
+  };
+
+  if (carsLoadingFromContext && !isDeleting && !isAddingRandomCar && !isTogglingStatus) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <Skeleton className="h-10 w-48" />
-          {/* Skeleton for buttons will be covered by the content below if loading */}
         </div>
         <h2 className="text-2xl font-bold font-headline pt-4">Car Listings Management</h2>
         <div className="flex flex-col sm:flex-row gap-2 mt-4 mb-6">
-            <Skeleton className="h-10 w-40" /> {/* Add Random Dev Car skeleton */}
-            <Skeleton className="h-10 w-36" /> {/* Add New Car skeleton */}
+            <Skeleton className="h-10 w-40" /> 
+            <Skeleton className="h-10 w-36" /> 
         </div>
-        <Skeleton className="h-96 w-full mt-6" />
+        <Skeleton className="h-96 w-full mt-6" /> {/* Skeleton for table */}
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold font-headline"></h1> {/* Admin Dashboard text removed */}
+      <h1 className="text-3xl font-bold font-headline"></h1> 
       
       <h2 className="text-2xl font-bold font-headline pt-4">Car Listings Management</h2>
-      <div className="flex flex-col sm:flex-row gap-2 mb-6"> {/* Buttons moved here */}
+      <div className="flex flex-col sm:flex-row gap-2 mb-6"> 
           <Button 
             onClick={handleAddRandomCar} 
             variant="outline"
-            disabled={isAddingRandomCar || carsLoadingFromContext}
+            disabled={isAddingRandomCar || carsLoadingFromContext || !!isTogglingStatus}
           >
             {isAddingRandomCar ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
             Add Random Dev Car
@@ -127,7 +138,6 @@ export default function AdminDashboardPage() {
           <Car className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
           <h2 className="text-xl font-semibold mb-2">No Cars Listed Yet</h2>
           <p className="text-muted-foreground mb-4">Start by adding your first car listing or a random dev car.</p>
-          {/* Button to add new car is already available above */}
         </div>
       ) : (
         <div className="border rounded-lg shadow-sm overflow-hidden">
@@ -139,6 +149,7 @@ export default function AdminDashboardPage() {
                 <TableHead className="hidden md:table-cell">Year</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead className="hidden lg:table-cell">Condition</TableHead>
+                <TableHead className="w-[150px] text-center">Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -171,17 +182,36 @@ export default function AdminDashboardPage() {
                     <TableCell className="hidden lg:table-cell">
                       <Badge variant={car.condition === "New" ? "default" : "secondary"}>{car.condition}</Badge>
                     </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center space-x-2">
+                        {isTogglingStatus === car.id ? 
+                          <Loader2 className="h-5 w-5 animate-spin text-primary" /> :
+                          <>
+                            <Switch
+                                id={`sold-status-${car.id}`}
+                                checked={!!car.isSold}
+                                onCheckedChange={() => handleToggleSoldStatus(car.id, !!car.isSold)}
+                                disabled={isTogglingStatus === car.id || isDeleting === car.id || isAddingRandomCar}
+                                aria-label={car.isSold ? "Mark as Available" : "Mark as Sold"}
+                            />
+                            <Label htmlFor={`sold-status-${car.id}`} className="text-xs">
+                                {car.isSold ? <Badge variant="destructive">Sold</Badge> : <Badge variant="default">Available</Badge>}
+                            </Label>
+                          </>
+                        }
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1 sm:gap-2">
-                        <Button variant="ghost" size="icon" asChild title="View Car" disabled={isDeleting === car.id || isAddingRandomCar}>
+                        <Button variant="ghost" size="icon" asChild title="View Car" disabled={isDeleting === car.id || isAddingRandomCar || isTogglingStatus === car.id}>
                           <Link href={`/cars/${car.id}`} target="_blank"><Eye className="h-4 w-4" /></Link>
                         </Button>
-                        <Button variant="ghost" size="icon" asChild title="Edit Car" disabled={isDeleting === car.id || isAddingRandomCar}>
+                        <Button variant="ghost" size="icon" asChild title="Edit Car" disabled={isDeleting === car.id || isAddingRandomCar || isTogglingStatus === car.id}>
                           <Link href={`/admin/cars/edit/${car.id}`}><Edit className="h-4 w-4" /></Link>
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" title="Delete Car" className="hover:bg-destructive/10" disabled={isDeleting === car.id || isAddingRandomCar}>
+                            <Button variant="ghost" size="icon" title="Delete Car" className="hover:bg-destructive/10" disabled={isDeleting === car.id || isAddingRandomCar || isTogglingStatus === car.id}>
                               {isDeleting === car.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
                             </Button>
                           </AlertDialogTrigger>

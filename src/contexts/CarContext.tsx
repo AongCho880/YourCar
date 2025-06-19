@@ -26,6 +26,7 @@ interface CarContextType {
   deleteCar: (carId: string) => Promise<boolean>;
   getCarById: (carId: string) => Car | undefined;
   refreshCars: () => Promise<void>;
+  toggleCarSoldStatus: (carId: string, newSoldStatus: boolean) => Promise<boolean>;
 }
 
 const CarContext = createContext<CarContextType | undefined>(undefined);
@@ -74,23 +75,24 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
       const carWithTimestamps = {
         ...carData,
         features: carData.features || [], 
-        images: carData.images || [],     
+        images: carData.images || [],
+        isSold: carData.isSold ?? false, // Initialize isSold, default to false
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
       const docRef = await addDoc(collection(db, 'cars'), carWithTimestamps);
       
-      // Optimistically create the car object for UI update, timestamps will be approximate until refresh
       const newCar: Car = { 
         id: docRef.id, 
         ...carData, 
         features: carData.features || [],
         images: carData.images || [],
-        createdAt: Date.now(), // Approximate
-        updatedAt: Date.now()  // Approximate
+        isSold: carData.isSold ?? false,
+        createdAt: Date.now(), 
+        updatedAt: Date.now()
       }; 
       
-      await fetchCars(); // Refresh to get accurate data including server timestamps
+      await fetchCars(); 
       
       toast({ title: "Success", description: "Car listing added successfully." });
       return newCar; 
@@ -116,23 +118,28 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
       const carDocRef = doc(db, 'cars', carData.id);
       const { id, ...dataToUpdate } = carData; 
       
-      const updatePayload = {
+      const updatePayload: Partial<Car> & { updatedAt: any } = { // Use Partial<Car> to allow isSold to be optional if not changing
         ...dataToUpdate,
         features: dataToUpdate.features || [], 
-        images: dataToUpdate.images || [],     
+        images: dataToUpdate.images || [],
         updatedAt: serverTimestamp(), 
       };
+      // Only include isSold if it's explicitly passed
+      if (typeof dataToUpdate.isSold === 'boolean') {
+        updatePayload.isSold = dataToUpdate.isSold;
+      }
 
-      await updateDoc(carDocRef, updatePayload);
+
+      await updateDoc(carDocRef, updatePayload as any); // Cast to any because serverTimestamp is not directly part of Car
       
-      await fetchCars(); // Refresh to get accurate data
+      await fetchCars(); 
       
-      // Optimistic update for UI
       const updatedCarData: Car = {
         ...carData,
         features: carData.features || [],
         images: carData.images || [],
-        updatedAt: Date.now(), // Approximate
+        isSold: carData.isSold ?? cars.find(c => c.id === carData.id)?.isSold ?? false, // Keep existing or default
+        updatedAt: Date.now(),
       };
       toast({ title: "Success", description: "Car listing updated successfully." });
       return updatedCarData;
@@ -143,6 +150,44 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
   };
+
+  const toggleCarSoldStatus = async (carId: string, newSoldStatus: boolean): Promise<boolean> => {
+    if (!firebaseUser) {
+      toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to update car status." });
+      return false;
+    }
+    if (!db) {
+      toast({ variant: "destructive", title: "Database Error", description: "Firestore is not initialized." });
+      return false;
+    }
+
+    try {
+      const carDocRef = doc(db, 'cars', carId);
+      await updateDoc(carDocRef, {
+        isSold: newSoldStatus,
+        updatedAt: serverTimestamp(),
+      });
+      
+      // Optimistically update local state for faster UI response
+      setCars(prevCars => 
+        prevCars.map(car => 
+          car.id === carId ? { ...car, isSold: newSoldStatus, updatedAt: Date.now() } : car
+        )
+      );
+      // await fetchCars(); // Can be called to ensure full consistency, but optimistic update is faster for UI
+
+      toast({ title: "Status Updated", description: `Car marked as ${newSoldStatus ? 'Sold' : 'Available'}.` });
+      return true;
+    } catch (error) {
+      console.error("Error toggling car sold status:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      toast({ variant: "destructive", title: "Update Failed", description: `Failed to update car status: ${errorMessage}` });
+      // Revert optimistic update if needed, or simply refetch
+      await fetchCars();
+      return false;
+    }
+  };
+
 
   const deleteCar = async (carId: string): Promise<boolean> => {
     if (!firebaseUser) {
@@ -183,7 +228,7 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <CarContext.Provider value={{ cars, loading, addCar, updateCar, deleteCar, getCarById, refreshCars: fetchCars }}>
+    <CarContext.Provider value={{ cars, loading, addCar, updateCar, deleteCar, getCarById, refreshCars: fetchCars, toggleCarSoldStatus }}>
       {children}
     </CarContext.Provider>
   );
@@ -196,3 +241,4 @@ export const useCars = () => {
   }
   return context;
 };
+

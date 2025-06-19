@@ -17,6 +17,7 @@ export interface Car {
   features: string[];
   images: string[]; // Array of image URLs
   description: string; // This can be the AI-generated ad copy
+  isSold?: boolean; // Added isSold status
   createdAt: number; // Timestamp
   updatedAt: number; // Timestamp
 }
