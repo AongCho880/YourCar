@@ -4,6 +4,7 @@ import Image from 'next/image';
 import type { Car as CarType } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { Fuel, Gauge, ExternalLink, GitCommitHorizontal } from 'lucide-react';
 
 interface CarCardProps {
@@ -23,16 +24,27 @@ export default function CarCard({ car }: CarCardProps) {
 
   return (
     <Card className="flex flex-col h-full overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg bg-card">
-      <Link href={`/cars/${car.id}`} className="block">
-        <Image
-          src={car.images[0] || "https://placehold.co/600x400.png"}
-          alt={`${car.make} ${car.model}`}
-          width={600}
-          height={400}
-          className="w-full h-48 object-cover"
-          data-ai-hint={aiHint}
-        />
-      </Link>
+      <div className="relative">
+        <Link href={`/cars/${car.id}`} className="block">
+          <Image
+            src={car.images[0] || "https://placehold.co/600x400.png"}
+            alt={`${car.make} ${car.model}`}
+            width={600}
+            height={400}
+            className="w-full h-48 object-cover"
+            data-ai-hint={aiHint}
+          />
+        </Link>
+        {car.isSold && (
+          <Badge 
+            variant="destructive" 
+            className="absolute top-3 right-3 text-sm px-3 py-1 z-10"
+            style={{ backgroundColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive-foreground))' }}
+          >
+            SOLD
+          </Badge>
+        )}
+      </div>
 
       <div className="p-4 flex flex-col flex-grow">
         <Link href={`/cars/${car.id}`} className="block group">
