@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu, LogOut, CarIcon as SiteLogoIcon, LayoutDashboard, MessageSquareText, ShieldAlert, Settings, User, FilePlus2, HomeIcon, ChevronDown } from 'lucide-react'; // Added HomeIcon, ChevronDown
+import { Menu, LogOut, LayoutDashboard, Settings as SettingsIcon, User, HomeIcon, ChevronDown, Mail, MessageSquareText, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
@@ -12,6 +12,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
@@ -100,9 +104,14 @@ export default function Navbar() {
     { href: '/contact/complaint', label: 'Submit Complaint', icon: ShieldAlert },
   ];
 
-  const adminDashboardLinksBase = [
-    { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/settings', label: 'Site Settings', icon: Settings },
+  // Simplified base links for admin, specific dropdowns built in JSX
+  const adminDashboardLink = { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard };
+  
+  // Links for the mobile menu when admin is logged in
+  const mobileAdminSpecificLinks = [
+    { href: '/admin/settings', label: 'Contact Settings', icon: SettingsIcon },
+    { href: '/admin/reviews', label: 'Manage Reviews', icon: MessageSquareText },
+    { href: '/admin/complaints', label: 'View Complaints', icon: ShieldAlert },
     { href: '/admin/account', label: 'My Account', icon: User },
   ];
 
@@ -178,7 +187,7 @@ export default function Navbar() {
     );
   };
 
-  const DesktopNavLink = ({ href, label, icon: Icon }: { href: string; label: string, icon?: React.ElementType }) => {
+  const DesktopNavLink = ({ href, label }: { href: string; label: string }) => {
     const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
     return (
       <Button
@@ -201,9 +210,6 @@ export default function Navbar() {
     );
   };
   
-  // Filter out "My Account" for desktop nav links if user is logged in, as it will be in the dropdown
-  const desktopAdminNavLinks = user ? adminDashboardLinksBase.filter(link => link.href !== '/admin/account') : [];
-
 
   return (
     <header className="bg-card/70 text-card-foreground shadow-xl backdrop-blur-lg sticky top-0 z-50 border-b border-border/30">
@@ -214,11 +220,51 @@ export default function Navbar() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-0.5">
-          <DesktopNavLink href={homeLink.href} label={homeLink.label} icon={homeLink.icon} />
+          <DesktopNavLink href={homeLink.href} label={homeLink.label} />
           
           {user ? (
             <>
-              {desktopAdminNavLinks.map(link => <DesktopNavLink key={link.href} href={link.href} label={link.label} icon={link.icon} />)}
+              <DesktopNavLink href={adminDashboardLink.href} label={adminDashboardLink.label} />
+              
+              {/* Settings Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="px-3 py-2 h-auto hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
+                    <SettingsIcon className="mr-1.5 h-4 w-4" />
+                    Settings
+                    <ChevronDown className="ml-1.5 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Mail className="mr-2 h-4 w-4" />
+                      <span>Contact</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/settings" className="flex items-center">
+                            <SettingsIcon className="mr-2 h-4 w-4" /> Contact Settings
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/reviews" className="flex items-center">
+                            <MessageSquareText className="mr-2 h-4 w-4" /> Manage Reviews
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/complaints" className="flex items-center">
+                            <ShieldAlert className="mr-2 h-4 w-4" /> View Complaints
+                          </Link>
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* My Account Dropdown */}
               <AlertDialog>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -246,7 +292,6 @@ export default function Navbar() {
                     </AlertDialogTrigger>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                 {/* AlertDialogContent for logout confirmation */}
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
@@ -264,7 +309,7 @@ export default function Navbar() {
               </AlertDialog>
             </>
           ) : (
-            customerInteractiveLinks.map(link => <DesktopNavLink key={link.href} href={link.href} label={link.label} icon={link.icon} />)
+            customerInteractiveLinks.map(link => <DesktopNavLink key={link.href} href={link.href} label={link.label} />)
           )}
         </nav>
 
@@ -283,7 +328,10 @@ export default function Navbar() {
                 <NavLinkItem key={`mobile-${homeLink.href}`} {...homeLink} />
 
                 {user ? (
-                  adminDashboardLinksBase.map(link => <NavLinkItem key={`mobile-admin-${link.href}`} {...link} />)
+                  <>
+                    <NavLinkItem key={`mobile-admin-${adminDashboardLink.href}`} {...adminDashboardLink} />
+                    {mobileAdminSpecificLinks.map(link => <NavLinkItem key={`mobile-admin-${link.href}`} {...link} />)}
+                  </>
                 ) : (
                   customerInteractiveLinks.map(link => <NavLinkItem key={`mobile-customer-${link.href}`} {...link} />)
                 )}
@@ -299,4 +347,3 @@ export default function Navbar() {
     </header>
   );
 }
-
