@@ -2,9 +2,17 @@
 "use client";
 
 import Link from 'next/link';
-import { Menu, LogOut, CarIcon as SiteLogoIcon, LayoutDashboard, MessageSquareText, ShieldAlert, Settings, User, FilePlus2, HomeIcon } from 'lucide-react'; // Added HomeIcon
+import { Menu, LogOut, CarIcon as SiteLogoIcon, LayoutDashboard, MessageSquareText, ShieldAlert, Settings, User, FilePlus2, HomeIcon, ChevronDown } from 'lucide-react'; // Added HomeIcon, ChevronDown
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -85,20 +93,15 @@ export default function Navbar() {
     return <NavbarLoadingSkeleton />;
   }
 
-  const homeLink = { href: '/', label: 'Home', icon: HomeIcon }; // Changed SiteLogoIcon to HomeIcon for clarity
+  const homeLink = { href: '/', label: 'Home', icon: HomeIcon }; 
 
   const customerInteractiveLinks = [
     { href: '/contact/review', label: 'Write a Review', icon: MessageSquareText },
     { href: '/contact/complaint', label: 'Submit Complaint', icon: ShieldAlert },
   ];
 
-  // "Manage Reviews" and "View Complaints" are now in AdminLayout header
-  // "Add New Car" functionality is primarily on the dashboard
-  const adminDashboardLinks = [
+  const adminDashboardLinksBase = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    // { href: '/admin/cars/new', label: 'Add Car', icon: FilePlus2 }, // Removed "Add New Car"
-    // { href: '/admin/reviews', label: 'Reviews', icon: MessageSquareText }, // Moved
-    // { href: '/admin/complaints', label: 'Complaints', icon: ShieldAlert }, // Moved
     { href: '/admin/settings', label: 'Site Settings', icon: Settings },
     { href: '/admin/account', label: 'My Account', icon: User },
   ];
@@ -176,15 +179,15 @@ export default function Navbar() {
   };
 
   const DesktopNavLink = ({ href, label, icon: Icon }: { href: string; label: string, icon?: React.ElementType }) => {
-    const isActive = pathname === href || (href !== "/" && pathname.startsWith(href)); // More robust active check
+    const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
     return (
       <Button
         variant="ghost"
-        size="default" // Reverted to default size for desktop navlinks
+        size="default"
         asChild
         className={cn(
           "hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground relative group px-3 py-2 h-auto",
-           isActive && "text-primary" // Style active link text
+           isActive && "text-primary" 
         )}
       >
         <Link href={href} className="flex items-center">
@@ -197,6 +200,10 @@ export default function Navbar() {
       </Button>
     );
   };
+  
+  // Filter out "My Account" for desktop nav links if user is logged in, as it will be in the dropdown
+  const desktopAdminNavLinks = user ? adminDashboardLinksBase.filter(link => link.href !== '/admin/account') : [];
+
 
   return (
     <header className="bg-card/70 text-card-foreground shadow-xl backdrop-blur-lg sticky top-0 z-50 border-b border-border/30">
@@ -210,33 +217,54 @@ export default function Navbar() {
           <DesktopNavLink href={homeLink.href} label={homeLink.label} icon={homeLink.icon} />
           
           {user ? (
-            adminDashboardLinks.map(link => <DesktopNavLink key={link.href} href={link.href} label={link.label} icon={link.icon} />)
+            <>
+              {desktopAdminNavLinks.map(link => <DesktopNavLink key={link.href} href={link.href} label={link.label} icon={link.icon} />)}
+              <AlertDialog>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="ml-3 px-3 py-2 h-auto hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
+                      <User className="mr-1.5 h-4 w-4" />
+                      {user.email ? user.email.split('@')[0] : 'Account'}
+                      <ChevronDown className="ml-1.5 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/account" className="flex items-center">
+                        <User className="mr-2 h-4 w-4" />
+                        Profile Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <AlertDialogTrigger asChild>
+                       <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                 {/* AlertDialogContent for logout confirmation */}
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to log out?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={logout} className="bg-destructive hover:bg-destructive/90">
+                      Logout
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
           ) : (
             customerInteractiveLinks.map(link => <DesktopNavLink key={link.href} href={link.href} label={link.label} icon={link.icon} />)
-          )}
-
-          {user && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="ml-2 hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground">
-                  <LogOut className="mr-2 h-4 w-4" />Logout
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to log out?
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={logout} className="bg-destructive hover:bg-destructive/90">
-                    Logout
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
           )}
         </nav>
 
@@ -255,7 +283,7 @@ export default function Navbar() {
                 <NavLinkItem key={`mobile-${homeLink.href}`} {...homeLink} />
 
                 {user ? (
-                  adminDashboardLinks.map(link => <NavLinkItem key={`mobile-admin-${link.href}`} {...link} />)
+                  adminDashboardLinksBase.map(link => <NavLinkItem key={`mobile-admin-${link.href}`} {...link} />)
                 ) : (
                   customerInteractiveLinks.map(link => <NavLinkItem key={`mobile-customer-${link.href}`} {...link} />)
                 )}
@@ -271,3 +299,4 @@ export default function Navbar() {
     </header>
   );
 }
+
