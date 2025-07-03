@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Phone, MessageSquareText, Loader2 } from 'lucide-react';
+import { Phone, MessageSquareText, Loader2, Facebook } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { AdminContactSettings } from '@/types';
@@ -18,7 +17,7 @@ export default function ContactSection() {
   const { toast } = useToast();
 
   useEffect(() => {
-    setIsClient(true); 
+    setIsClient(true);
 
     const fetchContactDetails = async () => {
       setIsLoading(true);
@@ -26,15 +25,17 @@ export default function ContactSection() {
         const response = await fetch('/api/admin-settings');
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to fetch contact settings');
+          throw new Error(errorData.error || response.statusText || 'Failed to fetch contact settings');
         }
         const data: AdminContactSettings = await response.json();
         setContactSettings(data);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching contact details for ContactSection:", error);
-        // Toasting here can be noisy if ContactButtons also toasts. 
-        // Consider a shared hook or context if this becomes an issue.
-        // For now, let individual components handle their specific error display or rely on a general error boundary.
+        toast({
+          variant: "destructive",
+          title: "Error Loading Contact Settings",
+          description: error.message || error.details || "An unknown error occurred.",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -58,7 +59,7 @@ export default function ContactSection() {
   if (!isClient) {
     return null; // Or a minimal skeleton if preferred for SSR consistency
   }
-  
+
   const LoadingSkeleton = () => (
     <Card className="max-w-3xl mx-auto shadow-xl">
       <CardHeader className="text-center">
@@ -93,56 +94,81 @@ export default function ContactSection() {
 
   const canContactViaWhatsApp = contactSettings?.whatsappNumber && contactSettings.whatsappNumber.trim() !== '';
   const canContactViaMessenger = contactSettings?.messengerId && contactSettings.messengerId.trim() !== '';
+  const canContactViaFacebookPage = contactSettings?.facebookPageLink && contactSettings.facebookPageLink.trim() !== '';
 
   return (
-    <section className="py-12 bg-card border-t border-border/20 mt-12">
-      <div className="container mx-auto px-4">
+    <section className="py-8 bg-card border-t border-border/20 mt-8 w-full max-w-full">
+      <div className="w-full max-w-full px-2 sm:px-4 md:px-8">
         {isLoading ? <LoadingSkeleton /> : (
-            <Card className="max-w-3xl mx-auto shadow-xl">
+          <Card className="w-full max-w-full mx-auto shadow-xl">
             <CardHeader className="text-center">
-                <CardTitle className="text-2xl md:text-3xl font-bold font-headline text-primary">
+              <CardTitle className="text-xl md:text-2xl font-bold font-headline text-primary">
                 Get in Touch
-                </CardTitle>
-                <p className="text-muted-foreground">
+              </CardTitle>
+              <p className="text-muted-foreground text-sm md:text-base">
                 Have questions or need assistance? Contact us directly!
-                </p>
+              </p>
             </CardHeader>
-            <CardContent className="space-y-6">
-                {canContactViaWhatsApp && (
-                <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-muted/50 rounded-lg">
-                    <div className="flex items-center mb-2 sm:mb-0">
-                    <Phone className="w-6 h-6 mr-3 text-primary" />
+            <CardContent className="space-y-4">
+              {canContactViaWhatsApp && (
+                <div className="flex flex-col sm:flex-row items-center justify-between p-2 sm:p-4 bg-muted/50 rounded-lg w-full max-w-full">
+                  <div className="flex items-center mb-2 sm:mb-0">
+                    <Phone className="w-4 h-4 mr-2 text-primary min-h-[32px] min-w-[32px]" />
                     <div>
-                        <p className="font-semibold text-foreground">WhatsApp</p>
-                        <p className="text-sm text-muted-foreground">{contactSettings.whatsappNumber}</p>
+                      <p className="font-semibold text-foreground text-sm md:text-base">WhatsApp</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">{contactSettings.whatsappNumber}</p>
                     </div>
-                    </div>
-                    <Button onClick={handleWhatsAppClick} variant="outline" size="sm">
+                  </div>
+                  <Button onClick={handleWhatsAppClick} variant="outline" size="sm" className="min-h-[48px] min-w-[48px]">
                     Chat on WhatsApp
-                    </Button>
+                  </Button>
                 </div>
-                )}
+              )}
 
-                {canContactViaMessenger && (
-                <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-muted/50 rounded-lg">
-                    <div className="flex items-center mb-2 sm:mb-0">
-                    <MessageSquareText className="w-6 h-6 mr-3 text-primary" />
+              {canContactViaMessenger && (
+                <div className="flex flex-col sm:flex-row items-center justify-between p-2 sm:p-4 bg-muted/50 rounded-lg w-full max-w-full">
+                  <div className="flex items-center mb-2 sm:mb-0">
+                    <MessageSquareText className="w-4 h-4 mr-2 text-primary min-h-[32px] min-w-[32px]" />
                     <div>
-                        <p className="font-semibold text-foreground">Messenger</p>
-                        <p className="text-sm text-muted-foreground">{contactSettings.messengerId}</p>
+                      <p className="font-semibold text-foreground text-sm md:text-base">Messenger</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">{contactSettings.messengerId}</p>
                     </div>
-                    </div>
-                    <Button onClick={handleMessengerClick} variant="outline" size="sm">
+                  </div>
+                  <Button onClick={handleMessengerClick} variant="outline" size="sm" className="min-h-[48px] min-w-[48px]">
                     Message on Facebook
-                    </Button>
+                  </Button>
                 </div>
-                )}
+              )}
 
-                {!isLoading && !canContactViaWhatsApp && !canContactViaMessenger && (
-                    <p className="text-center text-muted-foreground">Contact details are not yet configured by the admin. Please check back later.</p>
-                )}
+              {canContactViaFacebookPage && (
+                <div className="flex flex-col sm:flex-row items-center justify-between p-2 sm:p-4 bg-muted/50 rounded-lg w-full max-w-full">
+                  <div className="flex items-center mb-2 sm:mb-0">
+                    <Facebook className="w-4 h-4 mr-2 text-primary min-h-[32px] min-w-[32px]" />
+                    <div>
+                      <p className="font-semibold text-foreground text-sm md:text-base">Facebook Page</p>
+                      <a
+                        href={contactSettings.facebookPageLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs md:text-sm text-blue-600 hover:underline break-all"
+                      >
+                        {contactSettings.facebookPageLink}
+                      </a>
+                    </div>
+                  </div>
+                  <Button asChild variant="outline" size="sm" className="min-h-[48px] min-w-[48px]">
+                    <a href={contactSettings.facebookPageLink} target="_blank" rel="noopener noreferrer">
+                      Visit Facebook Page
+                    </a>
+                  </Button>
+                </div>
+              )}
+
+              {!isLoading && !canContactViaWhatsApp && !canContactViaMessenger && !canContactViaFacebookPage && (
+                <p className="text-center text-muted-foreground text-sm md:text-base">Contact details are not yet configured by the admin. Please check back later.</p>
+              )}
             </CardContent>
-            </Card>
+          </Card>
         )}
       </div>
     </section>

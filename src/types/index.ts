@@ -1,4 +1,3 @@
-
 export enum CarCondition {
   NEW = "New",
   USED_EXCELLENT = "Used - Excellent",
@@ -14,12 +13,12 @@ export interface Car {
   price: number;
   mileage: number;
   condition: CarCondition;
-  features: string[];
+  features: { value: string }[];
   images: string[]; // Array of image URLs
   description: string; // This can be the AI-generated ad copy
   isSold?: boolean; // Added isSold status
-  createdAt: number; // Timestamp
-  updatedAt: number; // Timestamp
+  createdAt: string; // ISO 8601 date string
+  updatedAt: string; // ISO 8601 date string
 }
 
 export type CarFilters = {
@@ -32,7 +31,8 @@ export type CarFilters = {
 export interface AdminContactSettings {
   whatsappNumber?: string;
   messengerId?: string;
-  updatedAt?: number; // Timestamp
+  facebookPageLink?: string;
+  updatedAt?: string; // ISO 8601 date string
 }
 
 export interface Complaint {
@@ -40,7 +40,7 @@ export interface Complaint {
   name?: string;
   email?: string;
   details: string;
-  submittedAt: number; // Timestamp
+  submittedAt: string; // ISO 8601 date string
   isResolved?: boolean;
 }
 
@@ -49,7 +49,9 @@ export interface Review {
   name: string;
   rating: number; // 1-5
   comment: string;
-  submittedAt: number; // Timestamp
+  email?: string;
+  occupation?: string;
+  submittedAt: string; // ISO 8601 date string
   isTestimonial: boolean;
   carId?: string; // Optional: if the review is about a specific car
   carMake?: string; // Optional: denormalized for easier display with testimonials

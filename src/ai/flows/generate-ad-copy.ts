@@ -17,7 +17,7 @@ const GenerateAdCopyInputSchema = z.object({
   year: z.number().describe('The year the car was manufactured.'),
   mileage: z.number().describe('The mileage of the car.'),
   condition: z.string().describe('The condition of the car (e.g., Excellent, Good, Fair).'),
-  features: z.string().describe('Key features of the car, separated by commas (e.g., Leather seats, Sunroof, Navigation).'),
+  features: z.array(z.string()).describe('Key features of the car, separated by commas (e.g., Leather seats, Sunroof, Navigation).'),
   price: z.number().describe('The asking price for the car.'),
 });
 

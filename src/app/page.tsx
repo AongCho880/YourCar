@@ -1,156 +1,103 @@
-
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import CarCard from '@/components/CarCard';
-import FilterControls from '@/components/FilterControls';
-import type { Car, CarFilters } from '@/types';
-import { useCars } from '@/contexts/CarContext';
-import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { List, LayoutGrid, Filter as FilterIcon } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import TestimonialsSection from '@/components/TestimonialsSection'; // Import TestimonialsSection
+import TestimonialsSection from '@/components/TestimonialsSection';
+import { Sparkles, Car, ArrowRight } from 'lucide-react';
+import Navbar from '@/components/layout/Navbar';
 
-const ITEMS_PER_PAGE = 9;
+const YourCarLogo = () => (
+  <svg
+    width="64"
+    height="64"
+    viewBox="0 0 32 32"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-16 w-16 text-primary drop-shadow-lg"
+    aria-hidden="true"
+  >
+    <rect
+      x="4"
+      y="4"
+      width="24"
+      height="24"
+      rx="4"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      fill="hsl(var(--foreground)/0.03)"
+    />
+    <path
+      d="M8 8L16 16M16 16L24 8M16 16V24"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 
-export default function HomePage() {
-  const { cars, loading: carsLoading } = useCars();
-  const [filters, setFilters] = useState<CarFilters>({});
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-
-  const filteredCars = useMemo(() => {
-    return cars.filter(car => {
-      // Exclude sold cars first
-      if (car.isSold) return false;
-
-      const { make, priceRange, condition, searchTerm } = filters;
-      if (make && car.make !== make) return false;
-      if (condition && car.condition !== condition) return false;
-      if (priceRange) {
-        if (car.price < priceRange[0] || car.price > priceRange[1]) return false;
-      }
-      if (searchTerm) {
-        const lowerSearchTerm = searchTerm.toLowerCase();
-        if (
-          !car.make.toLowerCase().includes(lowerSearchTerm) &&
-          !car.model.toLowerCase().includes(lowerSearchTerm) &&
-          !(car.features || []).join(' ').toLowerCase().includes(lowerSearchTerm) &&
-          !(car.description || '').toLowerCase().includes(lowerSearchTerm)
-        ) return false;
-      }
-      return true;
-    });
-  }, [cars, filters]);
-
-  const paginatedCars = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredCars.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredCars, currentPage]);
-
-  const totalPages = Math.ceil(filteredCars.length / ITEMS_PER_PAGE);
-
-  const handleFilterChange = useCallback((newFilters: CarFilters) => {
-    setFilters(newFilters);
-    setCurrentPage(1); // Reset to first page on filter change
-  }, [setFilters, setCurrentPage]); 
-
-  const FilterControlsContent = <FilterControls initialFilters={filters} onFilterChange={handleFilterChange} />;
-
+export default function LandingPage() {
   return (
-    <>
-      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 items-start">
-        {/* Desktop Filters */}
-        <aside className="hidden lg:block sticky top-24">
-          <h2 className="text-xl font-semibold mb-4 font-headline">Filters</h2>
-          {FilterControlsContent}
-        </aside>
-
-        {/* Mobile Filter Button & Sheet */}
-        <div className="lg:hidden mb-6">
-          <Sheet open={isMobileFilterOpen} onOpenChange={setIsMobileFilterOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline" className="w-full border-border">
-                <FilterIcon className="mr-2 h-4 w-4" /> Filters
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] overflow-y-auto">
-               <div className="p-4">
-                  <SheetHeader className="mb-4 text-left">
-                    <SheetTitle className="text-xl font-headline">Filters</SheetTitle>
-                  </SheetHeader>
-                  {FilterControlsContent}
-                  <SheetClose asChild>
-                      <Button className="w-full mt-4 bg-accent">Apply Filters</Button>
-                  </SheetClose>
-               </div>
-            </SheetContent>
-          </Sheet>
+    <main className="min-h-screen bg-background flex flex-col">
+      {/* Hero Section */}
+      <section className="flex-1 flex flex-col justify-center items-center px-4 py-24 text-center bg-gradient-to-b from-primary/5 to-background">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex justify-center items-center mb-6 gap-3">
+            <YourCarLogo />
+            <span className="text-3xl md:text-4xl font-extrabold font-headline text-primary tracking-tight">YourCar</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold font-headline mb-4 text-foreground leading-tight">
+            Find Your Next Car, Effortlessly
+          </h1>
+          <p className="text-lg md:text-xl text-muted-foreground mb-8">
+            Discover, compare, and connect with the best car deals. Simple. Fast. Trusted.
+          </p>
+          <Button asChild size="lg" className="px-8 py-4 text-lg font-semibold shadow-lg">
+            <Link href="/homepage">
+              Browse Cars <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
         </div>
+      </section>
 
-        <section>
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold font-headline">Available Cars ({filteredCars.length})</h1>
-            <div className="flex items-center gap-2">
-              <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('grid')} aria-label="Grid view">
-                <LayoutGrid className="h-5 w-5" />
-              </Button>
-              <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('list')} aria-label="List view">
-                <List className="h-5 w-5" />
-              </Button>
+      {/* How It Works */}
+      <section className="py-16 bg-muted/40">
+        <div className="max-w-4xl mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-bold font-headline text-center mb-10 text-primary flex items-center justify-center">
+            <Sparkles className="w-7 h-7 mr-2 text-primary/80" /> How It Works
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8 text-center">
+            <div>
+              <div className="mb-4 flex justify-center">
+                <Car className="h-10 w-10 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Browse</h3>
+              <p className="text-muted-foreground">Explore a curated selection of cars from trusted sellers.</p>
+            </div>
+            <div>
+              <div className="mb-4 flex justify-center">
+                <Sparkles className="h-10 w-10 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Compare</h3>
+              <p className="text-muted-foreground">Easily compare features, prices, and reviews to find your perfect match.</p>
+            </div>
+            <div>
+              <div className="mb-4 flex justify-center">
+                <ArrowRight className="h-10 w-10 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Connect</h3>
+              <p className="text-muted-foreground">Contact sellers directly and drive away with confidence.</p>
             </div>
           </div>
+        </div>
+      </section>
 
-          {carsLoading ? (
-             <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-              {[...Array(ITEMS_PER_PAGE)].map((_, i) => (
-                <div key={i} className="space-y-3 p-4 border rounded-lg bg-card">
-                  <Skeleton className="h-48 w-full" />
-                  <Skeleton className="h-6 w-5/6 mt-2" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-10 w-full mt-3" />
-                </div>
-              ))}
-            </div>
-          ) : paginatedCars.length > 0 ? (
-            <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
-              {paginatedCars.map(car => (
-                <CarCard key={car.id} car={car} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <h2 className="text-2xl font-semibold mb-2">No Cars Found</h2>
-              <p className="text-muted-foreground">Try adjusting your filters or check back later.</p>
-            </div>
-          )}
-
-          {totalPages > 1 && !carsLoading && (
-            <div className="mt-8 flex justify-center items-center gap-2">
-              <Button 
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
-                disabled={currentPage === 1}
-                variant="outline"
-              >
-                Previous
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages}
-              </span>
-              <Button 
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                variant="outline"
-              >
-                Next
-              </Button>
-            </div>
-          )}
-        </section>
-      </div>
-      <TestimonialsSection /> 
-    </>
+      {/* Featured Testimonials */}
+      <section className="py-16">
+        <div className="max-w-5xl mx-auto px-4">
+          <TestimonialsSection />
+        </div>
+      </section>
+    </main>
   );
 }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCars } from '@/contexts/CarContext';
@@ -58,7 +57,7 @@ function generateRandomCarData(): Omit<CarType, 'id' | 'createdAt' | 'updatedAt'
     price: Math.floor(Math.random() * (65000 - 7000 + 1)) + 7000, // 7000 to 65000
     mileage: Math.floor(Math.random() * (120000 - 5000 + 1)) + 5000, // 5000 to 120000
     condition: randomConditionObj.value,
-    features: randomFeatures,
+    features: randomFeatures.map(f => ({ value: f })),
     images: [
       `https://placehold.co/600x400.png`,
       `https://placehold.co/600x400.png`,
@@ -69,20 +68,20 @@ function generateRandomCarData(): Omit<CarType, 'id' | 'createdAt' | 'updatedAt'
   };
 }
 
-const CarTable = ({ 
-  cars, 
-  title, 
+const CarTable = ({
+  cars,
+  title,
   isSoldTable,
-  onDelete, 
-  onToggleSoldStatus, 
-  isDeletingId, 
+  onDelete,
+  onToggleSoldStatus,
+  isDeletingId,
   isTogglingStatusId,
   isAddingRandomCar
-}: { 
-  cars: CarType[], 
-  title: string, 
+}: {
+  cars: CarType[],
+  title: string,
   isSoldTable: boolean,
-  onDelete: (carId: string, carName: string) => void, 
+  onDelete: (carId: string, carName: string) => void,
   onToggleSoldStatus: (carId: string, currentStatus: boolean) => void,
   isDeletingId: string | null,
   isTogglingStatusId: string | null,
@@ -92,7 +91,7 @@ const CarTable = ({
     return (
       <div className="mt-8">
         <h3 className="text-xl font-semibold mb-3 font-headline flex items-center">
-          <ListFilter className="mr-2 h-5 w-5 text-primary"/> {title} (0)
+          <ListFilter className="mr-2 h-5 w-5 text-primary" /> {title} (0)
         </h3>
         <div className="text-center py-8 border-2 border-dashed border-border rounded-lg">
           <Car className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
@@ -107,7 +106,7 @@ const CarTable = ({
   return (
     <div className="mt-8">
       <h3 className="text-xl font-semibold mb-3 font-headline flex items-center">
-        <ListFilter className="mr-2 h-5 w-5 text-primary"/> {title} ({cars.length})
+        <ListFilter className="mr-2 h-5 w-5 text-primary" /> {title} ({cars.length})
       </h3>
       <div className="border rounded-lg shadow-sm overflow-hidden">
         <Table className="max-h-[65vh]">
@@ -153,18 +152,18 @@ const CarTable = ({
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center space-x-2">
-                      {isTogglingStatusId === car.id ? 
+                      {isTogglingStatusId === car.id ?
                         <Loader2 className="h-5 w-5 animate-spin text-primary" /> :
                         <>
                           <Switch
-                              id={`sold-status-${car.id}`}
-                              checked={!!car.isSold}
-                              onCheckedChange={() => onToggleSoldStatus(car.id, !!car.isSold)}
-                              disabled={isTogglingStatusId === car.id || isDeletingId === car.id || isAddingRandomCar}
-                              aria-label={car.isSold ? "Mark as Available" : "Mark as Sold"}
+                            id={`sold-status-${car.id}`}
+                            checked={!!car.isSold}
+                            onCheckedChange={() => onToggleSoldStatus(car.id, !!car.isSold)}
+                            disabled={isTogglingStatusId === car.id || isDeletingId === car.id || isAddingRandomCar}
+                            aria-label={car.isSold ? "Mark as Available" : "Mark as Sold"}
                           />
                           <Label htmlFor={`sold-status-${car.id}`} className="text-xs">
-                              {car.isSold ? <Badge variant="destructive">Sold</Badge> : <Badge variant="default">Available</Badge>}
+                            {car.isSold ? <Badge variant="destructive">Sold</Badge> : <Badge variant="default">Available</Badge>}
                           </Label>
                         </>
                       }
@@ -253,10 +252,10 @@ export default function AdminDashboardPage() {
         </div>
         <h2 className="text-2xl font-bold font-headline pt-4">Car Listings Management</h2>
         <div className="flex flex-col sm:flex-row gap-2 mt-4 mb-6">
-            <Skeleton className="h-10 w-40" /> 
-            <Skeleton className="h-10 w-36" /> 
+          <Skeleton className="h-10 w-40" />
+          <Skeleton className="h-10 w-36" />
         </div>
-        <Skeleton className="h-64 w-full mt-6" /> 
+        <Skeleton className="h-64 w-full mt-6" />
         <Separator className="my-8" />
         <Skeleton className="h-64 w-full mt-6" />
       </div>
@@ -265,26 +264,26 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold font-headline">Admin Dashboard</h1> 
-      
-      <h2 className="text-2xl font-semibold font-headline pt-4">Car Listings Management</h2>
-      <div className="flex flex-col sm:flex-row gap-2 mb-6"> 
-          <Button 
-            onClick={handleAddRandomCar} 
-            variant="outline"
-            disabled={isAddingRandomCar || carsLoadingFromContext || !!isTogglingStatus}
-          >
-            {isAddingRandomCar ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-            Add Random Dev Car
-          </Button>
-          <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">
-            <Link href="/admin/cars/new">
-              <PlusCircle className="mr-2 h-4 w-4" /> Add New Car
-            </Link>
-          </Button>
-        </div>
+      <h1 className="text-3xl font-bold font-headline">Admin Dashboard</h1>
 
-      <CarTable 
+      <h2 className="text-2xl font-semibold font-headline pt-4">Car Listings Management</h2>
+      <div className="flex flex-col sm:flex-row gap-2 mb-6">
+        <Button
+          onClick={handleAddRandomCar}
+          variant="outline"
+          disabled={isAddingRandomCar || carsLoadingFromContext || !!isTogglingStatus}
+        >
+          {isAddingRandomCar ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+          Add Random Dev Car
+        </Button>
+        <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Link href="/admin/cars/new">
+            <PlusCircle className="mr-2 h-4 w-4" /> Add New Car
+          </Link>
+        </Button>
+      </div>
+
+      <CarTable
         cars={availableCars}
         title="Available Cars"
         isSoldTable={false}
@@ -297,7 +296,7 @@ export default function AdminDashboardPage() {
 
       <Separator className="my-8" />
 
-      <CarTable 
+      <CarTable
         cars={soldCars}
         title="Sold Cars"
         isSoldTable={true}

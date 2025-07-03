@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { Review } from '@/types';
@@ -13,22 +12,22 @@ interface TestimonialCardProps {
 }
 
 const StarRatingDisplay = ({ rating, size = "h-5 w-5" }: { rating: number, size?: string }) => (
-    <div className="flex items-center">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          className={cn(
-            size, "transition-colors",
-            rating >= star ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground/50"
-          )}
-        />
-      ))}
-    </div>
-  );
+  <div className="flex items-center">
+    {[1, 2, 3, 4, 5].map((star) => (
+      <Star
+        key={star}
+        className={cn(
+          size, "transition-colors",
+          rating >= star ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground/50"
+        )}
+      />
+    ))}
+  </div>
+);
 
 export default function TestimonialCard({ review }: TestimonialCardProps) {
   const timeAgo = review.submittedAt ? formatDistanceToNow(new Date(review.submittedAt), { addSuffix: true }) : '';
-  
+
   // Create a simple avatar placeholder based on the first letter of the name
   const avatarFallback = review.name ? review.name.charAt(0).toUpperCase() : <User className="h-5 w-5" />;
 
@@ -39,8 +38,8 @@ export default function TestimonialCard({ review }: TestimonialCardProps) {
           "{review.comment}"
         </blockquote>
         <div className="flex items-center justify-between">
-            <StarRatingDisplay rating={review.rating} />
-            {timeAgo && <p className="text-xs text-muted-foreground">{timeAgo}</p>}
+          <StarRatingDisplay rating={review.rating} />
+          {timeAgo && <p className="text-xs text-muted-foreground">{timeAgo}</p>}
         </div>
       </CardContent>
       <CardFooter className="p-6 pt-0 border-t border-border/30 mt-auto">
@@ -52,8 +51,14 @@ export default function TestimonialCard({ review }: TestimonialCardProps) {
           </Avatar>
           <div>
             <p className="text-sm font-semibold text-foreground">{review.name}</p>
+            {review.occupation && (
+              <p className="text-xs text-muted-foreground">{review.occupation}</p>
+            )}
+            {review.email && (
+              <p className="text-xs text-muted-foreground break-all">{review.email}</p>
+            )}
             {review.carMake && review.carModel && (
-                <p className="text-xs text-muted-foreground">Reviewed: {review.carMake} {review.carModel}</p>
+              <p className="text-xs text-muted-foreground">Reviewed: {review.carMake} {review.carModel}</p>
             )}
           </div>
         </div>

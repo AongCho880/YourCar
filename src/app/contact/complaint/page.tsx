@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -12,8 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/lib/firebaseConfig';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Loader2, Send } from 'lucide-react';
 
 const complaintFormSchema = z.object({
@@ -40,14 +37,19 @@ export default function ComplaintPage() {
   const onSubmit = async (data: ComplaintFormValues) => {
     setIsSubmitting(true);
     try {
-      if (!db) {
-        throw new Error("Database service is not available.");
-      }
-      await addDoc(collection(db, "complaints"), {
-        ...data,
-        submittedAt: serverTimestamp(),
-        isResolved: false,
+      const response = await fetch('/api/complaints', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to submit complaint.");
+      }
+
       toast({
         title: "Complaint Submitted",
         description: "Thank you for your feedback. We will look into it shortly.",

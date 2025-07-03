@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -93,7 +92,7 @@ export default function Navbar() {
     return <NavbarLoadingSkeleton />;
   }
 
-  const homeLink = { href: '/', label: 'Home', icon: HomeIcon }; 
+  const homeLink = { href: '/homepage', label: 'Home', icon: HomeIcon };
 
   const customerInteractiveLinks = [
     { href: '/contact/review', label: 'Write a Review', icon: MessageSquareText },
@@ -101,7 +100,7 @@ export default function Navbar() {
   ];
 
   const adminDashboardLink = { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard };
-  
+
   // Links for the mobile menu when admin is logged in
   const mobileAdminSpecificLinks = [
     { href: '/admin/settings', label: 'Contact Settings', icon: ContactIcon },
@@ -114,7 +113,7 @@ export default function Navbar() {
 
   const NavLinkItem = ({ href, label, icon: Icon, onClick, isLogoutButton = false }: { href: string; label: string, icon?: React.ElementType, onClick?: () => void, isLogoutButton?: boolean }) => {
     const isActive = pathname === href;
-    
+
     const buttonContent = (
       <>
         {Icon && <Icon className="mr-2 h-4 w-4 shrink-0" />}
@@ -136,7 +135,7 @@ export default function Navbar() {
               variant="ghost"
               className="w-full justify-start relative group text-left hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground"
             >
-               <LogOut className="mr-2 h-4 w-4" />{label} 
+              <LogOut className="mr-2 h-4 w-4" />{label}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
@@ -150,7 +149,7 @@ export default function Navbar() {
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={() => {
                 if (onClick) onClick();
-                setIsMobileMenuOpen(false); 
+                setIsMobileMenuOpen(false);
               }} className="bg-destructive hover:bg-destructive/90">
                 Logout
               </AlertDialogAction>
@@ -168,7 +167,7 @@ export default function Navbar() {
           className="w-full justify-start relative group text-left hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground"
           onClick={() => {
             if (onClick) onClick();
-            setIsMobileMenuOpen(false); 
+            setIsMobileMenuOpen(false);
           }}
         >
           {onClick ? (
@@ -184,7 +183,7 @@ export default function Navbar() {
   };
 
   const DesktopNavLink = ({ href, label }: { href: string; label: string }) => {
-    const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
+    const isActive = (href === '/homepage' && pathname === '/homepage') || (href !== '/homepage' && pathname.startsWith(href) && href !== '/');
     return (
       <Button
         variant="ghost"
@@ -192,7 +191,7 @@ export default function Navbar() {
         asChild
         className={cn(
           "hover:bg-transparent hover:text-foreground active:bg-transparent active:text-foreground relative group px-3 py-2 h-auto",
-           isActive && "text-primary" 
+          isActive && "text-primary"
         )}
       >
         <Link href={href} className="flex items-center">
@@ -205,7 +204,7 @@ export default function Navbar() {
       </Button>
     );
   };
-  
+
 
   return (
     <header className="bg-card/70 text-card-foreground shadow-xl backdrop-blur-lg sticky top-0 z-50 border-b border-border/30">
@@ -214,14 +213,13 @@ export default function Navbar() {
           <YourCarLogo />
           <span className="font-headline">YourCar</span>
         </Link>
-
-        <nav className="hidden md:flex items-center gap-0.5">
+        <nav className="hidden md:flex items-center gap-1">
           <DesktopNavLink href={homeLink.href} label={homeLink.label} />
-          
+
           {user ? (
             <>
               <DesktopNavLink href={adminDashboardLink.href} label={adminDashboardLink.label} />
-              
+
               {/* Settings Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -232,26 +230,26 @@ export default function Navbar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                   <DropdownMenuItem asChild>
-                      <Link href="/admin/settings" className="flex items-center">
-                        <ContactIcon className="mr-2 h-4 w-4" /> Contact Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin/reviews" className="flex items-center">
-                        <MessageSquareText className="mr-2 h-4 w-4" /> Manage Reviews
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin/complaints" className="flex items-center">
-                        <ShieldAlert className="mr-2 h-4 w-4" /> View Complaints
-                      </Link>
-                    </DropdownMenuItem>
-                     <DropdownMenuItem asChild>
-                      <Link href="/admin/statistics" className="flex items-center">
-                        <BarChart3 className="mr-2 h-4 w-4" /> Statistics
-                      </Link>
-                    </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/settings" className="flex items-center">
+                      <ContactIcon className="mr-2 h-4 w-4" /> Contact Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/reviews" className="flex items-center">
+                      <MessageSquareText className="mr-2 h-4 w-4" /> Manage Reviews
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/complaints" className="flex items-center">
+                      <ShieldAlert className="mr-2 h-4 w-4" /> View Complaints
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/statistics" className="flex items-center">
+                      <BarChart3 className="mr-2 h-4 w-4" /> Statistics
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -276,7 +274,7 @@ export default function Navbar() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <AlertDialogTrigger asChild>
-                       <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                         <LogOut className="mr-2 h-4 w-4" />
                         Logout
                       </DropdownMenuItem>
@@ -326,7 +324,7 @@ export default function Navbar() {
                 ) : (
                   customerInteractiveLinks.map(link => <NavLinkItem key={`mobile-customer-${link.href}`} {...link} />)
                 )}
-                
+
                 {user && (
                   <NavLinkItem href="#" label="Logout" onClick={logout} isLogoutButton={true} />
                 )}
@@ -339,4 +337,4 @@ export default function Navbar() {
   );
 }
 
-    
+

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -18,7 +17,7 @@ export default function ContactButtons({ car }: ContactButtonsProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    setIsClient(true); 
+    setIsClient(true);
 
     const fetchContactDetails = async () => {
       setIsLoading(true);
@@ -41,7 +40,14 @@ export default function ContactButtons({ car }: ContactButtonsProps) {
     fetchContactDetails();
   }, [toast]);
 
-  const prefilledMessage = `Hello, I'm interested in the ${car.year} ${car.make} ${car.model} (ID: ${car.id}) listed for $${car.price.toLocaleString()}. Is it still available?`;
+  // Use an environment variable for the base URL to ensure it works in production
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (isClient ? window.location.origin : '');
+  const carDetailPageUrl = `${baseUrl}/cars/${car.id}`;
+
+  const prefilledMessage = `Hello, I'm interested in the ${car.year} ${car.make} ${car.model} (ID: ${car.id}).
+
+Here is the link to the car:
+${carDetailPageUrl}`;
 
   const handleWhatsAppClick = () => {
     if (!contactSettings?.whatsappNumber) return;
@@ -51,6 +57,22 @@ export default function ContactButtons({ car }: ContactButtonsProps) {
 
   const handleMessengerClick = () => {
     if (!contactSettings?.messengerId) return;
+    // Messenger doesn't support pre-filled text in m.me links.
+    // As a workaround, we can copy the message to the clipboard.
+    navigator.clipboard.writeText(prefilledMessage).then(() => {
+      toast({
+        title: "Message Copied!",
+        description: "The car details have been copied to your clipboard. You can paste it into the Messenger chat.",
+      });
+    }).catch(err => {
+      console.error('Could not copy text: ', err);
+      toast({
+        variant: "destructive",
+        title: "Copy Failed",
+        description: "Could not copy the message to your clipboard.",
+      });
+    });
+
     const messengerUrl = `https://m.me/${contactSettings.messengerId.trim()}`;
     window.open(messengerUrl, '_blank');
   };
@@ -73,25 +95,25 @@ export default function ContactButtons({ car }: ContactButtonsProps) {
 
   if (!canContactViaWhatsApp && !canContactViaMessenger) {
     return (
-        <div className="mt-6 text-center text-muted-foreground">
-            Contact options are not configured by the administrator.
-        </div>
+      <div className="mt-6 text-center text-muted-foreground">
+        Contact options are not configured by the administrator.
+      </div>
     );
   }
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 mt-6">
       {canContactViaWhatsApp && (
-        <Button 
-          onClick={handleWhatsAppClick} 
+        <Button
+          onClick={handleWhatsAppClick}
           className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           <Send className="mr-2 h-5 w-5" /> Contact via WhatsApp
         </Button>
       )}
       {canContactViaMessenger && (
-        <Button 
-          onClick={handleMessengerClick} 
+        <Button
+          onClick={handleMessengerClick}
           className="flex-1 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
         >
           <MessageCircle className="mr-2 h-5 w-5" /> Contact via Messenger

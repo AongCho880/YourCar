@@ -186,10 +186,10 @@ export default function AdminStatisticsPage() {
             <p>
                 The statistics displayed on this page are currently using <strong>mock data</strong>.
                 To show real-time analytics, you'll need to integrate with an analytics service (for website visits)
-                and implement tracking for contact button clicks (e.g., by logging events to Firestore when WhatsApp/Messenger buttons are clicked).
+                and implement tracking for contact button clicks (e.g., by logging events to Supabase when WhatsApp/Messenger buttons are clicked).
             </p>
             <p>
-                Consider services like Google Analytics for site traffic and custom Firestore collections for tracking specific user interactions
+                Consider services like Google Analytics for site traffic and custom Supabase tables for tracking specific user interactions
                 like contact initiations or car detail page views.
             </p>
         </CardContent>

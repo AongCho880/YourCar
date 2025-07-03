@@ -1,28 +1,39 @@
-
 import { NextResponse } from 'next/server';
-import { collection, addDoc, getDocs, Timestamp, query, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
+import { createClient } from '@supabase/supabase-js';
+
 import type { Car } from '@/types';
+
+// Initialize Supabase Admin Client
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+);
 
 // GET /api/cars - Fetch all cars
 export async function GET() {
   try {
-    if (!db) {
-      return NextResponse.json({ error: 'Firestore is not initialized.' }, { status: 500 });
+
+    const { data, error } = await supabaseAdmin
+      .from('cars')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching cars:', error);
+      return NextResponse.json({ error: 'Failed to fetch cars' }, { status: 500 });
     }
-    const carsCollection = collection(db, 'cars');
-    const q = query(carsCollection, orderBy('createdAt', 'desc'));
-    const carSnapshot = await getDocs(q);
-    const carsList = carSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        // Convert Firestore Timestamps to numbers (milliseconds)
-        createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toMillis() : data.createdAt,
-        updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toMillis() : data.updatedAt,
-      } as Car;
-    });
+
+    const carsList = data.map(car => ({
+      ...car,
+      id: car.id.toString(),
+      createdAt: car.created_at,
+      updatedAt: car.created_at,
+      features: car.features ? car.features
+        .filter((feature: any) => feature !== null && feature !== undefined)
+        .map((feature: any) =>
+          typeof feature === 'string' ? { value: feature } : feature
+        ) : [],
+    })) as Car[];
     return NextResponse.json(carsList);
   } catch (error) {
     console.error('Error fetching cars:', error);
@@ -34,25 +45,42 @@ export async function GET() {
 // POST /api/cars - Create a new car
 export async function POST(request: Request) {
   try {
-    if (!db) {
-      return NextResponse.json({ error: 'Firestore is not initialized.' }, { status: 500 });
-    }
+
     const carData = await request.json() as Omit<Car, 'id' | 'createdAt' | 'updatedAt'>;
-    
-    const now = Timestamp.now();
+
+    // Transform features from objects to strings for database storage
+    const transformedFeatures = carData.features ? carData.features
+      .filter(f => f && f.value)
+      .map(f => f.value) : [];
+
     const newCarData = {
       ...carData,
-      createdAt: now,
-      updatedAt: now,
+      features: transformedFeatures,
+      created_at: new Date().toISOString(),
     };
 
-    const docRef = await addDoc(collection(db, 'cars'), newCarData);
-    
+    const { data, error } = await supabaseAdmin
+      .from('cars')
+      .insert([newCarData])
+      .select();
+
+    if (error) {
+      console.error('Error adding car:', error);
+      return NextResponse.json({ error: 'Failed to add car' }, { status: 500 });
+    }
+
+    const addedCar = data[0];
+
     const createdCar: Car = {
-      id: docRef.id,
-      ...carData,
-      createdAt: newCarData.createdAt.toMillis(),
-      updatedAt: newCarData.updatedAt.toMillis(),
+      ...addedCar,
+      id: addedCar.id.toString(),
+      createdAt: addedCar.created_at,
+      updatedAt: addedCar.created_at,
+      features: addedCar.features ? addedCar.features
+        .filter((feature: any) => feature !== null && feature !== undefined)
+        .map((feature: any) =>
+          typeof feature === 'string' ? { value: feature } : feature
+        ) : [],
     };
     return NextResponse.json(createdCar, { status: 201 });
   } catch (error) {

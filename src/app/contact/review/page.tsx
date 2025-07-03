@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -12,8 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/lib/firebaseConfig';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { supabase } from '@/lib/supabaseClient';
 import { Star, Loader2, MessageSquarePlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +19,8 @@ const reviewFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }).max(50, { message: "Name cannot exceed 50 characters." }),
   rating: z.number().min(1, { message: "Please select a rating." }).max(5),
   comment: z.string().min(10, { message: "Review must be at least 10 characters long." }).max(1500, { message: "Review cannot exceed 1500 characters." }),
+  email: z.string().email({ message: "Invalid email address." }).optional().or(z.literal('')),
+  occupation: z.string().max(100, { message: "Occupation cannot exceed 100 characters." }).optional().or(z.literal('')),
 });
 
 type ReviewFormValues = z.infer<typeof reviewFormSchema>;
@@ -36,6 +36,8 @@ export default function ReviewPage() {
       name: "",
       rating: 0,
       comment: "",
+      email: "",
+      occupation: "",
     },
   });
 
@@ -44,14 +46,19 @@ export default function ReviewPage() {
   const onSubmit = async (data: ReviewFormValues) => {
     setIsSubmitting(true);
     try {
-      if (!db) {
-        throw new Error("Database service is not available.");
-      }
-      await addDoc(collection(db, "reviews"), {
-        ...data,
-        submittedAt: serverTimestamp(),
-        isTestimonial: false, 
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to submit review.");
+      }
+
       toast({
         title: "Review Submitted",
         description: "Thank you for your valuable feedback!",
@@ -136,6 +143,32 @@ export default function ReviewPage() {
                         rows={6}
                         disabled={isSubmitting}
                       />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email (optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your email" {...field} disabled={isSubmitting} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="occupation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Occupation (e.g. Student, Co-founder, Chairman)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your occupation or role (optional)" {...field} disabled={isSubmitting} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { CarFilters, CarCondition } from '@/types';
@@ -21,6 +20,13 @@ export default function FilterControls({ initialFilters = {}, onFilterChange }: 
   const [condition, setCondition] = useState<CarCondition | ''>(initialFilters.condition || '');
   const [priceRange, setPriceRange] = useState<[number, number]>(initialFilters.priceRange || [DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE]);
   const [searchTerm, setSearchTerm] = useState(initialFilters.searchTerm || '');
+  const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
+
+  useEffect(() => {
+    fetch('/api/brands')
+      .then(res => res.json())
+      .then(data => setBrands(data || []));
+  }, []);
 
   useEffect(() => {
     // Debounce or directly call onFilterChange
@@ -29,7 +35,7 @@ export default function FilterControls({ initialFilters = {}, onFilterChange }: 
     if (condition) filters.condition = condition;
     if (priceRange[0] !== DEFAULT_MIN_PRICE || priceRange[1] !== DEFAULT_MAX_PRICE) filters.priceRange = priceRange;
     if (searchTerm) filters.searchTerm = searchTerm;
-    
+
     onFilterChange(filters);
   }, [make, condition, priceRange, searchTerm, onFilterChange]);
 
@@ -40,7 +46,7 @@ export default function FilterControls({ initialFilters = {}, onFilterChange }: 
     setSearchTerm('');
     onFilterChange({});
   };
-  
+
   const hasActiveFilters = make || condition || searchTerm || (priceRange[0] !== DEFAULT_MIN_PRICE || priceRange[1] !== DEFAULT_MAX_PRICE);
 
   return (
@@ -55,7 +61,7 @@ export default function FilterControls({ initialFilters = {}, onFilterChange }: 
         />
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
       </div>
-      
+
       <div>
         <Label htmlFor="make-select" className="block mb-1 font-medium">Make</Label>
         <Select value={make} onValueChange={setMake}>
@@ -63,8 +69,8 @@ export default function FilterControls({ initialFilters = {}, onFilterChange }: 
             <SelectValue placeholder="Any Make" />
           </SelectTrigger>
           <SelectContent>
-            {CAR_MAKES.map((m) => (
-              <SelectItem key={m} value={m}>{m}</SelectItem>
+            {brands.map((b) => (
+              <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -99,7 +105,7 @@ export default function FilterControls({ initialFilters = {}, onFilterChange }: 
           className="w-full"
         />
       </div>
-      
+
       {hasActiveFilters && (
         <Button variant="outline" onClick={handleResetFilters} className="w-full">
           <X className="mr-2 h-4 w-4" /> Reset Filters

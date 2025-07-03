@@ -1,21 +1,10 @@
-
 "use client";
 
 import type { ReactNode } from 'react';
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import type { Car } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { db, auth } from '@/lib/firebaseConfig'; // Import db and auth
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  doc, 
-  updateDoc, 
-  query, 
-  orderBy,
-  serverTimestamp 
-} from 'firebase/firestore';
+import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from './AuthContext'; // To check for authenticated user
 
 interface CarContextType {
@@ -35,23 +24,21 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { user: firebaseUser } = useAuth(); 
+  const { user } = useAuth();
 
   const fetchCars = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/cars');
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to fetch cars');
+        throw new Error(`Failed to fetch cars: ${response.status}`);
       }
-      const data: Car[] = await response.json();
-      setCars(data);
-    } catch (error) {
-      console.error("Error fetching cars:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      toast({ variant: "destructive", title: "Error Loading Cars", description: `${errorMessage}` });
-      setCars([]); 
+      const data = await response.json();
+      setCars(data as Car[]);
+    } catch (error: any) {
+      console.error("Error fetching cars:", JSON.stringify(error));
+      toast({ variant: "destructive", title: "Error Loading Cars", description: error.message || error.details || 'An unknown error occurred.' });
+      setCars([]);
     } finally {
       setLoading(false);
     }
@@ -62,157 +49,160 @@ export const CarProvider = ({ children }: { children: ReactNode }) => {
   }, [fetchCars]);
 
   const addCar = async (carData: Omit<Car, 'id' | 'createdAt' | 'updatedAt'>): Promise<Car | null> => {
-    if (!firebaseUser) {
+    if (!user) {
       toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to add a car." });
       return null;
     }
-    if (!db) {
-      toast({ variant: "destructive", title: "Database Error", description: "Firestore is not initialized." });
-      return null;
-    }
 
     try {
-      const carWithTimestamps = {
-        ...carData,
-        features: carData.features || [], 
-        images: carData.images || [],
-        isSold: carData.isSold ?? false, // Initialize isSold, default to false
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-      const docRef = await addDoc(collection(db, 'cars'), carWithTimestamps);
-      
-      const newCar: Car = { 
-        id: docRef.id, 
-        ...carData, 
-        features: carData.features || [],
-        images: carData.images || [],
-        isSold: carData.isSold ?? false,
-        createdAt: Date.now(), 
-        updatedAt: Date.now()
-      }; 
-      
-      await fetchCars(); 
-      
-      toast({ title: "Success", description: "Car listing added successfully." });
-      return newCar; 
-    } catch (error) {
-      console.error("Error adding car directly to Firestore:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      toast({ variant: "destructive", title: "Error Adding Car", description: `Failed to create car: ${errorMessage}` });
-      return null;
-    }
-  };
-
-  const updateCar = async (carData: Omit<Car, 'createdAt' | 'updatedAt'> & { id: string }): Promise<Car | null> => {
-     if (!firebaseUser) {
-      toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to update a car." });
-      return null;
-    }
-    if (!db) {
-      toast({ variant: "destructive", title: "Database Error", description: "Firestore is not initialized." });
-      return null;
-    }
-
-    try {
-      const carDocRef = doc(db, 'cars', carData.id);
-      const { id, ...dataToUpdate } = carData; 
-      
-      const updatePayload: Partial<Car> & { updatedAt: any } = { // Use Partial<Car> to allow isSold to be optional if not changing
-        ...dataToUpdate,
-        features: dataToUpdate.features || [], 
-        images: dataToUpdate.images || [],
-        updatedAt: serverTimestamp(), 
-      };
-      // Only include isSold if it's explicitly passed
-      if (typeof dataToUpdate.isSold === 'boolean') {
-        updatePayload.isSold = dataToUpdate.isSold;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("You must be logged in to add a car.");
       }
 
-
-      await updateDoc(carDocRef, updatePayload as any); // Cast to any because serverTimestamp is not directly part of Car
-      
-      await fetchCars(); 
-      
-      const updatedCarData: Car = {
+      // Ensure price and mileage are numbers
+      const payload = {
         ...carData,
-        features: carData.features || [],
-        images: carData.images || [],
-        isSold: carData.isSold ?? cars.find(c => c.id === carData.id)?.isSold ?? false, // Keep existing or default
-        updatedAt: Date.now(),
+        price: Number(carData.price),
+        mileage: Number(carData.mileage),
       };
-      toast({ title: "Success", description: "Car listing updated successfully." });
-      return updatedCarData;
-    } catch (error) {
-      console.error("Error updating car directly in Firestore:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      toast({ variant: "destructive", title: "Error Updating Car", description: `Failed to update car: ${errorMessage}` });
-      return null;
-    }
-  };
 
-  const toggleCarSoldStatus = async (carId: string, newSoldStatus: boolean): Promise<boolean> => {
-    if (!firebaseUser) {
-      toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to update car status." });
-      return false;
-    }
-    if (!db) {
-      toast({ variant: "destructive", title: "Database Error", description: "Firestore is not initialized." });
-      return false;
-    }
-
-    try {
-      const carDocRef = doc(db, 'cars', carId);
-      await updateDoc(carDocRef, {
-        isSold: newSoldStatus,
-        updatedAt: serverTimestamp(),
-      });
-      
-      // Optimistically update local state for faster UI response
-      setCars(prevCars => 
-        prevCars.map(car => 
-          car.id === carId ? { ...car, isSold: newSoldStatus, updatedAt: Date.now() } : car
-        )
-      );
-      // await fetchCars(); // Can be called to ensure full consistency, but optimistic update is faster for UI
-
-      toast({ title: "Status Updated", description: `Car marked as ${newSoldStatus ? 'Sold' : 'Available'}.` });
-      return true;
-    } catch (error) {
-      console.error("Error toggling car sold status:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      toast({ variant: "destructive", title: "Update Failed", description: `Failed to update car status: ${errorMessage}` });
-      // Revert optimistic update if needed, or simply refetch
-      await fetchCars();
-      return false;
-    }
-  };
-
-
-  const deleteCar = async (carId: string): Promise<boolean> => {
-    if (!firebaseUser) {
-      toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to delete a car." });
-      return false;
-    }
-    if (!auth?.currentUser) {
-      toast({ variant: "destructive", title: "Authentication Error", description: "User not found for token generation." });
-      return false;
-    }
-
-    try {
-      const token = await auth.currentUser.getIdToken();
-      const response = await fetch(`/api/cars/${carId}`, {
-        method: 'DELETE',
+      const response = await fetch('/api/cars', {
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response from server.' }));
         throw new Error(errorData.error || `Server responded with ${response.status}`);
       }
-      await fetchCars(); // Refresh list
+
+      const newCar = await response.json();
+      await fetchCars();
+      toast({ title: "Success", description: "Car listing added successfully." });
+      return newCar;
+    } catch (error: any) {
+      console.error("Error adding car:", error);
+      const errorMessage = error.message || error.details || 'An unknown error occurred.';
+      toast({ variant: "destructive", title: "Error Adding Car", description: `Failed to create car: ${errorMessage}` });
+      return null;
+    }
+  };
+
+  const updateCar = async (carData: Omit<Car, 'createdAt' | 'updatedAt'> & { id: string }): Promise<Car | null> => {
+    if (!user) {
+      toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to update a car." });
+      return null;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("You must be logged in to update a car.");
+      }
+
+      const { id, ...dataToUpdate } = carData;
+      // Ensure price and mileage are numbers
+      const payload = {
+        ...dataToUpdate,
+        price: Number(dataToUpdate.price),
+        mileage: Number(dataToUpdate.mileage),
+      };
+
+      const response = await fetch(`/api/cars/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response from server.' }));
+        throw new Error(errorData.error || `Server responded with ${response.status}`);
+      }
+
+      const updatedCar = await response.json();
+      await fetchCars();
+      toast({ title: "Success", description: "Car listing updated successfully." });
+      return updatedCar;
+    } catch (error: any) {
+      console.error("Error updating car:", error);
+      toast({ variant: "destructive", title: "Error Updating Car", description: `Failed to update car: ${error.message}` });
+      return null;
+    }
+  };
+
+  const toggleCarSoldStatus = async (carId: string, newSoldStatus: boolean): Promise<boolean> => {
+    if (!user) {
+      toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to update car status." });
+      return false;
+    }
+
+    try {
+      const { error } = await supabase.from('cars').update({ isSold: newSoldStatus }).eq('id', carId);
+
+      if (error) throw error;
+
+      setCars(prevCars =>
+        prevCars.map(car =>
+          car.id === carId ? { ...car, isSold: newSoldStatus } : car
+        )
+      );
+
+      toast({ title: "Status Updated", description: `Car marked as ${newSoldStatus ? 'Sold' : 'Available'}.` });
+      return true;
+    } catch (error: any) {
+      console.error("Error toggling car sold status:", error);
+      toast({ variant: "destructive", title: "Update Failed", description: `Failed to update car status: ${error.message}` });
+      await fetchCars();
+      return false;
+    }
+  };
+
+  /**
+   * Deletes a car and all its associated images from both database and storage
+   * This function calls the DELETE /api/cars/[id] endpoint which handles:
+   * 1. Authentication verification
+   * 2. Fetching car details to get image URLs
+   * 3. Deleting all images from Supabase storage
+   * 4. Deleting the car record from the database
+   */
+  const deleteCar = async (carId: string): Promise<boolean> => {
+    // Check if user is authenticated before attempting to delete
+    if (!user) {
+      toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to delete a car." });
+      return false;
+    }
+
+    try {
+      // Get the current session to obtain the access token for API calls
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("You must be logged in to delete a car.");
+      }
+
+      // Call the DELETE endpoint which handles both image and car deletion
+      const response = await fetch(`/api/cars/${carId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      // Handle API response errors
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response from server.' }));
+        throw new Error(errorData.error || `Server responded with ${response.status}`);
+      }
+
+      // Refresh the cars list to reflect the deletion
+      await fetchCars();
       toast({ title: "Car Deleted", description: "The car listing has been removed." });
       return true;
     } catch (error) {

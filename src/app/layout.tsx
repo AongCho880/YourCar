@@ -1,4 +1,3 @@
-
 "use client"; // Added to use usePathname
 
 import type { Metadata } from 'next';
@@ -24,6 +23,7 @@ export default function RootLayout({
 }>) {
   const pathname = usePathname();
   const isAdminPage = pathname.startsWith('/admin');
+  const isLandingPage = pathname === '/';
 
   return (
     <html lang="en">
@@ -38,8 +38,8 @@ export default function RootLayout({
       <body className="font-body antialiased flex flex-col min-h-screen">
         <AuthProvider>
           <CarProvider>
-            <Navbar />
-            <main className="flex-grow container mx-auto px-4 py-8">
+            {!isLandingPage && <Navbar />}
+            <main className="flex-grow w-full max-w-full px-2 py-4 sm:px-4 md:px-8">
               {children}
             </main>
             {!isAdminPage && <ContactSection />} {/* Conditionally render ContactSection */}

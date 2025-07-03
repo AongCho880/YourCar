@@ -1,5 +1,4 @@
-
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -60,12 +59,21 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'wwyxhsjsyxhizrjscuci.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/car-images/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'klkrsuocbmrrirjclfym.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/car-images/**',
+      },
     ],
   },
   experimental: {
-    allowedDevOrigins: [
-      "https://6000-firebase-studio-1748771317222.cluster-isls3qj2gbd5qs4jkjqvhahfv6.cloudworkstations.dev",
-    ],
     cpus: 2, // Attempt to reduce build parallelism and memory usage
   },
 };

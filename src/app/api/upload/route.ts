@@ -1,47 +1,27 @@
-
 import { NextResponse } from 'next/server';
-import admin from '@/lib/firebaseAdmin'; // Import Firebase Admin SDK
+import { createClient } from '@supabase/supabase-js';
 
-// Firebase Storage related imports are not needed if functionality is disabled
-// import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-// import { storage } from '@/lib/firebaseConfig'; // Storage is not initialized here
+// Initialize Supabase client with service role key for admin operations
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
 export async function POST(request: Request) {
   try {
+    // Extract and validate authorization token from request headers
     const authorizationHeader = request.headers.get('Authorization');
     if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized: Missing or invalid token.' }, { status: 401 });
     }
     const token = authorizationHeader.split('Bearer ')[1];
 
-    if (!admin.apps.length) {
-      return NextResponse.json({ error: 'Firebase Admin SDK not initialized on server.' }, { status: 500 });
-    }
-    
-    try {
-      await admin.auth().verifyIdToken(token);
-      // console.log('Authenticated user for upload:', decodedToken.uid); // Optional: log UID
-    } catch (authError) {
-      console.error('Firebase ID token verification failed for upload:', authError);
+    // Verify the user's authentication token with Supabase
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error('Supabase token verification failed for upload:', authError);
       return NextResponse.json({ error: 'Unauthorized: Invalid token.' }, { status: 403 });
     }
 
-    // Token is valid, but functionality is disabled
-    console.warn("Image upload API called by authenticated user, but direct Firebase Storage integration is currently disabled by the administrator.");
-    return NextResponse.json(
-      { 
-        error: 'Image upload functionality is currently disabled.',
-        message: 'Please use externally hosted image URLs and add them manually in the form.' 
-      }, 
-      { status: 503 } // 503 Service Unavailable
-    );
-
-    // --- PREVIOUS CODE FOR ACTUAL UPLOAD (KEPT FOR REFERENCE IF RE-ENABLING) ---
-    /*
-    if (!storage) { // This check would fail as storage is not initialized in firebaseConfig
-      return NextResponse.json({ error: 'Firebase Storage is not initialized or configured.' }, { status: 500 });
-    }
-
+    // Parse form data to get the uploaded file
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
 
@@ -49,27 +29,102 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided.' }, { status: 400 });
     }
 
+    // Validate that the uploaded file is an image
     if (!file.type.startsWith('image/')) {
       return NextResponse.json({ error: 'Invalid file type. Only images are allowed.' }, { status: 400 });
     }
-    
+
+    // Convert file to buffer for upload
     const fileBuffer = Buffer.from(await file.arrayBuffer());
+    // Sanitize filename to prevent security issues
     const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    // Create unique filename with timestamp to prevent conflicts
     const fileName = `car_images/${Date.now()}-${safeFileName}`;
-    const storageRef = ref(storage, fileName);
 
-    const uploadTask = uploadBytesResumable(storageRef, fileBuffer, { contentType: file.type });
-    
-    await uploadTask; 
-    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+    // Upload file to Supabase storage bucket
+    const { data, error: uploadError } = await supabase.storage
+      .from('car-images') // Make sure this bucket exists and has correct policies
+      .upload(fileName, fileBuffer, {
+        contentType: file.type,
+        upsert: false, // Don't overwrite existing files
+      });
 
-    return NextResponse.json({ imageUrl: downloadURL }, { status: 201 });
-    */
-    // --- END OF PREVIOUS CODE ---
+    if (uploadError) {
+      console.error('Supabase storage upload error:', uploadError);
+      return NextResponse.json({ error: 'Failed to upload image.', details: uploadError.message }, { status: 500 });
+    }
+
+    // Generate public URL for the uploaded image
+    const { data: { publicUrl } } = supabase.storage.from('car-images').getPublicUrl(data.path);
+
+    return NextResponse.json({ imageUrl: publicUrl }, { status: 201 });
 
   } catch (error) {
     console.error('Error in upload API route:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown server error';
     return NextResponse.json({ error: 'Failed to process upload request', details: errorMessage }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE endpoint for removing individual images from Supabase storage
+ * This endpoint is called when users want to delete a specific image from the car form
+ */
+export async function DELETE(request: Request) {
+  try {
+    // Extract and validate authorization token from request headers
+    const authorizationHeader = request.headers.get('Authorization');
+    if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized: Missing or invalid token.' }, { status: 401 });
+    }
+    const token = authorizationHeader.split('Bearer ')[1];
+
+    // Verify the user's authentication token with Supabase
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error('Supabase token verification failed for delete:', authError);
+      return NextResponse.json({ error: 'Unauthorized: Invalid token.' }, { status: 403 });
+    }
+
+    // Extract the image URL to delete from request body
+    const { urlToDelete } = await request.json();
+
+    // Validate that a valid URL was provided
+    if (!urlToDelete || typeof urlToDelete !== 'string') {
+      return NextResponse.json({ error: 'Image URL to delete was not provided.' }, { status: 400 });
+    }
+
+    // Define the storage bucket name
+    const bucketName = 'car-images';
+
+    // Parse the Supabase storage URL to extract the file path
+    // Expected format: https://<project-id>.supabase.co/storage/v1/object/public/car-images/<filename>
+    const urlParts = urlToDelete.split(`/${bucketName}/`);
+
+    if (urlParts.length < 2) {
+      return NextResponse.json({ error: 'Invalid Supabase storage URL format.' }, { status: 400 });
+    }
+
+    // Extract the file path from the URL (everything after the bucket name)
+    const imagePath = urlParts[1];
+
+    // Delete the file from Supabase storage using the remove method
+    // The remove method takes an array of file paths to delete
+    const { error: deleteError } = await supabase.storage
+      .from(bucketName)
+      .remove([imagePath]);
+
+    if (deleteError) {
+      console.error('Supabase storage delete error:', deleteError);
+      return NextResponse.json({ error: 'Failed to delete image from storage.', details: deleteError.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ message: 'Image deleted successfully.' }, { status: 200 });
+
+  } catch (error: any) {
+    console.error('Error in delete image API route:', error);
+    const errorMessage = error.message || 'Unknown server error during image deletion.';
+    return NextResponse.json({ error: 'Failed to process delete request', details: errorMessage }, { status: 500 });
   }
 }

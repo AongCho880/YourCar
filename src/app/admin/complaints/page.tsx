@@ -1,10 +1,11 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Complaint } from '@/types';
-import { db } from '@/lib/firebaseConfig';
-import { collection, getDocs, query, orderBy, doc, updateDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
+import { supabase } from '@/lib/supabaseClient';
+
+
+
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -22,18 +23,22 @@ export default function AdminComplaintsPage() {
   const fetchComplaints = useCallback(async () => {
     setLoading(true);
     try {
-      if (!db) throw new Error("Firestore not initialized");
-      const complaintsCollection = collection(db, 'complaints');
-      const q = query(complaintsCollection, orderBy('submittedAt', 'desc'));
-      const complaintSnapshot = await getDocs(q);
-      const complaintsList = complaintSnapshot.docs.map(docSnap => {
-        const data = docSnap.data();
-        return {
-          id: docSnap.id,
-          ...data,
-          submittedAt: data.submittedAt instanceof Timestamp ? data.submittedAt.toMillis() : data.submittedAt || Date.now(),
-        } as Complaint;
-      });
+
+      const { data, error } = await supabase
+        .from('complaints')
+        .select('*')
+        .order('submitted_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching complaints:', error);
+        return [];
+      }
+
+      const complaintsList = data.map(complaint => ({
+        ...complaint,
+        id: complaint.id.toString(), // Ensure id is string for React keys
+        submittedAt: complaint.submitted_at, // Use the database column name
+      })) as Complaint[];
       setComplaints(complaintsList);
     } catch (error) {
       console.error("Error fetching complaints:", error);
@@ -49,26 +54,35 @@ export default function AdminComplaintsPage() {
   }, [fetchComplaints]);
 
   const toggleResolveStatus = async (complaint: Complaint) => {
-    if (!db) {
-        toast({ variant: "destructive", title: "Database Error", description: "Firestore not initialized."});
-        return;
+    if (!supabase) {
+      toast({ variant: "destructive", title: "Database Error", description: "Supabase client not initialized." });
+      return;
     }
     setUpdatingId(complaint.id);
     try {
-        const complaintRef = doc(db, "complaints", complaint.id);
-        await updateDoc(complaintRef, {
-            isResolved: !complaint.isResolved,
-            updatedAt: serverTimestamp()
+      const { error } = await supabase
+        .from('complaints')
+        .update({ is_resolved: !complaint.isResolved })
+        .eq('id', complaint.id);
+
+      if (error) {
+        console.error('Error marking complaint as resolved:', error);
+        toast({
+          title: "Error",
+          description: "Failed to mark complaint as resolved.",
+          variant: "destructive",
         });
-        toast({ title: "Success", description: `Complaint status updated.` });
-        // Refresh data
-        setComplaints(prev => prev.map(c => c.id === complaint.id ? {...c, isResolved: !c.isResolved} : c));
+        return;
+      }
+      toast({ title: "Success", description: `Complaint status updated.` });
+      // Refresh data
+      setComplaints(prev => prev.map(c => c.id === complaint.id ? { ...c, isResolved: !c.isResolved } : c));
     } catch (error) {
-        console.error("Error updating complaint status:", error);
-        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-        toast({ variant: "destructive", title: "Update Failed", description: errorMessage });
+      console.error("Error updating complaint status:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      toast({ variant: "destructive", title: "Update Failed", description: errorMessage });
     } finally {
-        setUpdatingId(null);
+      setUpdatingId(null);
     }
   };
 
@@ -111,7 +125,7 @@ export default function AdminComplaintsPage() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold font-headline">Customer Complaints</h1>
       {complaints.length === 0 && !loading ? (
-         <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
+        <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
           <Inbox className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
           <h2 className="text-xl font-semibold mb-2">No Complaints Yet</h2>
           <p className="text-muted-foreground">Looks like all customers are happy for now!</p>
@@ -142,14 +156,14 @@ export default function AdminComplaintsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => toggleResolveStatus(complaint)}
-                        disabled={updatingId === complaint.id}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleResolveStatus(complaint)}
+                      disabled={updatingId === complaint.id}
                     >
-                        {updatingId === complaint.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {complaint.isResolved ? 'Mark Unresolved' : 'Mark Resolved'}
+                      {updatingId === complaint.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {complaint.isResolved ? 'Mark Unresolved' : 'Mark Resolved'}
                     </Button>
                   </TableCell>
                 </TableRow>

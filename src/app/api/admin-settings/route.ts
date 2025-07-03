@@ -1,37 +1,51 @@
-
 import { NextResponse } from 'next/server';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
-import admin from '@/lib/firebaseAdmin'; // Import Firebase Admin SDK
+import { createClient } from '@supabase/supabase-js';
 import type { AdminContactSettings } from '@/types';
 
-const SETTINGS_DOC_PATH = 'adminSettings/contactDetails';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceRoleKey) {
+  throw new Error('Supabase URL and Service Role Key are required.');
+}
+
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+});
 
 // GET /api/admin-settings - Fetch admin contact settings (Publicly readable)
 export async function GET() {
   try {
-    if (!db) {
-      return NextResponse.json({ error: 'Firestore is not initialized.' }, { status: 500 });
-    }
-    const settingsDocRef = doc(db, SETTINGS_DOC_PATH);
-    const settingsSnap = await getDoc(settingsDocRef);
+    const { data, error } = await supabaseAdmin
+      .from('admin_settings')
+      .select('whatsapp_number, messenger_link, facebook_page_link, updated_at')
+      .eq('id', 1)
+      .single();
 
-    if (!settingsSnap.exists()) {
-      return NextResponse.json({ whatsappNumber: '', messengerId: '' });
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No row found, which is not an error in our case. Return default values.
+        return NextResponse.json({ whatsappNumber: '', messengerId: '', facebookPageLink: '' });
+      }
+      console.error('Error fetching admin settings:', error);
+      return NextResponse.json({ error: 'Failed to fetch admin settings', details: error.message }, { status: 500 });
     }
-    
-    const settingsData = settingsSnap.data() as AdminContactSettings;
-    const responseData = {
-      ...settingsData,
-      updatedAt: settingsData.updatedAt && typeof settingsData.updatedAt === 'object' && 'seconds' in settingsData.updatedAt
-        // @ts-ignore
-        ? (settingsData.updatedAt.seconds * 1000 + settingsData.updatedAt.nanoseconds / 1000000) 
-        : settingsData.updatedAt,
-    };
 
-    return NextResponse.json(responseData);
+    if (!data) {
+      return NextResponse.json({ whatsappNumber: '', messengerId: '', facebookPageLink: '' });
+    }
+
+    return NextResponse.json({
+      whatsappNumber: data.whatsapp_number,
+      messengerId: data.messenger_link,
+      facebookPageLink: data.facebook_page_link,
+      updatedAt: data.updated_at
+    });
   } catch (error) {
-    console.error('Error fetching admin settings:', error);
+    console.error('Error in GET /api/admin-settings:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ error: 'Failed to fetch admin settings', details: errorMessage }, { status: 500 });
   }
@@ -46,52 +60,58 @@ export async function POST(request: Request) {
     }
     const token = authorizationHeader.split('Bearer ')[1];
 
-    if (!admin.apps.length) {
-      return NextResponse.json({ error: 'Firebase Admin SDK not initialized on server.' }, { status: 500 });
-    }
-    
-    try {
-      await admin.auth().verifyIdToken(token);
-      // console.log('Authenticated user for admin settings update:', decodedToken.uid);
-    } catch (authError) {
-      console.error('Firebase ID token verification failed for admin settings update:', authError);
+    // Verify the token using Supabase Admin
+    const { data: userData, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !userData?.user) {
+      console.error('Supabase authentication failed for admin settings update:', authError);
       return NextResponse.json({ error: 'Unauthorized: Invalid token.' }, { status: 403 });
     }
 
     // Token is valid, proceed with updating settings
-    if (!db) {
-      return NextResponse.json({ error: 'Firestore is not initialized.' }, { status: 500 });
-    }
-    const { whatsappNumber, messengerId } = await request.json() as Partial<AdminContactSettings>;
+    const { whatsappNumber, messengerId, facebookPageLink } = (await request.json()) as Partial<AdminContactSettings>;
 
-    if (typeof whatsappNumber === 'undefined' && typeof messengerId === 'undefined') {
-        return NextResponse.json({ error: 'At least one setting (whatsappNumber or messengerId) must be provided.' }, { status: 400 });
+    if (typeof whatsappNumber === 'undefined' && typeof messengerId === 'undefined' && typeof facebookPageLink === 'undefined') {
+      return NextResponse.json(
+        { error: 'At least one setting (whatsappNumber, messengerId, or facebookPageLink) must be provided.' },
+        { status: 400 }
+      );
     }
-    
-    const settingsDocRef = doc(db, SETTINGS_DOC_PATH);
-    const dataToSave: Partial<AdminContactSettings> = { // Use Partial for serverTimestamp compatibility
-        ...(whatsappNumber !== undefined && { whatsappNumber }),
-        ...(messengerId !== undefined && { messengerId }),
-        // @ts-ignore Firestore serverTimestamp type
-        updatedAt: serverTimestamp(), 
+
+    const dataToSave = {
+      ...(whatsappNumber !== undefined && { whatsapp_number: whatsappNumber }),
+      ...(messengerId !== undefined && { messenger_link: messengerId }),
+      ...(facebookPageLink !== undefined && { facebook_page_link: facebookPageLink }),
+      updated_at: new Date().toISOString(),
     };
 
-    await setDoc(settingsDocRef, dataToSave, { merge: true });
+    const { data, error } = await supabaseAdmin
+      .from('admin_settings')
+      .update(dataToSave)
+      .eq('id', 1) // Assuming a single row for admin settings with ID 1
+      .select();
 
-    // Fetch the newly saved data to return it accurately
-    const updatedSnap = await getDoc(settingsDocRef);
-    const updatedData = updatedSnap.data();
-    
-    return NextResponse.json({ 
-      message: 'Admin settings updated successfully.', 
-      // @ts-ignore
-      whatsappNumber: updatedData?.whatsappNumber || '', 
-      // @ts-ignore
-      messengerId: updatedData?.messengerId || '',
-      // @ts-ignore
-      updatedAt: updatedData?.updatedAt?.toMillis ? updatedData.updatedAt.toMillis() : Date.now() 
-    }, { status: 200 });
+    if (error) {
+      console.error('Error updating admin settings:', error);
+      return NextResponse.json({ error: 'Failed to update admin settings', details: error.message }, { status: 500 });
+    }
 
+    if (!data || data.length === 0) {
+      return NextResponse.json({ error: 'Failed to update admin settings: No record found or updated.' }, { status: 404 });
+    }
+
+    const updatedSettings = data[0];
+
+    return NextResponse.json(
+      {
+        message: 'Admin settings updated successfully.',
+        whatsappNumber: updatedSettings.whatsapp_number || '',
+        messengerId: updatedSettings.messenger_link || '',
+        facebookPageLink: updatedSettings.facebook_page_link || '',
+        updatedAt: updatedSettings.updated_at,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('Error updating admin settings:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

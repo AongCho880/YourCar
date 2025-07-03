@@ -1,32 +1,22 @@
-
 "use client";
 
 import type { ReactNode } from 'react';
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword, 
-  signOut as firebaseSignOut,
-  sendEmailVerification,
-  verifyBeforeUpdateEmail,
-  updatePassword as firebaseUpdatePassword,
-  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
-  type User 
-} from 'firebase/auth';
-import { auth } from '@/lib/firebaseConfig'; // Ensure auth is exported from firebaseConfig
+import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
 import { sendLoginNotification } from '@/ai/flows/send-login-notification-flow';
+import type { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
-  user: User | null;
+  user: User & { emailVerified?: boolean } | null;
   loading: boolean;
   login: (email: string, pass: string) => Promise<boolean>;
   logout: () => Promise<void>;
   updateAdminEmail: (newEmail: string) => Promise<boolean>;
   updateAdminPassword: (newPassword: string) => Promise<boolean>;
-  sendAdminEmailVerification: () => Promise<boolean>;
   sendAdminPasswordResetEmail: (email: string) => Promise<boolean>;
+  sendAdminEmailVerification: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,196 +29,158 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!auth) {
-      console.error("Firebase Auth is not initialized. Check your Firebase configuration.");
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
       setLoading(false);
-      setUser(null);
-      return;
-    }
 
-    let unsubscribe: (() => void) | undefined;
-    try {
-      unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        setUser(currentUser);
-        setLoading(false);
-      }, (error) => {
-        // This error callback is for errors *during* the observation, not setup.
-        console.error("Error in onAuthStateChanged observation:", error);
-        setUser(null);
-        setLoading(false);
-      });
-    } catch (error) {
-      console.error("Error setting up Firebase onAuthStateChanged listener:", error);
-      setUser(null); 
-      setLoading(false); 
-    }
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
+      // If session is null and event is SIGNED_OUT, just clear user (no toast, no redirect)
+      if (!session && event === "SIGNED_OUT" && pathname !== "/") {
+        // No toast, no redirect
       }
-    };
-  }, [router, pathname]); // Dependencies remain to re-evaluate if router/pathname causes context re-instantiation issues, though ideally this effect runs once.
+    });
 
-  const login = async (email: string, pass: string): Promise<boolean> => {
-    if (!auth) {
-      toast({ variant: "destructive", title: "Login Failed", description: "Authentication service not available." });
-      return false;
-    }
-    setLoading(true);
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-      
-      if (userCredential.user && userCredential.user.email) {
-        try {
-          const loginTimestamp = new Date().toISOString();
-          sendLoginNotification({
-            adminEmail: userCredential.user.email,
-            loginTimestamp: loginTimestamp,
-          }).then(notificationContent => {
-            console.log('Login Notification Email Content Generated:');
-            console.log(`Intended Recipient: ${userCredential.user.email}`);
-            console.log(`Subject: ${notificationContent.emailSubject}`);
-            console.log(`Body: ${notificationContent.emailBody}`);
-            console.warn(
-              `[Action Required] An email notification for this login should be sent. ` +
-              `Integrate an email sending service to dispatch this email using the content above.`
-            );
-          }).catch(notificationError => {
-            console.error('Failed to generate login notification content in background:', notificationError);
-          });
-        } catch (e) {
-          console.error('Error initiating login notification generation:', e);
+    // Initial check
+    const checkUser = async () => {
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if ((error || !data.user) && pathname !== "/") {
+          setUser(null);
+          // No toast, no redirect
+        } else {
+          setUser(data.user);
+        }
+      } catch (err) {
+        if (pathname !== "/") {
+          setUser(null);
+          // No toast, no redirect
+        } else {
+          setUser(null);
         }
       }
-      // User will be set by onAuthStateChanged, setLoading(false) will also be handled there.
-      // router.push('/admin/dashboard'); // Let onAuthStateChanged and page logic handle redirects
-      return true;
-    } catch (error: any) {
-      console.error("Firebase login error:", error);
-      const errorMessage = error.message || "Invalid credentials or network error.";
-      toast({ variant: "destructive", title: "Login Failed", description: errorMessage });
-      setUser(null); // Ensure user is null on failed login
-      setLoading(false); // Set loading false on error
+      setLoading(false);
+    };
+
+    checkUser();
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [router, pathname]);
+
+  const login = async (email: string, pass: string): Promise<boolean> => {
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: pass,
+    });
+
+    if (error) {
+      toast({ variant: "destructive", title: "Login Failed", description: error.message });
+      setLoading(false);
       return false;
     }
-    // No finally setLoading(false) here as onAuthStateChanged should handle it.
+
+    if (data.user) {
+      try {
+        const loginTimestamp = new Date().toISOString();
+        sendLoginNotification({
+          adminEmail: data.user.email!,
+          loginTimestamp: loginTimestamp,
+        }).then(notificationContent => {
+          console.log('Login Notification Email Content Generated:');
+          console.log(`Intended Recipient: ${data.user.email}`);
+          console.log(`Subject: ${notificationContent.emailSubject}`);
+          console.log(`Body: ${notificationContent.emailBody}`);
+          console.warn(
+            `[Action Required] An email notification for this login should be sent. ` +
+            `Integrate an email sending service to dispatch this email using the content above.`
+          );
+        }).catch(notificationError => {
+          console.error('Failed to generate login notification content in background:', notificationError);
+        });
+      } catch (e) {
+        console.error('Error initiating login notification generation:', e);
+      }
+    }
+
+    setLoading(false);
+    return true;
   };
 
   const logout = async () => {
-    if (!auth) {
-      toast({ variant: "destructive", title: "Logout Failed", description: "Authentication service not available." });
-      return;
-    }
     setLoading(true);
-    try {
-      await firebaseSignOut(auth);
-      // User will be set to null by onAuthStateChanged, setLoading(false) will also be handled there.
-      router.push('/admin'); 
-    } catch (error: any) {
-      console.error("Firebase logout error:", error);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
       toast({ variant: "destructive", title: "Logout Failed", description: error.message });
-      setLoading(false); // Set loading false on error if signOut doesn't trigger onAuthStateChanged quickly
     }
+    setUser(null);
+    router.push('/admin');
+    setLoading(false);
   };
 
   const updateAdminEmail = async (newEmail: string): Promise<boolean> => {
-    if (!auth || !auth.currentUser) {
-      toast({ variant: "destructive", title: "Error", description: "No user logged in or auth service unavailable." });
+    const { data, error } = await supabase.auth.updateUser({ email: newEmail });
+    if (error) {
+      toast({ variant: "destructive", title: "Update Email Failed", description: error.message });
       return false;
     }
-    try {
-      await verifyBeforeUpdateEmail(auth.currentUser, newEmail);
-      toast({ title: "Verification Email Sent", description: `A verification email has been sent to ${newEmail}. Please verify to update your email address.` });
-      return true;
-    } catch (error: any) {
-      console.error("Update email error:", error);
-      if (error.code === 'auth/requires-recent-login') {
-        toast({
-          variant: "destructive",
-          title: "Action Requires Recent Login",
-          description: "Updating your email is a sensitive action and requires a recent login. Please log out and log back in to continue.",
-          duration: 7000,
-        });
-      } else {
-        toast({ variant: "destructive", title: "Update Email Failed", description: error.message });
-      }
-      return false;
-    }
-  };
-  
-  const updateAdminPassword = async (newPassword: string): Promise<boolean> => {
-    if (!auth || !auth.currentUser) {
-      toast({ variant: "destructive", title: "Error", description: "No user logged in or auth service unavailable." });
-      return false;
-    }
-    try {
-      await firebaseUpdatePassword(auth.currentUser, newPassword);
-      toast({ title: "Password Updated", description: "Your password has been successfully updated." });
-      return true;
-    } catch (error: any) {
-      console.error("Update password error:", error);
-      if (error.code === 'auth/requires-recent-login') {
-         toast({
-          variant: "destructive",
-          title: "Action Requires Recent Login",
-          description: "Changing your password requires a recent login. Please log out and log back in to continue.",
-          duration: 7000,
-        });
-      } else {
-        toast({ variant: "destructive", title: "Update Password Failed", description: error.message });
-      }
-      return false;
-    }
+    toast({ title: "Verification Email Sent", description: `A verification email has been sent to ${newEmail}. Please verify to update your email address.` });
+    return true;
   };
 
-  const sendAdminEmailVerification = async (): Promise<boolean> => {
-    if (!auth || !auth.currentUser) {
-      toast({ variant: "destructive", title: "Error", description: "No user logged in or auth service unavailable." });
+  const updateAdminPassword = async (newPassword: string): Promise<boolean> => {
+    const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      toast({ variant: "destructive", title: "Update Password Failed", description: error.message });
       return false;
     }
-    if (auth.currentUser.emailVerified) {
-       toast({ title: "Email Already Verified", description: "Your email address is already verified." });
-       return true;
-    }
-    try {
-      await sendEmailVerification(auth.currentUser);
-      toast({ title: "Verification Email Sent", description: `A new verification email has been sent to ${auth.currentUser.email}.` });
-      return true;
-    } catch (error: any) {
-      console.error("Send verification email error:", error);
-      toast({ variant: "destructive", title: "Verification Failed", description: error.message });
-      return false;
-    }
+    toast({ title: "Password Updated", description: "Your password has been successfully updated." });
+    return true;
   };
 
   const sendAdminPasswordResetEmail = async (email: string): Promise<boolean> => {
-    if (!auth) {
-      toast({ variant: "destructive", title: "Error", description: "Authentication service not available." });
-      return false;
-    }
-    try {
-      await firebaseSendPasswordResetEmail(auth, email);
-      toast({ title: "Password Reset Email Sent", description: "If an account exists for this email, a password reset link has been sent. Please check your inbox (and spam folder)." });
-      return true;
-    } catch (error: any) {
-      // Avoid detailed error messages that could confirm/deny email existence
-      console.error("Error sending password reset email:", error);
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/admin/update-password`,
+    });
+    if (error) {
       toast({ variant: "destructive", title: "Request Failed", description: "Could not process the request. Please try again or contact support if the issue persists." });
       return false;
     }
+    toast({ title: "Password Reset Email Sent", description: "If an account exists for this email, a password reset link has been sent. Please check your inbox (and spam folder)." });
+    return true;
+  };
+
+  const sendAdminEmailVerification = async (): Promise<boolean> => {
+    if (!user || !user.email) {
+      toast({ variant: "destructive", title: "Verification Failed", description: "No user is currently logged in." });
+      return false;
+    }
+
+    const { data, error } = await supabase.auth.resend({
+      type: 'signup',
+      email: user.email,
+    });
+
+    if (error) {
+      toast({ variant: "destructive", title: "Verification Failed", description: error.message });
+      return false;
+    }
+
+    toast({ title: "Verification Email Sent", description: `A verification email has been sent to ${user.email}. Please check your inbox (and spam folder).` });
+    return true;
   };
 
   return (
-    <AuthContext.Provider value={{ 
-        user, 
-        loading, 
-        login, 
-        logout, 
-        updateAdminEmail, 
-        updateAdminPassword, 
-        sendAdminEmailVerification,
-        sendAdminPasswordResetEmail
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      login,
+      logout,
+      updateAdminEmail,
+      updateAdminPassword,
+      sendAdminPasswordResetEmail,
+      sendAdminEmailVerification
     }}>
       {children}
     </AuthContext.Provider>

@@ -16,7 +16,7 @@ export default function AdminAccountPage() {
   const { toast } = useToast();
 
   const [newEmail, setNewEmail] = useState('');
-  const [currentPasswordForEmailChange, setCurrentPasswordForEmailChange] = useState(''); // May not be needed depending on Firebase re-auth flow
+  const [currentPasswordForEmailChange, setCurrentPasswordForEmailChange] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   
@@ -37,7 +37,7 @@ export default function AdminAccountPage() {
       toast({ variant: "destructive", title: "Error", description: "New email cannot be empty." });
       return;
     }
-    // Firebase's verifyBeforeUpdateEmail doesn't require current password by default
+    
     // but reauthentication might be needed for sensitive operations if sessions are short.
     // For simplicity, we'll directly call it.
     setIsUpdatingEmail(true);
