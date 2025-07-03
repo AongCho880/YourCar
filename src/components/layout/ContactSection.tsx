@@ -113,13 +113,13 @@ export default function ContactSection() {
               {canContactViaWhatsApp && (
                 <div className="flex flex-col sm:flex-row items-center justify-between p-2 sm:p-4 bg-muted/50 rounded-lg w-full max-w-full">
                   <div className="flex items-center mb-2 sm:mb-0">
-                    <Phone className="w-4 h-4 mr-2 text-primary min-h-[32px] min-w-[32px]" />
+                    <Phone className="w-3 h-3 mr-1 text-primary min-h-[24px] min-w-[24px]" />
                     <div>
                       <p className="font-semibold text-foreground text-sm md:text-base">WhatsApp</p>
                       <p className="text-xs md:text-sm text-muted-foreground">{contactSettings.whatsappNumber}</p>
                     </div>
                   </div>
-                  <Button onClick={handleWhatsAppClick} variant="outline" size="sm" className="min-h-[48px] min-w-[48px]">
+                  <Button onClick={handleWhatsAppClick} variant="outline" size="sm" className="min-h-[40px] min-w-[40px]">
                     Chat on WhatsApp
                   </Button>
                 </div>
@@ -128,13 +128,13 @@ export default function ContactSection() {
               {canContactViaMessenger && (
                 <div className="flex flex-col sm:flex-row items-center justify-between p-2 sm:p-4 bg-muted/50 rounded-lg w-full max-w-full">
                   <div className="flex items-center mb-2 sm:mb-0">
-                    <MessageSquareText className="w-4 h-4 mr-2 text-primary min-h-[32px] min-w-[32px]" />
+                    <MessageSquareText className="w-3 h-3 mr-1 text-primary min-h-[24px] min-w-[24px]" />
                     <div>
                       <p className="font-semibold text-foreground text-sm md:text-base">Messenger</p>
                       <p className="text-xs md:text-sm text-muted-foreground">{contactSettings.messengerId}</p>
                     </div>
                   </div>
-                  <Button onClick={handleMessengerClick} variant="outline" size="sm" className="min-h-[48px] min-w-[48px]">
+                  <Button onClick={handleMessengerClick} variant="outline" size="sm" className="min-h-[40px] min-w-[40px]">
                     Message on Facebook
                   </Button>
                 </div>
@@ -143,20 +143,12 @@ export default function ContactSection() {
               {canContactViaFacebookPage && (
                 <div className="flex flex-col sm:flex-row items-center justify-between p-2 sm:p-4 bg-muted/50 rounded-lg w-full max-w-full">
                   <div className="flex items-center mb-2 sm:mb-0">
-                    <Facebook className="w-4 h-4 mr-2 text-primary min-h-[32px] min-w-[32px]" />
+                    <Facebook className="w-3 h-3 mr-1 text-primary min-h-[24px] min-w-[24px]" />
                     <div>
                       <p className="font-semibold text-foreground text-sm md:text-base">Facebook Page</p>
-                      <a
-                        href={contactSettings.facebookPageLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs md:text-sm text-blue-600 hover:underline break-all"
-                      >
-                        {contactSettings.facebookPageLink}
-                      </a>
                     </div>
                   </div>
-                  <Button asChild variant="outline" size="sm" className="min-h-[48px] min-w-[48px]">
+                  <Button asChild variant="outline" size="sm" className="min-h-[40px] min-w-[40px]">
                     <a href={contactSettings.facebookPageLink} target="_blank" rel="noopener noreferrer">
                       Visit Facebook Page
                     </a>
