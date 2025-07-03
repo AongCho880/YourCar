@@ -32,7 +32,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
         {/* It's generally recommended to define metadata outside the component or use generateMetadata for dynamic titles */}
-        <link rel="icon" type="image/svg+xml" href="/public/YourCarLogo.svg" />
         <title>YourCar - Your Premier Car Marketplace</title>
         <meta name="description" content="Find or list your next car with YourCar. Featuring AI-powered ad copy generation." />
       </head>
